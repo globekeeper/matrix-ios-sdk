@@ -497,7 +497,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  initial sync the session state is MXSessionStateInitialSyncFailed.
  */
 - (void)start:(void (^)(void))onServerSyncDone
-      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+      failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
 
 /**
  Start the session like `[MXSession start]` but with using a filter in /sync requests.
@@ -508,7 +508,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)startWithSyncFilter:(MXFilterJSONModel*)syncFilter
            onServerSyncDone:(void (^)(void))onServerSyncDone
-                    failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                    failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
 
 /**
  Start the session like `[MXSession startWithSyncFilter]` but with a filter id.
@@ -519,7 +519,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  */
 - (void)startWithSyncFilterId:(NSString*)syncFilterId
              onServerSyncDone:(void (^)(void))onServerSyncDone
-                      failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                      failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
 
 /**
  Pause the session events stream.
@@ -556,7 +556,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  */
 - (void)backgroundSync:(unsigned int)timeout
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
-               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails; // NS_REFINED_FOR_SWIFT;
 
 /**
  Perform an events stream catchup in background (by keeping user offline).
@@ -569,7 +569,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (void)backgroundSync:(unsigned int)timeout
     ignoreSessionState:(BOOL)ignoreSessionState
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
-               failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+               failure:(MXOnBackgroundSyncFail)backgroundSyncfails; // NS_REFINED_FOR_SWIFT;
 
 /**
  Restart the session events stream.
@@ -594,7 +594,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)logout:(void (^)(void))success
-                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                   failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
 
 /**
  Deactivate the user's account, removing all ability for the user to login again.
@@ -704,7 +704,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (void)enableCrypto:(BOOL)enableCrypto success:(void (^)(void))success failure:(void (^)(NSError *error))failure; // NS_REFINED_FOR_SWIFT;
 
 /**
  Get the versions of the specification supported by the server.
@@ -877,7 +877,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  
  @return an array of MXRooms.
  */
-- (NSArray<MXRoom*>*)rooms NS_REFINED_FOR_SWIFT;
+- (NSArray<MXRoom*>*)rooms; // NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - The user's direct rooms
