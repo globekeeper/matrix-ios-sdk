@@ -2209,7 +2209,6 @@
 		AEA3A18924D9C0EA00F851FE /* libbase58.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libbase58.framework; path = Carthage/Build/iOS/libbase58.framework; sourceTree = "<group>"; };
 		AEA3A72D24D9EB8100F851FE /* Realm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Realm.framework; path = Carthage/Build/iOS/Realm.framework; sourceTree = "<group>"; };
 		AEA3A72E24D9EB8100F851FE /* RealmSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealmSwift.framework; path = Carthage/Build/iOS/RealmSwift.framework; sourceTree = "<group>"; };
-		AEA3A7FD24D9FEE200F851FE /* OLMKit_Carthage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OLMKit_Carthage.framework; path = Carthage/Build/iOS/OLMKit_Carthage.framework; sourceTree = "<group>"; };
 		AEA3A80124DA002900F851FE /* OLMKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OLMKit.framework; path = Carthage/Build/iOS/OLMKit.framework; sourceTree = "<group>"; };
 		B10AFB4122A970060092E6AF /* MXEventReplace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventReplace.h; sourceTree = "<group>"; };
 		B10AFB4222A970060092E6AF /* MXEventReplace.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventReplace.m; sourceTree = "<group>"; };
@@ -2455,7 +2454,6 @@
 			isa = PBXGroup;
 			children = (
 				AEA3A80124DA002900F851FE /* OLMKit.framework */,
-				AEA3A7FD24D9FEE200F851FE /* OLMKit_Carthage.framework */,
 				AEA3A72D24D9EB8100F851FE /* Realm.framework */,
 				AEA3A72E24D9EB8100F851FE /* RealmSwift.framework */,
 				AEA3A18724D9C0EA00F851FE /* AFNetworking.framework */,
