@@ -1,4 +1,5 @@
-git "https://gitlab.matrix.org/matrix-org/olm.git" "3.1.0"
 github "AFNetworking/AFNetworking" "4.0.1"
 github "nicklockwood/GZIP" "1.2.2"
-github "xinsight/libbase58" "288360db3bf135445e851806242d8140fcf572de"
+github "realm/realm-cocoa" "v3.18.0"
+github "xinsight/libbase58" "8a0514df567144e63849cb23fd64a443817fee30"
+github "xinsight/olm" "71cbc3137338acf88535bf07d28f026ea4150617"

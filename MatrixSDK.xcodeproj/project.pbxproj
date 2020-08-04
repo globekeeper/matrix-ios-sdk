@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 46;
+	objectVersion = 52;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -1060,6 +1060,9 @@
 		AEA3A60024D9C63500F851FE /* GZIP.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A18824D9C0EA00F851FE /* GZIP.framework */; };
 		AEA3A60224D9C63500F851FE /* libbase58.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A18924D9C0EA00F851FE /* libbase58.framework */; };
 		AEA3A60424D9C63500F851FE /* AFNetworking.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A18724D9C0EA00F851FE /* AFNetworking.framework */; };
+		AEA3A72F24D9EB8200F851FE /* Realm.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A72D24D9EB8100F851FE /* Realm.framework */; };
+		AEA3A73124D9EB8200F851FE /* RealmSwift.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A72E24D9EB8100F851FE /* RealmSwift.framework */; };
+		AEA3A80224DA002900F851FE /* OLMKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AEA3A80124DA002900F851FE /* OLMKit.framework */; platformFilter = ios; };
 		B10AFB4322A970060092E6AF /* MXEventReplace.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4122A970060092E6AF /* MXEventReplace.h */; };
 		B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */ = {isa = PBXBuildFile; fileRef = B10AFB4222A970060092E6AF /* MXEventReplace.m */; };
 		B10AFB4722AA8A8E0092E6AF /* MXEventEditsListener.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */; };
@@ -2204,6 +2207,10 @@
 		AEA3A18724D9C0EA00F851FE /* AFNetworking.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AFNetworking.framework; path = Carthage/Build/iOS/AFNetworking.framework; sourceTree = "<group>"; };
 		AEA3A18824D9C0EA00F851FE /* GZIP.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GZIP.framework; path = Carthage/Build/iOS/GZIP.framework; sourceTree = "<group>"; };
 		AEA3A18924D9C0EA00F851FE /* libbase58.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = libbase58.framework; path = Carthage/Build/iOS/libbase58.framework; sourceTree = "<group>"; };
+		AEA3A72D24D9EB8100F851FE /* Realm.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Realm.framework; path = Carthage/Build/iOS/Realm.framework; sourceTree = "<group>"; };
+		AEA3A72E24D9EB8100F851FE /* RealmSwift.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = RealmSwift.framework; path = Carthage/Build/iOS/RealmSwift.framework; sourceTree = "<group>"; };
+		AEA3A7FD24D9FEE200F851FE /* OLMKit_Carthage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OLMKit_Carthage.framework; path = Carthage/Build/iOS/OLMKit_Carthage.framework; sourceTree = "<group>"; };
+		AEA3A80124DA002900F851FE /* OLMKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OLMKit.framework; path = Carthage/Build/iOS/OLMKit.framework; sourceTree = "<group>"; };
 		B10AFB4122A970060092E6AF /* MXEventReplace.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventReplace.h; sourceTree = "<group>"; };
 		B10AFB4222A970060092E6AF /* MXEventReplace.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = MXEventReplace.m; sourceTree = "<group>"; };
 		B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MXEventEditsListener.h; sourceTree = "<group>"; };
@@ -2378,8 +2385,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				AEA3A72F24D9EB8200F851FE /* Realm.framework in Frameworks */,
+				AEA3A73124D9EB8200F851FE /* RealmSwift.framework in Frameworks */,
 				AEA3A60224D9C63500F851FE /* libbase58.framework in Frameworks */,
 				AEA3A60424D9C63500F851FE /* AFNetworking.framework in Frameworks */,
+				AEA3A80224DA002900F851FE /* OLMKit.framework in Frameworks */,
 				AEA3A60024D9C63500F851FE /* GZIP.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2444,6 +2454,10 @@
 		10FA4A5252784B85B27DEA5B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				AEA3A80124DA002900F851FE /* OLMKit.framework */,
+				AEA3A7FD24D9FEE200F851FE /* OLMKit_Carthage.framework */,
+				AEA3A72D24D9EB8100F851FE /* Realm.framework */,
+				AEA3A72E24D9EB8100F851FE /* RealmSwift.framework */,
 				AEA3A18724D9C0EA00F851FE /* AFNetworking.framework */,
 				AEA3A18824D9C0EA00F851FE /* GZIP.framework */,
 				AEA3A18924D9C0EA00F851FE /* libbase58.framework */,
@@ -5947,7 +5961,11 @@
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
@@ -5975,7 +5993,11 @@
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
@@ -6002,7 +6024,11 @@
 				);
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
@@ -6027,7 +6053,11 @@
 				GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				OTHER_LDFLAGS = "$(inherited)";
 				PRODUCT_BUNDLE_IDENTIFIER = "org.matrix.$(PRODUCT_NAME:rfc1034identifier)";
@@ -6062,7 +6092,11 @@
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = ca.xinsight.MatrixSDK;
@@ -6099,7 +6133,11 @@
 				INFOPLIST_FILE = MatrixSDK/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				MTL_FAST_MATH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = ca.xinsight.MatrixSDK;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -6126,7 +6164,11 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MatrixSDK/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = "$(inherited)";
@@ -6156,7 +6198,11 @@
 				INFOPLIST_FILE = "$(SRCROOT)/MatrixSDK/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				OTHER_LDFLAGS = "$(inherited)";
@@ -6187,7 +6233,11 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
@@ -6217,7 +6267,11 @@
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				HEADER_SEARCH_PATHS = "$(inherited)";
 				INFOPLIST_FILE = MatrixSDKTests/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.10;
 				MTL_FAST_MATH = YES;

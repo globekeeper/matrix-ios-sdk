@@ -3,7 +3,8 @@ github "AFNetworking/AFNetworking" "4.0.1"
 
 # TODO: add shared framework
 # git "git@gitlab.int.matrix.org:matrix-org/olm.git" "3.1.0"
-git "https://gitlab.matrix.org/matrix-org/olm.git" "3.1.0"
+# git "https://gitlab.matrix.org/matrix-org/olm.git" "3.1.0"
+git "git@github.com:xinsight/olm.git" "carthage"
 
 # github "luke-jr/libbase58"
 # TEST: branch with xcode framework
