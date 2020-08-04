@@ -17,6 +17,7 @@
 import Foundation
 
 #if os(iOS)
+    import UIKit
     public typealias MXImage = UIImage
 #elseif os(OSX)
     public typealias MXImage = NSImage
