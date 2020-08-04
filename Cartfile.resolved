@@ -1,3 +1,4 @@
 git "https://gitlab.matrix.org/matrix-org/olm.git" "3.1.0"
 github "AFNetworking/AFNetworking" "4.0.1"
-github "xinsight/libbase58" "490490e3ec9b868bea56d01d91e2488129e8dffb"
+github "nicklockwood/GZIP" "1.2.2"
+github "xinsight/libbase58" "288360db3bf135445e851806242d8140fcf572de"

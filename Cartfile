@@ -1,14 +1,17 @@
 
 github "AFNetworking/AFNetworking" "4.0.1"
 
-# no access?
+# TODO: add shared framework
 # git "git@gitlab.int.matrix.org:matrix-org/olm.git" "3.1.0"
 git "https://gitlab.matrix.org/matrix-org/olm.git" "3.1.0"
 
-# branch with xcode framework
-github "xinsight/libbase58" "carthage"
 # github "luke-jr/libbase58"
+# TEST: branch with xcode framework
+github "xinsight/libbase58" "carthage"
+
 # github "realm/realm-cocoa" "v3.17.3"
+github "realm/realm-cocoa" "v3.18.0"
 
 # pod 'GZIP', '~> 1.2.2'
+github "nicklockwood/GZIP" "1.2.2"
 
