@@ -18,11 +18,13 @@
 
 @import Foundation;
 
+#import "MXCallAudioSessionConfigurator.h"
+
 NS_ASSUME_NONNULL_BEGIN
 
 @class MXCall;
 @class MXCallKitConfiguration;
-@protocol MXCallAudioSessionConfigurator;
+//@protocol MXCallAudioSessionConfigurator;
 
 /**
  Posted when then system has activated AVAudioSession.
