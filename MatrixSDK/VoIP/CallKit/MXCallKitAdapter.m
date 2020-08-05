@@ -17,11 +17,10 @@
 #if TARGET_OS_IPHONE
 
 #import "MXCallKitAdapter.h"
-// CXProviderDelegate?
 
 @import AVFoundation;
 @import CallKit;
-@import UIKit;
+//@import UIKit;
 
 #import "MXCall.h"
 #import "MXCallAudioSessionConfigurator.h"
