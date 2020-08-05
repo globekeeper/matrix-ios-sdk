@@ -33,9 +33,10 @@
 #import <OLMKit/OLMKit.h>
 #endif
 
-#if __has_include(<MatrixKit/MatrixKit.h>)
-#import <MatrixKit/MatrixKit.h>
-#endif
+// ???: MatrixSDK depends on MatrixKit?
+//#if __has_include(<MatrixKit/MatrixKit.h>)
+//#import <MatrixKit/MatrixKit.h>
+//#endif
 
 @interface MXBugReportRestClient ()
 {
