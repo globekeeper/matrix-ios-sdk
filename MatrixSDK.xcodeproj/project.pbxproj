@@ -2392,9 +2392,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				AEA3A91624DB327900F851FE /* AVFoundation.framework in Frameworks */,
+				AEA3A90E24DB0A8800F851FE /* CallKit.framework in Frameworks */,
 				AEA3A72F24D9EB8200F851FE /* Realm.framework in Frameworks */,
 				AEA3A73124D9EB8200F851FE /* RealmSwift.framework in Frameworks */,
-				AEA3A90E24DB0A8800F851FE /* CallKit.framework in Frameworks */,
 				AEA3A60224D9C63500F851FE /* libbase58.framework in Frameworks */,
 				AEA3A60424D9C63500F851FE /* AFNetworking.framework in Frameworks */,
 				AEA3A80224DA002900F851FE /* OLMKit.framework in Frameworks */,
