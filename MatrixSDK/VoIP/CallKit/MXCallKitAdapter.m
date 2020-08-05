@@ -14,7 +14,7 @@
  limitations under the License.
  */
 
-#if TARGET_OS_IPHONE
+//#if TARGET_OS_IPHONE
 
 #import "MXCallKitAdapter.h"
 
@@ -318,4 +318,4 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
 
 @end
 
-#endif
+//#endif
