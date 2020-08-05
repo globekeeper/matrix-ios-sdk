@@ -48,6 +48,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXBase64Tools.h"
 #import "MXDecryptionResult.h"
 #import "MXEncryptedAttachments.h"
+#import "MXEventReplace.h"
 
 #import "MXSDKOptions.h"
 
