@@ -569,7 +569,7 @@
 		9CC8EFC1457B94FB58DFF1F7 /* libPods-MatrixSDK-MatrixSDK-macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FA84A2BE7767F3645CAEC2AF /* libPods-MatrixSDK-MatrixSDK-macOS.a */; };
 		AEA3A1B524D9C15700F851FE /* MXAntivirusScanStatus.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D47321A5945800D8C2C6 /* MXAntivirusScanStatus.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A1BD24D9C15B00F851FE /* MXMediaScanStoreDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D48321A5A04200D8C2C6 /* MXMediaScanStoreDelegate.h */; };
-		AEA3A1D124D9C16800F851FE /* MXScanManager.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D50021A5C6D600D8C2C6 /* MXScanManager.h */; };
+		AEA3A1D124D9C16800F851FE /* MXScanManager.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D50021A5C6D600D8C2C6 /* MXScanManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A3C424D9C1A300F851FE /* MXKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A151431DAF7C0C00400192 /* MXKey.m */; };
 		AEA3A3C524D9C1A300F851FE /* MXJSONModels.m in Sources */ = {isa = PBXBuildFile; fileRef = 3281E8B619E42DFE00976E1A /* MXJSONModels.m */; };
 		AEA3A3C624D9C1A300F851FE /* MXPeekingRoom.h in Headers */ = {isa = PBXBuildFile; fileRef = 32E226A41D06AC9F00E6CA54 /* MXPeekingRoom.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1062,7 +1062,7 @@
 		AEA3A84824DA17C300F851FE /* MXAggregationPaginatedResponse_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B176B25023EB03E3001879C6 /* MXAggregationPaginatedResponse_Private.h */; };
 		AEA3A84924DA9CDA00F851FE /* MXRealmHelper.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D47021A5939000D8C2C6 /* MXRealmHelper.h */; };
 		AEA3A84A24DA9D9200F851FE /* MXRoomNameStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA86AB21529AE3008F277E /* MXRoomNameStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA3A84B24DA9DF200F851FE /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; };
+		AEA3A84B24DA9DF200F851FE /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B10AFB4322A970060092E6AF /* MXEventReplace.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4122A970060092E6AF /* MXEventReplace.h */; };
 		B10AFB4422A970060092E6AF /* MXEventReplace.m in Sources */ = {isa = PBXBuildFile; fileRef = B10AFB4222A970060092E6AF /* MXEventReplace.m */; };
 		B10AFB4722AA8A8E0092E6AF /* MXEventEditsListener.h in Headers */ = {isa = PBXBuildFile; fileRef = B10AFB4522AA8A8D0092E6AF /* MXEventEditsListener.h */; };
