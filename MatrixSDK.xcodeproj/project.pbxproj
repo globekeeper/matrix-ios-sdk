@@ -742,7 +742,7 @@
 		AEA3A48B24D9C1A300F851FE /* MXIncomingSASTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDE822525DED004D31DF /* MXIncomingSASTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A48C24D9C1A300F851FE /* MXPusher.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DDD22DCD183004FF987 /* MXPusher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A48D24D9C1A300F851FE /* MXRoomMember.m in Sources */ = {isa = PBXBuildFile; fileRef = 329FB1741A0A3A1600A5E88E /* MXRoomMember.m */; };
-		AEA3A48E24D9C1A300F851FE /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; };
+		AEA3A48E24D9C1A300F851FE /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A48F24D9C1A300F851FE /* MXRoomEventFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 323F3F9120D3F0C700D26D6A /* MXRoomEventFilter.m */; };
 		AEA3A49024D9C1A300F851FE /* MXReplyEventBodyParts.m in Sources */ = {isa = PBXBuildFile; fileRef = B11BD45322CB583E0064D8B0 /* MXReplyEventBodyParts.m */; };
 		AEA3A49124D9C1A300F851FE /* MXEventContentRelatesTo.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9AE02285497100A98BC1 /* MXEventContentRelatesTo.m */; };
@@ -1431,7 +1431,7 @@
 		B14EF2FF2397E90400758AF0 /* MXSendReplyEventStringsLocalizable.h in Headers */ = {isa = PBXBuildFile; fileRef = B17285782100C88A0052C51E /* MXSendReplyEventStringsLocalizable.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3002397E90400758AF0 /* MXQueuedEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A151501DAF8A7200400192 /* MXQueuedEncryption.h */; };
 		B14EF3012397E90400758AF0 /* MXIncomingRoomKeyRequestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A30B161FB4813400C8309E /* MXIncomingRoomKeyRequestManager.h */; };
-		B14EF3022397E90400758AF0 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; };
+		B14EF3022397E90400758AF0 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3032397E90400758AF0 /* MXEventsByTypesEnumeratorOnArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3E1D6C81550079890E /* MXEventsByTypesEnumeratorOnArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3042397E90400758AF0 /* MXKeyVerificationTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF3052397E90400758AF0 /* MXIdentityServerHashDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = B182B08523167A640057972E /* MXIdentityServerHashDetails.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1674,7 +1674,7 @@
 		F03EF5011DF014D9009DF592 /* MXMediaManager.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF4FD1DF014D9009DF592 /* MXMediaManager.m */; };
 		F03EF5041DF01596009DF592 /* MXLRUCache.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5021DF01596009DF592 /* MXLRUCache.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F03EF5051DF01596009DF592 /* MXLRUCache.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF5031DF01596009DF592 /* MXLRUCache.m */; };
-		F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; };
+		F03EF5081DF071D5009DF592 /* MXEncryptedAttachments.h in Headers */ = {isa = PBXBuildFile; fileRef = F03EF5061DF071D5009DF592 /* MXEncryptedAttachments.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F03EF5091DF071D5009DF592 /* MXEncryptedAttachments.m in Sources */ = {isa = PBXBuildFile; fileRef = F03EF5071DF071D5009DF592 /* MXEncryptedAttachments.m */; };
 		F082946D1DB66C3D00CEAB63 /* MXInvite3PID.h in Headers */ = {isa = PBXBuildFile; fileRef = F082946B1DB66C3D00CEAB63 /* MXInvite3PID.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		F082946E1DB66C3D00CEAB63 /* MXInvite3PID.m in Sources */ = {isa = PBXBuildFile; fileRef = F082946C1DB66C3D00CEAB63 /* MXInvite3PID.m */; };
