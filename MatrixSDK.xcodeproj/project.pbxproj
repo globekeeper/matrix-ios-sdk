@@ -541,7 +541,7 @@
 		32F945F61FAB83D900622468 /* MXIncomingRoomKeyRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F945F21FAB83D900622468 /* MXIncomingRoomKeyRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F945F71FAB83D900622468 /* MXIncomingRoomKeyRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F945F31FAB83D900622468 /* MXIncomingRoomKeyRequest.m */; };
 		32F945F81FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F945F41FAB83D900622468 /* MXIncomingRoomKeyRequestCancellation.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; };
+		32F9FA7D1DBA0CF0009D98A6 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		32F9FA7E1DBA0CF0009D98A6 /* MXDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */; };
 		32FA10C11FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FA10BF1FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.h */; };
 		32FA10C21FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32FA10C01FA1C9EE00E54233 /* MXOutgoingRoomKeyRequestManager.m */; };
@@ -1041,7 +1041,7 @@
 		AEA3A5DB24D9C1A400F851FE /* MXKeyVerificationMac.h in Headers */ = {isa = PBXBuildFile; fileRef = 327A5F38239805F500ED6329 /* MXKeyVerificationMac.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A5DD24D9C1A400F851FE /* MXReplyEventParts.h in Headers */ = {isa = PBXBuildFile; fileRef = B11BD44A22CB56E80064D8B0 /* MXReplyEventParts.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A5DE24D9C1A400F851FE /* MXServerNoticeContent.m in Sources */ = {isa = PBXBuildFile; fileRef = 32954018216385F100E300FC /* MXServerNoticeContent.m */; };
-		AEA3A5E024D9C1A400F851FE /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; };
+		AEA3A5E024D9C1A400F851FE /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A5E124D9C1A400F851FE /* MXDeviceInfo.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A151411DAF7C0C00400192 /* MXDeviceInfo.m */; };
 		AEA3A5E224D9C1A400F851FE /* MXError.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDD319DD99B60068622A /* MXError.m */; };
 		AEA3A5E324D9C1A400F851FE /* MXIdentityService.h in Headers */ = {isa = PBXBuildFile; fileRef = B113695E230AC9D900E2B2FA /* MXIdentityService.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -1396,7 +1396,7 @@
 		B14EF2DC2397E90400758AF0 /* MXOlmSessionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A1514C1DAF897600400192 /* MXOlmSessionResult.h */; };
 		B14EF2DD2397E90400758AF0 /* MXEventsEnumerator.h in Headers */ = {isa = PBXBuildFile; fileRef = 320BBF3B1D6C7D9D0079890E /* MXEventsEnumerator.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2DE2397E90400758AF0 /* MXDeviceList.h in Headers */ = {isa = PBXBuildFile; fileRef = 32637ED21E5B00400011E20D /* MXDeviceList.h */; };
-		B14EF2DF2397E90400758AF0 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; };
+		B14EF2DF2397E90400758AF0 /* MXDecryptionResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F9FA7B1DBA0CF0009D98A6 /* MXDecryptionResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2E02397E90400758AF0 /* MXCall.h in Headers */ = {isa = PBXBuildFile; fileRef = 3245A74C1AF7B2930001D8A7 /* MXCall.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2E12397E90400758AF0 /* MXContentScanEncryptedBody.h in Headers */ = {isa = PBXBuildFile; fileRef = 02CAD437217DD12F0074700B /* MXContentScanEncryptedBody.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		B14EF2E22397E90400758AF0 /* MX3PidAddManager.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D2CC0023422462002BD8CA /* MX3PidAddManager.h */; settings = {ATTRIBUTES = (Public, ); }; };
