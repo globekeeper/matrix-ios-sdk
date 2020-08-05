@@ -45,6 +45,8 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXThrottler.h"
 #import "NSData+MatrixSDK.h"
 
+#import "MXBase64Tools.h"
+
 #import "MXSDKOptions.h"
 
 #import "MXMediaManager.h"
