@@ -617,7 +617,7 @@
 		AEA3A3F624D9C1A300F851FE /* MXWellKnown.h in Headers */ = {isa = PBXBuildFile; fileRef = 323547D32226D3F500F15F94 /* MXWellKnown.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A3F824D9C1A300F851FE /* MXPeekingRoomSummary.h in Headers */ = {isa = PBXBuildFile; fileRef = 3293C6FE214BBA4F009B3DDB /* MXPeekingRoomSummary.h */; };
 		AEA3A3FA24D9C1A300F851FE /* MXEventListener.h in Headers */ = {isa = PBXBuildFile; fileRef = 3220093619EFA4C9008DE41D /* MXEventListener.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA3A3FC24D9C1A300F851FE /* MXKeyVerificationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */; };
+		AEA3A3FC24D9C1A300F851FE /* MXKeyVerificationRequest.h in Headers */ = {isa = PBXBuildFile; fileRef = 320B3938239FD15E00BE2C06 /* MXKeyVerificationRequest.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A3FD24D9C1A300F851FE /* MXAggregatedReactionsUpdater.m in Sources */ = {isa = PBXBuildFile; fileRef = 32792BD32295A86600F4FC9D /* MXAggregatedReactionsUpdater.m */; };
 		AEA3A3FF24D9C1A300F851FE /* MXCallKitAdapter.m in Sources */ = {isa = PBXBuildFile; fileRef = 9274AFE71EE580240009BEB6 /* MXCallKitAdapter.m */; };
 		AEA3A40024D9C1A300F851FE /* MXRecoveryKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FFB4EE217E146A00C96002 /* MXRecoveryKey.h */; };
@@ -625,11 +625,11 @@
 		AEA3A40324D9C1A300F851FE /* MXEmojiRepresentation.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDFD2254E8C4004D31DF /* MXEmojiRepresentation.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A40424D9C1A300F851FE /* MXRealmEventScanMapper.m in Sources */ = {isa = PBXBuildFile; fileRef = B146D4EC21A5AF7F00D8C2C6 /* MXRealmEventScanMapper.m */; };
 		AEA3A40524D9C1A300F851FE /* MX3PidAddManager.m in Sources */ = {isa = PBXBuildFile; fileRef = 32D2CC0223422462002BD8CA /* MX3PidAddManager.m */; };
-		AEA3A40624D9C1A300F851FE /* MXKeyVerificationTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */; };
+		AEA3A40624D9C1A300F851FE /* MXKeyVerificationTransaction.h in Headers */ = {isa = PBXBuildFile; fileRef = 3252DCB5224BEA610032264F /* MXKeyVerificationTransaction.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A40724D9C1A300F851FE /* MXRoomCreationParameters.h in Headers */ = {isa = PBXBuildFile; fileRef = 3291DC8123DF52E10009732F /* MXRoomCreationParameters.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A40824D9C1A300F851FE /* MXCredentials.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547DB2226FC5700F15F94 /* MXCredentials.m */; };
 		AEA3A40924D9C1A300F851FE /* MXWellKnownBaseConfig.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547D72226D5D600F15F94 /* MXWellKnownBaseConfig.m */; };
-		AEA3A40A24D9C1A300F851FE /* MXKeyVerification.h in Headers */ = {isa = PBXBuildFile; fileRef = 3297912523A93D4B00F7BB9B /* MXKeyVerification.h */; };
+		AEA3A40A24D9C1A300F851FE /* MXKeyVerification.h in Headers */ = {isa = PBXBuildFile; fileRef = 3297912523A93D4B00F7BB9B /* MXKeyVerification.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A40B24D9C1A300F851FE /* MXLoginPolicy.h in Headers */ = {isa = PBXBuildFile; fileRef = 3275FD9A21A6B60B00B9C13D /* MXLoginPolicy.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A40C24D9C1A300F851FE /* MXCryptoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 3284A59D1DB7C00600A09972 /* MXCryptoStore.h */; };
 		AEA3A40E24D9C1A300F851FE /* MXOlmInboundGroupSession.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A1513C1DAF768D00400192 /* MXOlmInboundGroupSession.h */; };
@@ -767,7 +767,7 @@
 		AEA3A4A424D9C1A300F851FE /* MXFilter.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A31BC220D3FFB0005916C7 /* MXFilter.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A4A624D9C1A300F851FE /* MXQRCodeKeyVerificationStart.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30A22404257600FB6F35 /* MXQRCodeKeyVerificationStart.m */; };
 		AEA3A4A724D9C1A300F851FE /* MXKeyVerificationJSONModel.m in Sources */ = {isa = PBXBuildFile; fileRef = 324AAC6A239913AC00380A66 /* MXKeyVerificationJSONModel.m */; };
-		AEA3A4A924D9C1A300F851FE /* MXSecretRecoveryResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 325AF3DF24897D9400EF937D /* MXSecretRecoveryResult.h */; };
+		AEA3A4A924D9C1A300F851FE /* MXSecretRecoveryResult.h in Headers */ = {isa = PBXBuildFile; fileRef = 325AF3DF24897D9400EF937D /* MXSecretRecoveryResult.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A4AA24D9C1A300F851FE /* NSArray+MatrixSDK.h in Headers */ = {isa = PBXBuildFile; fileRef = 321CFDEC225264C4004D31DF /* NSArray+MatrixSDK.h */; };
 		AEA3A4AB24D9C1A300F851FE /* MXFilterObject.h in Headers */ = {isa = PBXBuildFile; fileRef = 32A31BBC20D3F2EC005916C7 /* MXFilterObject.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A4AC24D9C1A300F851FE /* MXWellKnown.m in Sources */ = {isa = PBXBuildFile; fileRef = 323547D22226D3F500F15F94 /* MXWellKnown.m */; };
@@ -802,7 +802,7 @@
 		AEA3A4CD24D9C1A300F851FE /* MXRoomFilter.m in Sources */ = {isa = PBXBuildFile; fileRef = 32A31BC720D401FC005916C7 /* MXRoomFilter.m */; };
 		AEA3A4CE24D9C1A300F851FE /* MXRoomPredecessorInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B17982EF2119E49F001FD722 /* MXRoomPredecessorInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A4CF24D9C1A300F851FE /* MXRoomState.m in Sources */ = {isa = PBXBuildFile; fileRef = 3265CB371A14C43E00E24B2F /* MXRoomState.m */; };
-		AEA3A4D024D9C1A300F851FE /* MXSecretStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorage.h */; };
+		AEA3A4D024D9C1A300F851FE /* MXSecretStorage.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD297246AD2B500377005 /* MXSecretStorage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A4D124D9C1A300F851FE /* MXMegolmSessionData.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE46A1E422766008D99D4 /* MXMegolmSessionData.h */; };
 		AEA3A4D224D9C1A300F851FE /* MXDeviceList.m in Sources */ = {isa = PBXBuildFile; fileRef = 32637ED31E5B00400011E20D /* MXDeviceList.m */; };
 		AEA3A4D324D9C1A300F851FE /* MXSDKOptions.m in Sources */ = {isa = PBXBuildFile; fileRef = F0C34CBA1C18C93700C36F09 /* MXSDKOptions.m */; };
@@ -859,10 +859,10 @@
 		AEA3A50F24D9C1A400F851FE /* MXPusherData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32999DE122DCD1AD004FF987 /* MXPusherData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A51024D9C1A400F851FE /* MXEventAnnotationChunk.h in Headers */ = {isa = PBXBuildFile; fileRef = 327E9AD32284803000A98BC1 /* MXEventAnnotationChunk.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A51124D9C1A400F851FE /* MXNoStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32114A8D1A262ECB00FF2EC4 /* MXNoStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA3A51224D9C1A400F851FE /* MXMegolmExportEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */; };
+		AEA3A51224D9C1A400F851FE /* MXMegolmExportEncryption.h in Headers */ = {isa = PBXBuildFile; fileRef = 324BE4661E3FADB1008D99D4 /* MXMegolmExportEncryption.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A51324D9C1A400F851FE /* MXRoom.m in Sources */ = {isa = PBXBuildFile; fileRef = 320DFDCB19DD99B60068622A /* MXRoom.m */; };
 		AEA3A51424D9C1A400F851FE /* MXMemoryStore.h in Headers */ = {isa = PBXBuildFile; fileRef = 32D7767B1A27860600FC4AA2 /* MXMemoryStore.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA3A51524D9C1A400F851FE /* MXSecretStorageKeyCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */; };
+		AEA3A51524D9C1A400F851FE /* MXSecretStorageKeyCreationInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2B4246C21C700377005 /* MXSecretStorageKeyCreationInfo.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A51624D9C1A400F851FE /* MXKeyBackupData.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BBAE6A2178E99100D85F46 /* MXKeyBackupData.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A51724D9C1A400F851FE /* MXMyUser.m in Sources */ = {isa = PBXBuildFile; fileRef = 327137261A24D50A00DB6757 /* MXMyUser.m */; };
 		AEA3A51824D9C1A400F851FE /* MXIncomingSASTransaction_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = B1DDC9D52418098200D208E3 /* MXIncomingSASTransaction_Private.h */; };
@@ -872,7 +872,7 @@
 		AEA3A51F24D9C1A400F851FE /* MXIdentityServerHashDetails.h in Headers */ = {isa = PBXBuildFile; fileRef = B182B08523167A640057972E /* MXIdentityServerHashDetails.h */; };
 		AEA3A52024D9C1A400F851FE /* MXScanRealmProvider.h in Headers */ = {isa = PBXBuildFile; fileRef = B146D4C421A5A44E00D8C2C6 /* MXScanRealmProvider.h */; };
 		AEA3A52124D9C1A400F851FE /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A30CC24042F0800FB6F35 /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		AEA3A52324D9C1A400F851FE /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; };
+		AEA3A52324D9C1A400F851FE /* MXSecretStoragePassphrase.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2AA246AEB7B00377005 /* MXSecretStoragePassphrase.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A52424D9C1A400F851FE /* MXEncryptedContentFile.m in Sources */ = {isa = PBXBuildFile; fileRef = 021AFBA32179E91800742B2C /* MXEncryptedContentFile.m */; };
 		AEA3A52524D9C1A400F851FE /* MXKeyVerificationKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 327A5F40239805F600ED6329 /* MXKeyVerificationKey.m */; };
 		AEA3A52624D9C1A400F851FE /* MXKeyVerificationStatusResolver.h in Headers */ = {isa = PBXBuildFile; fileRef = 3297912C23AA126400F7BB9B /* MXKeyVerificationStatusResolver.h */; };
@@ -907,7 +907,7 @@
 		AEA3A54624D9C1A400F851FE /* MXHkdfSha256.m in Sources */ = {isa = PBXBuildFile; fileRef = 324DD2BE246D658500377005 /* MXHkdfSha256.m */; };
 		AEA3A54724D9C1A400F851FE /* MXAesHmacSha2.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2C3246E638B00377005 /* MXAesHmacSha2.h */; };
 		AEA3A54924D9C1A400F851FE /* MXEventAnnotationChunk.m in Sources */ = {isa = PBXBuildFile; fileRef = 327E9AD52284803100A98BC1 /* MXEventAnnotationChunk.m */; };
-		AEA3A54A24D9C1A400F851FE /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; };
+		AEA3A54A24D9C1A400F851FE /* MXRecoveryService.h in Headers */ = {isa = PBXBuildFile; fileRef = 32F00AB92488E1CD00131741 /* MXRecoveryService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A54B24D9C1A400F851FE /* MXEnumConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 32FE41341D0AB7070060835E /* MXEnumConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A54C24D9C1A400F851FE /* MXOlmEncryption.m in Sources */ = {isa = PBXBuildFile; fileRef = 327187881DA7DCE50071C818 /* MXOlmEncryption.m */; };
 		AEA3A54D24D9C1A400F851FE /* MXDecryptionResult.m in Sources */ = {isa = PBXBuildFile; fileRef = 32F9FA7C1DBA0CF0009D98A6 /* MXDecryptionResult.m */; };
@@ -939,7 +939,7 @@
 		AEA3A56924D9C1A400F851FE /* MXQRCodeDataBuilder.h in Headers */ = {isa = PBXBuildFile; fileRef = B19A30B82404268500FB6F35 /* MXQRCodeDataBuilder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A56A24D9C1A400F851FE /* MXFileRoomStore.m in Sources */ = {isa = PBXBuildFile; fileRef = 3291D4D31A68FFEB00C3BA41 /* MXFileRoomStore.m */; };
 		AEA3A56B24D9C1A400F851FE /* MXVerifyingAnotherUserQRCodeData.m in Sources */ = {isa = PBXBuildFile; fileRef = B19A30B52404268500FB6F35 /* MXVerifyingAnotherUserQRCodeData.m */; };
-		AEA3A56C24D9C1A400F851FE /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; };
+		AEA3A56C24D9C1A400F851FE /* MXSecretStorageKeyContent.h in Headers */ = {isa = PBXBuildFile; fileRef = 324DD2A4246AE81300377005 /* MXSecretStorageKeyContent.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A56D24D9C1A400F851FE /* MXRoomNameDefaultStringLocalizations.h in Headers */ = {isa = PBXBuildFile; fileRef = 32BA86AD2152A79E008F277E /* MXRoomNameDefaultStringLocalizations.h */; };
 		AEA3A56E24D9C1A400F851FE /* MXRoomThirdPartyInvite.h in Headers */ = {isa = PBXBuildFile; fileRef = 327F8DB01C6112BA00581CA3 /* MXRoomThirdPartyInvite.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		AEA3A57024D9C1A400F851FE /* MXSecretShareSend.m in Sources */ = {isa = PBXBuildFile; fileRef = 32AF9289240EA3880008A0FD /* MXSecretShareSend.m */; };
