@@ -1686,6 +1686,15 @@
 		C6F9358A1E5B3BE600FC34BF /* MXEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935861E5B3BE600FC34BF /* MXEvent.swift */; };
 		C6F9358B1E5B3BE600FC34BF /* MXJSONModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6F935871E5B3BE600FC34BF /* MXJSONModels.swift */; };
 		C6FE1EF01E65C4F7008587E4 /* MXAnalyticsDelegate.h in Headers */ = {isa = PBXBuildFile; fileRef = C6FE1EEF1E65C4F7008587E4 /* MXAnalyticsDelegate.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB171495257514AB00A9F8B5 /* MXMembershipTransitionState.h in Headers */ = {isa = PBXBuildFile; fileRef = B124BBC9256453C90028996D /* MXMembershipTransitionState.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714A0257514C300A9F8B5 /* MXAes.h in Headers */ = {isa = PBXBuildFile; fileRef = 3A23A73E256D322C00B9D00F /* MXAes.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714AB2575159500A9F8B5 /* MXProfiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 323F8772255460B5009E9E67 /* MXProfiler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714B62575170900A9F8B5 /* MXTaskProfile.h in Headers */ = {isa = PBXBuildFile; fileRef = 323F878B25553D84009E9E67 /* MXTaskProfile.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714C12575173D00A9F8B5 /* MXBaseProfiler.h in Headers */ = {isa = PBXBuildFile; fileRef = 323F877925546170009E9E67 /* MXBaseProfiler.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714CC2575174900A9F8B5 /* MXTaskProfile_Private.h in Headers */ = {isa = PBXBuildFile; fileRef = 323F879525554FF2009E9E67 /* MXTaskProfile_Private.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		EB1714D72575176D00A9F8B5 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; };
+		EB1714DD257517C000A9F8B5 /* MXCryptoVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B65256CFC4D008130B1 /* MXCryptoVersion.h */; };
+		EB1714E3257517C300A9F8B5 /* MXCryptoMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B67256CFC4D008130B1 /* MXCryptoMigration.h */; };
 		EC619D9224DD834B00663A80 /* MXPushGatewayRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */; };
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
@@ -4218,6 +4227,7 @@
 				AEA3A43624D9C1A300F851FE /* MXSelfVerifyingMasterKeyNotTrustedQRCodeData.h in Headers */,
 				AEA3A56524D9C1A400F851FE /* MXJSONModel.h in Headers */,
 				AEA3A57124D9C1A400F851FE /* MXThrottler.h in Headers */,
+				EB1714B62575170900A9F8B5 /* MXTaskProfile.h in Headers */,
 				AEA3A5C524D9C1A400F851FE /* MXPushRuleEventMatchConditionChecker.h in Headers */,
 				AEA3A42024D9C1A300F851FE /* MXOutgoingRoomKeyRequest.h in Headers */,
 				AEA3A4E224D9C1A400F851FE /* MXMegolmBackupAuthData.h in Headers */,
@@ -4236,6 +4246,7 @@
 				AEA3A4CE24D9C1A300F851FE /* MXRoomPredecessorInfo.h in Headers */,
 				AEA3A50024D9C1A400F851FE /* MXServerNotices.h in Headers */,
 				AEA3A42E24D9C1A300F851FE /* MXUIKitBackgroundModeHandler.h in Headers */,
+				EB1714A0257514C300A9F8B5 /* MXAes.h in Headers */,
 				AEA3A44424D9C1A300F851FE /* MXQRCodeData.h in Headers */,
 				AEA3A53124D9C1A400F851FE /* MXKeyVerificationAccept.h in Headers */,
 				AEA3A5FF24D9C3A400F851FE /* MXCallKitAdapter.h in Headers */,
@@ -4253,6 +4264,7 @@
 				AEA3A40E24D9C1A300F851FE /* MXOlmInboundGroupSession.h in Headers */,
 				AEA3A40324D9C1A300F851FE /* MXEmojiRepresentation.h in Headers */,
 				AEA3A1B524D9C15700F851FE /* MXAntivirusScanStatus.h in Headers */,
+				EB1714C12575173D00A9F8B5 /* MXBaseProfiler.h in Headers */,
 				AEA3A53F24D9C1A400F851FE /* MXEventAnnotation.h in Headers */,
 				AEA3A54424D9C1A400F851FE /* MXMediaManager.h in Headers */,
 				AEA3A49624D9C1A300F851FE /* MXHTTPOperation.h in Headers */,
@@ -4297,6 +4309,7 @@
 				AEA3A43224D9C1A300F851FE /* MXBackgroundModeHandler.h in Headers */,
 				AEA3A54A24D9C1A400F851FE /* MXRecoveryService.h in Headers */,
 				AEA3A49524D9C1A300F851FE /* MXCallStack.h in Headers */,
+				EB1714DD257517C000A9F8B5 /* MXCryptoVersion.h in Headers */,
 				AEA3A4A224D9C1A300F851FE /* MXRoomFilter.h in Headers */,
 				AEA3A5FE24D9C39D00F851FE /* MXCallKitConfiguration.h in Headers */,
 				AEA3A5A324D9C1A400F851FE /* MXEventReplace.h in Headers */,
@@ -4312,6 +4325,7 @@
 				AEA3A50824D9C1A400F851FE /* MXKeyBackupPassword.h in Headers */,
 				AEA3A4B324D9C1A300F851FE /* MXCrossSigningKey.h in Headers */,
 				AEA3A4F524D9C1A400F851FE /* MXOlmEncryption.h in Headers */,
+				EB1714CC2575174900A9F8B5 /* MXTaskProfile_Private.h in Headers */,
 				AEA3A4AB24D9C1A300F851FE /* MXFilterObject.h in Headers */,
 				AEA3A53B24D9C1A400F851FE /* MXAggregatedReferencesUpdater.h in Headers */,
 				AEA3A44124D9C1A300F851FE /* MXQRCodeDataCodable.h in Headers */,
@@ -4324,6 +4338,7 @@
 				AEA3A58D24D9C1A400F851FE /* MXRecoveryService_Private.h in Headers */,
 				AEA3A44C24D9C1A300F851FE /* MXReceiptData.h in Headers */,
 				AEA3A84824DA17C300F851FE /* MXAggregationPaginatedResponse_Private.h in Headers */,
+				EB1714E3257517C300A9F8B5 /* MXCryptoMigration.h in Headers */,
 				AEA3A3E124D9C1A300F851FE /* MXKeyVerificationByDMRequest.h in Headers */,
 				AEA3A5E624D9C1A400F851FE /* MXMegolmDecryption.h in Headers */,
 				AEA3A3CC24D9C1A300F851FE /* MXLoginTerms.h in Headers */,
@@ -4334,6 +4349,7 @@
 				AEA3A5C124D9C1A400F851FE /* MXAnalyticsDelegate.h in Headers */,
 				AEA3A52124D9C1A400F851FE /* MXSelfVerifyingMasterKeyTrustedQRCodeData.h in Headers */,
 				AEA3A55824D9C1A400F851FE /* MXKeyVerificationManager_Private.h in Headers */,
+				EB171495257514AB00A9F8B5 /* MXMembershipTransitionState.h in Headers */,
 				AEA3A3DC24D9C1A300F851FE /* MXRealmMediaScan.h in Headers */,
 				AEA3A5DD24D9C1A400F851FE /* MXReplyEventParts.h in Headers */,
 				AEA3A5EA24D9C30D00F851FE /* MatrixSDK.h in Headers */,
@@ -4356,6 +4372,7 @@
 				AEA3A52024D9C1A400F851FE /* MXScanRealmProvider.h in Headers */,
 				AEA3A45224D9C1A300F851FE /* MXCall.h in Headers */,
 				AEA3A44324D9C1A300F851FE /* MXKeyBackupVersion.h in Headers */,
+				EB1714D72575176D00A9F8B5 /* MXPushGatewayRestClient.h in Headers */,
 				AEA3A55324D9C1A400F851FE /* MXAggregationsStore.h in Headers */,
 				AEA3A4BA24D9C1A300F851FE /* MX3PidAddSession.h in Headers */,
 				AEA3A53724D9C1A400F851FE /* MXRoomPowerLevels.h in Headers */,
@@ -4370,6 +4387,7 @@
 				AEA3A56024D9C1A400F851FE /* MXEvent.h in Headers */,
 				AEA3A4FA24D9C1A400F851FE /* MXEventScanStoreDelegate.h in Headers */,
 				AEA3A4C524D9C1A300F851FE /* MXServiceTerms.h in Headers */,
+				EB1714AB2575159500A9F8B5 /* MXProfiler.h in Headers */,
 				AEA3A49424D9C1A300F851FE /* MXKeyVerificationStart.h in Headers */,
 				AEA3A51124D9C1A400F851FE /* MXNoStore.h in Headers */,
 				AEA3A40C24D9C1A300F851FE /* MXCryptoStore.h in Headers */,
