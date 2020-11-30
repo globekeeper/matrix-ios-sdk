@@ -1695,6 +1695,10 @@
 		EB1714D72575176D00A9F8B5 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; };
 		EB1714DD257517C000A9F8B5 /* MXCryptoVersion.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B65256CFC4D008130B1 /* MXCryptoVersion.h */; };
 		EB1714E3257517C300A9F8B5 /* MXCryptoMigration.h in Headers */ = {isa = PBXBuildFile; fileRef = 32C78B67256CFC4D008130B1 /* MXCryptoMigration.h */; };
+		EB1714EE25751AF000A9F8B5 /* MXCryptoMigration.m in Sources */ = {isa = PBXBuildFile; fileRef = 32C78B66256CFC4D008130B1 /* MXCryptoMigration.m */; };
+		EB1714F425751B2400A9F8B5 /* MXAes.m in Sources */ = {isa = PBXBuildFile; fileRef = 3A23A73D256D322C00B9D00F /* MXAes.m */; };
+		EB1714FA25751B5D00A9F8B5 /* MXBaseProfiler.m in Sources */ = {isa = PBXBuildFile; fileRef = 323F877A25546170009E9E67 /* MXBaseProfiler.m */; };
+		EB17150025751B6000A9F8B5 /* MXTaskProfile.m in Sources */ = {isa = PBXBuildFile; fileRef = 323F878C25553D84009E9E67 /* MXTaskProfile.m */; };
 		EC619D9224DD834B00663A80 /* MXPushGatewayRestClient.m in Sources */ = {isa = PBXBuildFile; fileRef = EC619D9024DD834B00663A80 /* MXPushGatewayRestClient.m */; };
 		EC619D9324DD834B00663A80 /* MXPushGatewayRestClient.h in Headers */ = {isa = PBXBuildFile; fileRef = EC619D9124DD834B00663A80 /* MXPushGatewayRestClient.h */; };
 		ECAE7AEC24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m in Sources */ = {isa = PBXBuildFile; fileRef = ECAE7AEB24ED75F1002FA813 /* HTTPAdditionalHeadersTests.m */; };
@@ -5344,6 +5348,7 @@
 				AEA3A52924D9C1A400F851FE /* MXAccountData.m in Sources */,
 				AEA3A5B724D9C1A400F851FE /* MXEventReference.m in Sources */,
 				AEA3A55724D9C1A400F851FE /* MXReactionCountChange.m in Sources */,
+				EB1714EE25751AF000A9F8B5 /* MXCryptoMigration.m in Sources */,
 				AEA3A44224D9C1A300F851FE /* MXReactionCount.m in Sources */,
 				AEA3A4F824D9C1A400F851FE /* MXCrossSigningTools.m in Sources */,
 				AEA3A5B224D9C1A400F851FE /* MXEmojiRepresentation.m in Sources */,
@@ -5358,6 +5363,7 @@
 				AEA3A41124D9C1A300F851FE /* MXEventScan.m in Sources */,
 				AEA3A4DB24D9C1A300F851FE /* MXWellknownIntegrations.m in Sources */,
 				AEA3A41C24D9C1A300F851FE /* MXKeyVerificationStart.m in Sources */,
+				EB17150025751B6000A9F8B5 /* MXTaskProfile.m in Sources */,
 				AEA3A5C024D9C1A400F851FE /* MXSASTransaction.m in Sources */,
 				AEA3A4F124D9C1A400F851FE /* MXEncryptedSecretContent.m in Sources */,
 				AEA3A5CF24D9C1A400F851FE /* MXIdentityServerHashDetails.m in Sources */,
@@ -5462,6 +5468,7 @@
 				AEA3A42B24D9C1A300F851FE /* MXScanRealmFileProvider.m in Sources */,
 				AEA3AA2824DB53AD00F851FE /* MXResponse.swift in Sources */,
 				AEA3A3ED24D9C1A300F851FE /* MXJSONModel.m in Sources */,
+				EB1714FA25751B5D00A9F8B5 /* MXBaseProfiler.m in Sources */,
 				AEA3A5CC24D9C1A400F851FE /* MXNotificationCenter.m in Sources */,
 				AEA3A57F24D9C1A400F851FE /* MXEventAnnotation.m in Sources */,
 				AEA3A53024D9C1A400F851FE /* MXEventsEnumeratorOnArray.m in Sources */,
@@ -5517,6 +5524,7 @@
 				AEA3A5C224D9C1A400F851FE /* MXSelfVerifyingMasterKeyTrustedQRCodeData.m in Sources */,
 				AEA3A44D24D9C1A300F851FE /* MX3PidAddSession.m in Sources */,
 				AEA3A5B324D9C1A400F851FE /* MXBugReportRestClient.m in Sources */,
+				EB1714F425751B2400A9F8B5 /* MXAes.m in Sources */,
 				AEA3A4EE24D9C1A400F851FE /* MXSessionEventListener.m in Sources */,
 				AEA3A49824D9C1A300F851FE /* MXEventReplace.m in Sources */,
 				AEA3A57424D9C1A400F851FE /* NSData+MatrixSDK.m in Sources */,
