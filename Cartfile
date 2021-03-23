@@ -11,7 +11,7 @@ git "git@github.com:xinsight/olm.git" "carthage"
 github "xinsight/libbase58" "carthage"
 
 # github "realm/realm-cocoa" "v3.17.3"
-github "realm/realm-cocoa" "v10.1.4"
+github "realm/realm-cocoa" "v10.7.2"
 
 # pod 'GZIP', '~> 1.2.2'
 github "nicklockwood/GZIP" "1.2.2"
