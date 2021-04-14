@@ -1,5 +1,5 @@
 github "AFNetworking/AFNetworking" "4.0.1"
 github "nicklockwood/GZIP" "1.2.2"
-github "realm/realm-cocoa" "v10.1.4"
+github "realm/realm-cocoa" "v10.7.2"
 github "xinsight/libbase58" "8a0514df567144e63849cb23fd64a443817fee30"
 github "xinsight/olm" "71cbc3137338acf88535bf07d28f026ea4150617"
