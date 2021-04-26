@@ -858,34 +858,20 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSString *filename = [NSString stringWithFormat:@"ima_%@%@", dataHash, extension];
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent;
-    NSMutableDictionary *msgInfo = [@{
-        @"mimetype": mimetype,
-        @"w": @(imageSize.width),
-        @"h": @(imageSize.height),
-        @"size": @(imageData.length)
-    } mutableCopy];
+    NSMutableDictionary *msgContent = [@{
+                                         @"msgtype": kMXMessageTypeImage,
+                                         @"body": filename,
+                                         @"url": fakeMediaURI,
+                                         @"info": [@{
+                                                     @"mimetype": mimetype,
+                                                     @"w": @(imageSize.width),
+                                                     @"h": @(imageSize.height),
+                                                     @"size": @(imageData.length)
+                                                     } mutableCopy]
+                                         } mutableCopy];
     
-    if (!caption)
-    {
-        // Send message without caption
-        msgContent = [@{
-            @"msgtype": kMXMessageTypeImage,
-            @"body": filename,
-            @"url": fakeMediaURI,
-            @"info": msgInfo
-        } mutableCopy];
-    }
-    else
-    {
-        // Send message with caption
-        msgContent = [@{
-            @"msgtype": kMXMessageTypeImage,
-            @"body": filename,
-            @"caption": caption,
-            @"url": fakeMediaURI,
-            @"info": msgInfo
-        } mutableCopy];
+    if (caption) {
+        msgContent[@"caption"] = caption;
     }
     
     __block MXEvent *event;
@@ -1100,39 +1086,25 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     [MXMediaManager writeMediaData:videoThumbnailData toFilePath:cacheFilePath];
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent;
-    NSMutableDictionary *msgInfo = [@{
-        @"thumbnail_url": fakeMediaURI,
-        @"thumbnail_info": @{
-                @"mimetype": @"image/jpeg",
-                @"w": @(videoThumbnail.size.width),
-                @"h": @(videoThumbnail.size.height),
-                @"size": @(videoThumbnailData.length)
-                }
-        } mutableCopy];
+    NSMutableDictionary *msgContent = [@{
+                                         @"msgtype": kMXMessageTypeVideo,
+                                         @"body": @"Video",
+                                         @"url": fakeMediaURI,
+                                         @"info": [@{
+                                                     @"thumbnail_url": fakeMediaURI,
+                                                     @"thumbnail_info": @{
+                                                             @"mimetype": @"image/jpeg",
+                                                             @"w": @(videoThumbnail.size.width),
+                                                             @"h": @(videoThumbnail.size.height),
+                                                             @"size": @(videoThumbnailData.length)
+                                                             }
+                                                     } mutableCopy]
+                                         } mutableCopy];
     
-    if (!caption)
-    {
-        // Send message without caption
-        msgContent = [@{
-            @"msgtype": kMXMessageTypeVideo,
-            @"body": @"Video",
-            @"url": fakeMediaURI,
-            @"info": msgInfo
-            } mutableCopy];
+    if (caption) {
+        msgContent[@"caption"] = caption;
     }
-    else
-    {
-        // Send message with caption
-        msgContent = [@{
-            @"msgtype": kMXMessageTypeVideo,
-            @"body": @"Video",
-            @"caption": caption,
-            @"url": fakeMediaURI,
-            @"info": msgInfo
-            } mutableCopy];
-    }
-    
+
     __block MXEvent *event;
     __block id uploaderObserver;
 
