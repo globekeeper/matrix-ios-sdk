@@ -825,6 +825,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #elif TARGET_OS_OSX
                  andThumbnail:(NSImage*)thumbnail
 #endif
+                      caption:(NSString*)caption
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -857,17 +858,35 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSString *filename = [NSString stringWithFormat:@"ima_%@%@", dataHash, extension];
     
     // Prepare the message content for building an echo message
-    NSMutableDictionary *msgContent = [@{
-                                         @"msgtype": kMXMessageTypeImage,
-                                         @"body": filename,
-                                         @"url": fakeMediaURI,
-                                         @"info": [@{
-                                                     @"mimetype": mimetype,
-                                                     @"w": @(imageSize.width),
-                                                     @"h": @(imageSize.height),
-                                                     @"size": @(imageData.length)
-                                                     } mutableCopy]
-                                         } mutableCopy];
+    NSMutableDictionary *msgContent;
+    NSMutableDictionary *msgInfo = [@{
+        @"mimetype": mimetype,
+        @"w": @(imageSize.width),
+        @"h": @(imageSize.height),
+        @"size": @(imageData.length)
+    } mutableCopy];
+    
+    if (!caption)
+    {
+        // Send message without caption
+        msgContent = [@{
+            @"msgtype": kMXMessageTypeImage,
+            @"body": filename,
+            @"url": fakeMediaURI,
+            @"info": msgInfo
+        } mutableCopy];
+    }
+    else
+    {
+        // Send message with caption
+        msgContent = [@{
+            @"msgtype": kMXMessageTypeImage,
+            @"body": filename,
+            @"caption": caption,
+            @"url": fakeMediaURI,
+            @"info": msgInfo
+        } mutableCopy];
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
