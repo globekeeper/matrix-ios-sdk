@@ -404,6 +404,7 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 #elif TARGET_OS_OSX
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
+                      caption:(NSString*)caption
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;

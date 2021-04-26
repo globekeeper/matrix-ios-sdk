@@ -218,6 +218,7 @@ public extension MXRoom {
      - parameters:
         - localURL: the local filesystem path of the video to send.
         - thumbnail: the UIImage hosting a video thumbnail.
+        - caption: optional caption text for video (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -235,8 +236,8 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVideo(localURL, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, caption: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideo(localURL, withThumbnail: thumbnail, caption: caption, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
