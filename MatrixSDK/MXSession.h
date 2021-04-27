@@ -38,6 +38,7 @@
 #import "MXIdentityService.h"
 #import "MX3PidAddManager.h"
 #import "MXMembershipTransitionState.h"
+#import "MXRoomAccountDataUpdating.h"
 
 /**
  `MXSessionState` represents the states in the life cycle of a MXSession instance.
@@ -213,6 +214,13 @@ FOUNDATION_EXPORT NSString *const kMXSessionIgnoredUsersDidChangeNotification;
  The notification object is the concerned session (MXSession instance).
  */
 FOUNDATION_EXPORT NSString *const kMXSessionDirectRoomsDidChangeNotification;
+
+/**
+ Posted when the virtual rooms are updated, either from the store or from the homeserver.
+ 
+ The notification object is the concerned session (MXSession instance).
+ */
+FOUNDATION_EXPORT NSString *const kMXSessionVirtualRoomsDidChangeNotification;
 
 /**
  Posted when the matrix account data are updated from homeserver.
@@ -562,7 +570,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Perform an events stream catchup in background (by keeping user offline).
  
- @param timeout the max time in milliseconds to perform the catchup
+ @param timeout the max time in milliseconds to perform the catchup in client side
  @param ignoreSessionState ignore session state to be equal to paused
  @param backgroundSyncDone A block called when the SDK has been successfully performed a catchup
  @param backgroundSyncfails A block called when the catchup fails.
@@ -571,6 +579,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
     ignoreSessionState:(BOOL)ignoreSessionState
                success:(MXOnBackgroundSyncDone)backgroundSyncDone
                failure:(MXOnBackgroundSyncFail)backgroundSyncfails NS_REFINED_FOR_SWIFT;
+
+/**
+ Handles sync response retrieved by the background sync service, if the cache is valid. Clears the cache after processing.
+ 
+ @param completion Completion block called when the session has been processed the cache, or when no valid cache exists.
+ */
+- (void)handleBackgroundSyncCacheIfRequiredWithCompletion:(void (^)(void))completion;
 
 /**
  Restart the session events stream.
@@ -1012,6 +1027,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
+
+/**
+ Delegate for updating room account data.
+ By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ */
+@property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 
 #pragma mark - The user's groups
 /**
@@ -1495,5 +1516,24 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the current publicised groups for the provided user.
  */
 - (NSArray<NSString *> *)publicisedGroupsForUser:(NSString*)userId;
+
+#pragma mark - Virtual Rooms
+
+/**
+ Cache the virtual room of a native room.
+ 
+ @param virtualRoomId nirtual room identifier
+ @param nativeRoomId native room identifier.
+ */
+- (void)setVirtualRoom:(NSString *)virtualRoomId
+         forNativeRoom:(NSString *)nativeRoomId;
+
+/**
+ Get virtual room identifier for a given native room identifier.
+ 
+ @param nativeRoomId native room identifier to look for the virtual room.
+ @return the virtual room identifier for the given native room. May be nil.
+ */
+- (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
 
 @end

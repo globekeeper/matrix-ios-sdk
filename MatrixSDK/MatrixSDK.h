@@ -107,3 +107,44 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 
 #import "MXEventScan.h"
 #import "MXMediaScan.h"
+
+#import "MXBase64Tools.h"
+#import "MXBaseProfiler.h"
+
+#import "MXCallInviteEventContent.h"
+#import "MXCallAnswerEventContent.h"
+#import "MXCallSelectAnswerEventContent.h"
+#import "MXCallCandidatesEventContent.h"
+#import "MXCallRejectEventContent.h"
+#import "MXCallNegotiateEventContent.h"
+#import "MXCallReplacesEventContent.h"
+#import "MXUserModel.h"
+#import "MXCallCapabilitiesModel.h"
+
+#import "MXThirdPartyProtocolInstance.h"
+#import "MXThirdPartyProtocol.h"
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUserInstance.h"
+#import "MXThirdPartyUsersResponse.h"
+
+#import "MXLoginSSOFlow.h"
+
+#import "MXKeyProvider.h"
+#import "MXAesKeyData.h"
+#import "MXRawDataKey.h"
+
+//  Bridging to Swift
+#import "MXCryptoStore.h"
+#import "MXRealmCryptoStore.h"
+#import "MXCryptoAlgorithms.h"
+#import "MXOlmDevice.h"
+#import "MXEventDecryptionResult.h"
+#import "MXPushRuleEventMatchConditionChecker.h"
+#import "MXPushRuleDisplayNameCondtionChecker.h"
+#import "MXPushRuleRoomMemberCountConditionChecker.h"
+#import "MXPushRuleSenderNotificationPermissionConditionChecker.h"
+#import "MXMegolmDecryption.h"
+#import "MXOlmDecryption.h"
+#import "MXCachedSyncResponse.h"
+#import "MXBackgroundCryptoStore.h"
+

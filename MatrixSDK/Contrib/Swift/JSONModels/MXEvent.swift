@@ -54,7 +54,12 @@ public enum MXEventType: Equatable, Hashable {
     case callInvite
     case callCandidates
     case callAnswer
+    case callSelectAnswer
     case callHangup
+    case callReject
+    case callNegotiate
+    case callReplaces
+    case callRejectReplacement
     case reaction
     case receipt
     case roomTombStone
@@ -64,6 +69,7 @@ public enum MXEventType: Equatable, Hashable {
     case keyVerificationMac
     case keyVerificationCancel
     case keyVerificationDone
+    case taggedEvents
 
     case custom(String)
     
@@ -94,7 +100,12 @@ public enum MXEventType: Equatable, Hashable {
         case .callInvite: return kMXEventTypeStringCallInvite
         case .callCandidates: return kMXEventTypeStringCallCandidates
         case .callAnswer: return kMXEventTypeStringCallAnswer
+        case .callSelectAnswer: return kMXEventTypeStringCallSelectAnswer
         case .callHangup: return kMXEventTypeStringCallHangup
+        case .callReject: return kMXEventTypeStringCallReject
+        case .callNegotiate: return kMXEventTypeStringCallNegotiate
+        case .callReplaces: return kMXEventTypeStringCallReplaces
+        case .callRejectReplacement: return kMXEventTypeStringCallRejectReplacement
         case .reaction: return kMXEventTypeStringReaction
         case .receipt: return kMXEventTypeStringReceipt
         case .roomTombStone: return kMXEventTypeStringRoomTombStone
@@ -104,6 +115,7 @@ public enum MXEventType: Equatable, Hashable {
         case .keyVerificationMac: return kMXEventTypeStringKeyVerificationMac
         case .keyVerificationCancel: return kMXEventTypeStringKeyVerificationCancel
         case .keyVerificationDone: return kMXEventTypeStringKeyVerificationDone
+        case .taggedEvents: return kMXEventTypeStringTaggedEvents
             
         // Swift converts any constant with the suffix "Notification" as the type `Notification.Name`
         // The original value can be reached using the `rawValue` property.
@@ -114,7 +126,7 @@ public enum MXEventType: Equatable, Hashable {
     }
 
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callHangup, .receipt, .roomTombStone]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .receipt, .roomTombStone, .taggedEvents]
         self = events.first(where: { $0.identifier == identifier }) ?? .custom(identifier)
     }
 }

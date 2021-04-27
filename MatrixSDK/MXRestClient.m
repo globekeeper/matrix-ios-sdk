@@ -26,6 +26,9 @@
 
 #import "MXAllowedCertificates.h"
 
+#import "MXThirdpartyProtocolsResponse.h"
+#import "MXThirdPartyUsersResponse.h"
+
 #pragma mark - Constants definitions
 /**
  Prefix used in path of home server API requests.
@@ -2725,6 +2728,86 @@ MXAuthAction;
                                  }];
 }
 
+#pragma mark - Room account data operations
+- (MXHTTPOperation*) updateTaggedEvents:(NSString*)roomId
+                            withContent:(MXTaggedEvents *)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    return [self setRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                     withParameters:content.JSONDictionary
+                            success:success
+                            failure:failure];
+}
+
+- (MXHTTPOperation*) getTaggedEvents:(NSString*)roomId
+                             success:(void (^)(MXTaggedEvents *taggedEvents))success
+                             failure:(void (^)(NSError *error))failure
+{
+    return [self getRoomAccountData:roomId
+                          eventType:kMXEventTypeStringTaggedEvents
+                            success:^(NSDictionary *JSONResponse) {
+                                if (success)
+                                {
+                                    __block MXTaggedEvents *taggedEvents;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(taggedEvents, MXTaggedEvents, JSONResponse)
+                                    } andCompletion:^{
+                                        success(taggedEvents);
+                                    }];
+                                }
+                            } failure:failure];
+}
+
+- (MXHTTPOperation*) setRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                         withParameters:(NSDictionary*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:content
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*) getRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                                success:(void (^)(NSDictionary *JSONResponse))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/user/%@/rooms/%@/account_data/%@", apiPathPrefix, credentials.userId, roomId, eventTypeString];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:nil
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         [self dispatchProcessing:nil andCompletion:^{
+                                             success(JSONResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
 
 #pragma mark - Profile operations
 - (MXHTTPOperation*)setDisplayName:(NSString*)displayname
@@ -3517,6 +3600,31 @@ MXAuthAction;
                                  }];
 }
 
+- (MXHTTPOperation *)thirdpartyUsers:(NSString *)protocol fields:(NSDictionary<NSString *,NSString *> *)fields success:(void (^)(MXThirdPartyUsersResponse *))success failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/thirdparty/user/%@", kMXAPIPrefixPathUnstable, protocol]
+                              parameters:fields
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+
+                                     if (success)
+                                     {
+                                         __block MXThirdPartyUsersResponse *thirdpartyUsersResponse;
+                                         [self dispatchProcessing:^{
+                                             thirdpartyUsersResponse = [MXThirdPartyUsersResponse modelFromJSON:JSONResponse];
+                                         } andCompletion:^{
+                                             success(thirdpartyUsersResponse);
+                                         }];
+                                     }
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 
 #pragma mark - Media Repository API
 - (MXHTTPOperation*) uploadContent:(NSData *)data
@@ -3866,17 +3974,10 @@ MXAuthAction;
 
 #pragma mark - Crypto
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
-                     forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure
 {
     NSString *path = [NSString stringWithFormat:@"%@/keys/upload", kMXAPIPrefixPathR0];
-    if (deviceId)
-    {
-        path = [NSString stringWithFormat:@"%@/%@",
-                path,
-                [MXTools encodeURIComponent:deviceId]];
-    }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
     if (deviceKeys)
@@ -3945,7 +4046,7 @@ MXAuthAction;
     NSMutableDictionary *downloadQuery = [NSMutableDictionary dictionary];
     for (NSString *userID in userIds)
     {
-        downloadQuery[userID] = @{};
+        downloadQuery[userID] = @[];
     }
 
     NSMutableDictionary *parameters = [NSMutableDictionary dictionaryWithDictionary:@{
@@ -4038,6 +4139,30 @@ MXAuthAction;
                                  } failure:^(NSError *error) {
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+
+#pragma mark - Crypto: Dehydration
+
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                          failure:(void (^)(NSError *error))failure
+{
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:[NSString stringWithFormat:@"%@/%@/org.matrix.msc2697.v2/dehydrated_device", credentials.homeServer, kMXAPIPrefixPathUnstable]
+                              parameters:@{}
+                                 success:^(NSDictionary *JSONResponse) {
+                                    __block MXDehydratedDevice *device;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(device, MXDehydratedDevice, JSONResponse);
+                                    } andCompletion:^{
+                                        success(device);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                    MXStrongifyAndReturnIfNil(self);
+                                    [self dispatchFailure:error inBlock:failure];
                                  }];
 }
 
@@ -5053,7 +5178,7 @@ MXAuthAction;
                               parameters:parameters
                                  success:^(NSDictionary *JSONResponse) {
 
-                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: Warning: get an authentication session failed");
+                                     NSLog(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed");
                                      if (success)
                                      {
                                          [self dispatchProcessing:nil
@@ -5064,8 +5189,18 @@ MXAuthAction;
                                  }
                                  failure:^(NSError *error) {
                                      __block MXAuthenticationSession *authSession;
+                                     __block BOOL isAuthenticationNeeded = YES;
                                      [self dispatchProcessing:^{
-                                         if (error.userInfo[MXHTTPClientErrorResponseDataKey])
+                                         
+                                         MXError *matrixError = [[MXError alloc] initWithNSError: error];
+                                         
+                                         // If a grace period is active or the endpoint do not requires authentication and waiting for parameters do not fail and give a nil auth session.
+                                         if (matrixError && matrixError.httpResponse.statusCode == 400)
+                                         {
+                                             NSLog(@"[MXRestClient] authSessionForRequestWithMethod: No authentication is needed. Ignore invalid parameters error");
+                                             isAuthenticationNeeded = NO;
+                                         }
+                                         else if (error.userInfo[MXHTTPClientErrorResponseDataKey])
                                          {
                                              // The auth session should be available in response data in case of unauthorized request.
                                              NSDictionary *JSONResponse = error.userInfo[MXHTTPClientErrorResponseDataKey];
@@ -5075,7 +5210,7 @@ MXAuthAction;
                                              }
                                          }
                                      } andCompletion:^{
-                                         if (authSession)
+                                         if (!isAuthenticationNeeded || authSession)
                                          {
                                              if (success)
                                              {
