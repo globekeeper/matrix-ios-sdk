@@ -871,7 +871,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                          } mutableCopy];
     
     if (caption) {
-        msgContent[@"caption"] = caption;
+        msgContent[@"info"][@"caption"] = caption;
     }
     
     __block MXEvent *event;
@@ -1102,7 +1102,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                          } mutableCopy];
     
     if (caption) {
-        msgContent[@"caption"] = caption;
+        msgContent[@"info"][@"caption"] = caption;
     }
 
     __block MXEvent *event;
