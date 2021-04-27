@@ -16,7 +16,7 @@
 
 #import "MXOlmOutboundGroupSession.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 @implementation MXOlmOutboundGroupSession
 

@@ -30,7 +30,7 @@
 #import "MXTools.h"
 #import "MXSendReplyEventDefaultStringLocalizations.h"
 #import "MXOutboundSessionInfo.h"
-#import <OLMKit/OLMKit.h>
+
 
 #if 1 // MX_CRYPTO autamatic definiton does not work well for tests so force it
 //#ifdef MX_CRYPTO

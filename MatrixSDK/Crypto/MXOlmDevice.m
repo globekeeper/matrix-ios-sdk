@@ -20,7 +20,7 @@
 
 #import "MXOlmDevice.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import "MXTools.h"
 #import "MXCryptoTools.h"
@@ -28,6 +28,8 @@
 
 #import "MXKeyProvider.h"
 #import "MXRawDataKey.h"
+
+#import "MXOlmKitInterface.h"
 
 @interface MXOlmDevice () <OLMKitPickleKeyDelegate>
 {

@@ -30,7 +30,8 @@
 #endif
 
 #ifdef MX_CRYPTO
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
+#import "MXOlmKitInterface.h"
 #endif
 
 // ???: MatrixSDK depends on MatrixKit?

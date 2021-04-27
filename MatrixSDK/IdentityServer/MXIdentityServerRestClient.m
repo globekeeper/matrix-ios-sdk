@@ -17,7 +17,7 @@
 #import "MXIdentityServerRestClient.h"
 
 #import <AFNetworking/AFNetworking.h>
-#import <OLMKit/OLMUtility.h>
+@import OLMKit;
 
 #import "MXHTTPClient.h"
 #import "MXError.h"

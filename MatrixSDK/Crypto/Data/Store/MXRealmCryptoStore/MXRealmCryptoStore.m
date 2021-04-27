@@ -19,7 +19,7 @@
 
 #ifdef MX_CRYPTO
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 #import <Realm/Realm.h>
 #import "MXSession.h"
 #import "MXTools.h"

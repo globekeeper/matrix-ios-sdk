@@ -23,7 +23,7 @@
 #import "MXHkdfSha256.h"
 #import "MXAesHmacSha2.h"
 #import "MXBase64Tools.h"
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 #import "MXEncryptedSecretContent.h"
 
 

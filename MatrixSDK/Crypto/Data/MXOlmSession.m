@@ -15,7 +15,7 @@
  */
 
 #import "MXOlmSession.h"
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 @implementation MXOlmSession
 

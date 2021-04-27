@@ -27,7 +27,7 @@
 #import "MXQueuedEncryption.h"
 #import "MXTools.h"
 #import "MXOutboundSessionInfo.h"
-#import <OLMKit/OLMKit.h>
+
 
 
 @interface MXMegolmEncryption ()

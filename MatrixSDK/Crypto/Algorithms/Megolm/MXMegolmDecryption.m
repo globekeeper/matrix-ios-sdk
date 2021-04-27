@@ -20,7 +20,8 @@
 
 #ifdef MX_CRYPTO
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
+
 #import "MXCryptoAlgorithms.h"
 #import "MXCrypto_Private.h"
 #import "MXTools.h"

@@ -19,7 +19,7 @@
 #import "MXTools.h"
 #import "MXCryptoConstants.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import <Security/Security.h>
 #import <CommonCrypto/CommonDigest.h>

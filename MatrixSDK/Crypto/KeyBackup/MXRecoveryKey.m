@@ -18,7 +18,7 @@
 
 #import "MXTools.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import <libbase58/libbase58.h>
 

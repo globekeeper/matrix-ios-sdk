@@ -16,7 +16,7 @@
 
 #import "MXBackgroundCryptoStore.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import "MXRealmCryptoStore.h"
 #import "MXTools.h"

@@ -19,7 +19,7 @@
 
 #import "MXCrypto_Private.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 #import "MXRecoveryKey.h"
 #import "MXKeyBackupPassword.h"
 #import "MXSession.h"
