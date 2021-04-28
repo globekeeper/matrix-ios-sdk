@@ -40,6 +40,10 @@
 #import "MXAggregationPaginatedResponse.h"
 #import "MXPusher.h"
 #import "MXRoomCreationParameters.h"
+#import "MXTurnServerResponse.h"
+
+@class MXThirdpartyProtocolsResponse;
+@class MXThirdPartyUsersResponse;
 
 #pragma mark - Constants definitions
 /**
@@ -1510,6 +1514,70 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                       success:(void (^)(void))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+#pragma mark - Room account data operations
+/**
+ Update the tagged events
+ 
+ @param roomId the id of the room.
+ @param content  the new tagged events content
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) updateTaggedEvents:(NSString*)roomId
+                            withContent:(MXTaggedEvents*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get the tagged events
+ 
+ @param roomId the id of the room.
+ 
+ @param success A block object called when the operation succeeds. It provides a MXTaggedEvents object.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) getTaggedEvents:(NSString*)roomId
+                             success:(void (^)(MXTaggedEvents *taggedEvents))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Set a dedicated room account data field
+ 
+ @param roomId the id of the room.
+ @param eventTypeString  the type of the event. @see MXEventType.
+ @param content the event content
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) setRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                         withParameters:(NSDictionary*)content
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Get the room account data field
+ 
+ @param roomId the id of the room.
+ @param eventTypeString  the type of the event. @see MXEventType.
+ 
+ @param success A block object called when the operation succeeds. It provides the raw JSON response.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*) getRoomAccountData:(NSString*)roomId
+                              eventType:(MXEventTypeString)eventTypeString
+                                success:(void (^)(NSDictionary *JSONResponse))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Profile operations
 /**
@@ -1814,6 +1882,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)thirdpartyProtocols:(void (^)(MXThirdpartyProtocolsResponse *thirdpartyProtocolsResponse))success
                                 failure:(void (^)(NSError *error))failure;
 
+/**
+ Retrieve a Matrix User ID linked to a user on the third party service, given a set of user parameters.
+ 
+ @param protocol Required. The name of the protocol.
+ @param fields One or more custom fields that are passed to the AS to help identify the user. Not optional.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return an MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)thirdpartyUsers:(NSString *)protocol
+                             fields:(NSDictionary<NSString*, NSString*> *)fields
+                            success:(void (^)(MXThirdPartyUsersResponse *thirdpartyUsersResponse))success
+                            failure:(void (^)(NSError *error))failure;
+
 
 #pragma mark - Media Repository API
 /**
@@ -2024,8 +2107,6 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 
  @param deviceKeys the device keys to send.
  @param oneTimeKeys the one-time keys to send.
- @param deviceId the explicit device_id to use for upload
-        (default is to use the same as that used during auth).
 
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
@@ -2033,7 +2114,6 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)uploadKeys:(NSDictionary*)deviceKeys oneTimeKeys:(NSDictionary*)oneTimeKeys
-                     forDevice:(NSString*)deviceId
                        success:(void (^)(MXKeysUploadResponse *keysUploadResponse))success
                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -2099,6 +2179,19 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                            success:(void (^)(MXDeviceListResponse *deviceLists))success
                            failure:(void (^)(NSError *error))failure;
 
+
+#pragma mark - Crypto: Dehydration
+
+/**
+ Get the dehydrated device of the current account.
+
+ @param success A block object called when the operation succeeds. It provides a `MXDehydratedDevice` instance of the current account.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)dehydratedDeviceWithSuccess:(void (^)(MXDehydratedDevice *device))success
+                                        failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Crypto: e2e keys backup
 

@@ -15,7 +15,7 @@
  */
 
 #import "MXContentScanEncryptedBody.h"
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 @implementation MXContentScanEncryptedBody
 

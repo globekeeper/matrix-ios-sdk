@@ -18,7 +18,7 @@
 #import "MXKeyVerificationTransaction_Private.h"
 #import "MXSASKeyVerificationStart.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 NS_ASSUME_NONNULL_BEGIN
 

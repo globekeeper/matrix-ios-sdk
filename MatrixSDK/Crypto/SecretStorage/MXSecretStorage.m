@@ -23,7 +23,7 @@
 #import "MXHkdfSha256.h"
 #import "MXAesHmacSha2.h"
 #import "MXBase64Tools.h"
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 #import "MXEncryptedSecretContent.h"
 
 
@@ -66,6 +66,63 @@ static NSString* const kSecretStorageZeroString = @"\0\0\0\0\0\0\0\0\0\0\0\0\0\0
 #pragma mark - Public methods -
 
 #pragma mark - Secret Storage Key
+
+- (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
+                               keyName:(nullable NSString*)keyName
+                            privateKey:(NSData*)privateKey
+                               success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                               failure:(void (^)(NSError *error))failure
+{
+    keyId = keyId ?: [[NSUUID UUID] UUIDString];
+    
+    MXHTTPOperation *operation = [MXHTTPOperation new];
+    
+    MXWeakify(self);
+    dispatch_async(processingQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        NSError *error;
+        
+        // Build iv and mac
+        MXEncryptedSecretContent *encryptedZeroString = [self encryptedZeroStringWithPrivateKey:privateKey iv:nil error:&error];
+        if (error)
+        {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+            return;
+        }
+        
+        MXSecretStorageKeyContent *ssssKeyContent = [MXSecretStorageKeyContent new];
+        ssssKeyContent.name = keyName;
+        ssssKeyContent.algorithm = MXSecretStorageKeyAlgorithm.aesHmacSha2;
+        ssssKeyContent.iv = encryptedZeroString.iv;
+        ssssKeyContent.mac = encryptedZeroString.mac;
+        
+        NSString *accountDataId = [self storageKeyIdForKey:keyId];
+        MXHTTPOperation *operation2 = [self setAccountData:ssssKeyContent.JSONDictionary forType:accountDataId success:^{
+            
+            MXSecretStorageKeyCreationInfo *keyCreationInfo = [MXSecretStorageKeyCreationInfo new];
+            keyCreationInfo.keyId = keyId;
+            keyCreationInfo.content = ssssKeyContent;
+            keyCreationInfo.privateKey = privateKey;
+            keyCreationInfo.recoveryKey = [MXRecoveryKey encode:privateKey];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                success(keyCreationInfo);
+            });
+            
+        } failure:^(NSError *error) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                failure(error);
+            });
+        }];
+        
+        [operation mutateTo:operation2];
+    });
+    
+    return operation;
+}
 
 - (MXHTTPOperation*)createKeyWithKeyId:(nullable NSString*)keyId
                                keyName:(nullable NSString*)keyName

@@ -2,6 +2,7 @@
  Copyright 2014 OpenMarket Ltd
  Copyright 2017 Vector Creations Ltd
  Copyright 2018 New Vector Ltd
+ Copyright 2020 The Matrix.org Foundation C.I.C
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -25,7 +26,7 @@
 #import "MXSDKOptions.h"
 #import "MXTools.h"
 
-static NSUInteger const kMXFileVersion = 67;
+static NSUInteger const kMXFileVersion = 70;
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -400,6 +401,9 @@ static NSUInteger preloadOptions;
 
 - (void)storeHasLoadedAllRoomMembersForRoom:(NSString *)roomId andValue:(BOOL)value
 {
+    // XXX: To remove once https://github.com/vector-im/element-ios/issues/3807 is fixed
+    NSLog(@"[MXFileStore] storeHasLoadedAllRoomMembersForRoom: %@ value: %@", roomId, @(value));
+          
     [super storeHasLoadedAllRoomMembersForRoom:roomId andValue:value];
 
     if (NSNotFound == [roomsToCommitForMessages indexOfObject:roomId])
@@ -685,7 +689,7 @@ static NSUInteger preloadOptions;
             {
                 backgroundTaskStartDate = startDate;
                 
-                self.commitBackgroundTask = [handler startBackgroundTaskWithName:@"[MXStore] commit" expirationHandler:^{
+                self.commitBackgroundTask = [handler startBackgroundTaskWithName:@"[MXFileStore commit]" expirationHandler:^{
                     MXStrongifyAndReturnIfNil(self);
                     
                     NSLog(@"[MXFileStore commit] Background task %@ is going to expire - ending it. pendingCommits: %tu", self.commitBackgroundTask, self->pendingCommits);
@@ -1950,6 +1954,27 @@ static NSUInteger preloadOptions;
         });
     });
 }
+
+
+#pragma mark - Sync API (Do not use them on the main thread)
+
+- (MXFileRoomStore *)roomStoreForRoom:(NSString*)roomId
+{
+    NSString *roomFile = [self messagesFileForRoom:roomId forBackup:NO];
+    
+    MXFileRoomStore *roomStore;
+    @try
+    {
+        roomStore = [NSKeyedUnarchiver unarchiveObjectWithFile:roomFile];
+    }
+    @catch (NSException *exception)
+    {
+        NSLog(@"[MXFileStore] roomStoreForRoom = Warning: MXFileRoomStore file for room %@ seems corrupted", roomId);
+    }
+    
+    return roomStore;
+}
+
 
 #pragma mark - Tools
 /**

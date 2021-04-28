@@ -433,7 +433,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
                 NSString *algorithm;
                 id<MXEncrypting> alg = self->roomEncryptors[room.roomId];
 
-                NSLog(@"[MXCrypto] encryptEventContent: with %@", roomState.encryptionAlgorithm);
+                NSLog(@"[MXCrypto] encryptEventContent: with %@ for %@ users", roomState.encryptionAlgorithm, @(userIds.count));
 
                 if (!alg)
                 {
@@ -682,6 +682,24 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     }
 
     return operation;
+}
+
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString*)roomId onComplete:(void (^)(void))onComplete
+{
+#ifdef MX_CRYPTO
+    MXWeakify(self);
+    dispatch_async(self.cryptoQueue, ^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        [self.olmDevice discardOutboundGroupSessionForRoomWithRoomId:roomId];
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            onComplete();
+        });
+    });
+#else
+    onComplete();
+#endif
 }
 
 - (void)handleDeviceListsChanges:(MXDeviceListResponse*)deviceLists
@@ -2533,33 +2551,27 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 {
     MXRoom *room = [_mxSession roomWithRoomId:event.roomId];
 
-    MXWeakify(self);
-    void (^success)(MXRoomMembers *roomMembers, MXRoomState *roomState) = ^void(MXRoomMembers *roomMembers, MXRoomState *roomState)
-    {
+    MXWeakify(self);    
+    [room state:^(MXRoomState *roomState) {
         MXStrongifyAndReturnIfNil(self);
-
+        
+        // We can start tracking only lazy loaded room members
+        // All room members will be loaded when necessary, ie when encrypting in the room
+        MXRoomMembers *roomMembers = roomState.members;
+        
         NSMutableArray *members = [NSMutableArray array];
         NSArray<MXRoomMember *> *encryptionTargetMembers = [roomMembers encryptionTargetMembers:roomState.historyVisibility];
         for (MXRoomMember *roomMember in encryptionTargetMembers)
         {
             [members addObject:roomMember.userId];
         }
-
+        
         if (self.cryptoQueue)
         {
             dispatch_async(self.cryptoQueue, ^{
                 [self setEncryptionInRoom:event.roomId withMembers:members algorithm:event.content[@"algorithm"] inhibitDeviceQuery:YES];
             });
         }
-    };
-    
-    [room state:^(MXRoomState *roomState) {
-        [room members:^(MXRoomMembers *roomMembers) {
-            success(roomMembers, roomState);
-        } failure:^(NSError *error) {
-            NSLog(@"[MXCrypto] onCryptoEvent: Warning: Unable to get all members from the HS. Fallback by using lazy-loaded members");
-            success(roomState.members, roomState);
-        }];
     }];
 }
 
@@ -2638,7 +2650,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
-    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:success failure:failure];
+    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil success:success failure:failure];
 }
 
 /**
@@ -2883,7 +2895,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
     // For now, we set the device id explicitly, as we may not be using the
     // same one as used in login.
     MXWeakify(self);
-    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:nil oneTimeKeys:oneTimeJson success:^(MXKeysUploadResponse *keysUploadResponse) {
         MXStrongifyAndReturnIfNil(self);
 
         [self.olmDevice markOneTimeKeysAsPublished];
@@ -2898,7 +2910,7 @@ NSTimeInterval kMXCryptoMinForceSessionPeriod = 3600.0; // one hour
 // Ask the server how many keys we have
 - (MXHTTPOperation *)publishedOneTimeKeysCount:(void (^)(NSUInteger publishedKeyCount))success failure:(void (^)(NSError *))failure
 {
-    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil forDevice:_myDevice.deviceId success:^(MXKeysUploadResponse *keysUploadResponse) {
+    return [_matrixRestClient uploadKeys:_myDevice.JSONDictionary oneTimeKeys:nil success:^(MXKeysUploadResponse *keysUploadResponse) {
         
         NSUInteger publishedkeyCount = [keysUploadResponse oneTimeKeyCountsForAlgorithm:@"signed_curve25519"];
         

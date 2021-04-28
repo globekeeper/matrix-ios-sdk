@@ -68,7 +68,12 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeCallInvite,
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
+    MXEventTypeCallSelectAnswer,
     MXEventTypeCallHangup,
+    MXEventTypeCallReject,
+    MXEventTypeCallNegotiate,
+    MXEventTypeCallReplaces,
+    MXEventTypeCallRejectReplacement,
     MXEventTypeSticker,
     MXEventTypeRoomTombStone,
     MXEventTypeKeyVerificationRequest,
@@ -82,6 +87,7 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeSecretRequest,
     MXEventTypeSecretSend,
     MXEventTypeSecretStorageDefaultKey,
+    MXEventTypeTaggedEvents,
 
     // The event is a custom event. Refer to its `MXEventTypeString` version
     MXEventTypeCustom = 1000
@@ -126,9 +132,15 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallSelectAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReject;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNegotiate;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReplaces;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallRejectReplacement;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringSticker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRoomTombStone;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringTaggedEvents;
 
 // Interactive key verification
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringKeyVerificationRequest;

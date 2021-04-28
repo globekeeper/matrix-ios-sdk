@@ -15,7 +15,7 @@
  */
 
 #import "MXScanManager.h"
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import "MXMediaScanStore.h"
 #import "MXRealmMediaScanStore.h"

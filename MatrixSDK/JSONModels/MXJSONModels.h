@@ -123,84 +123,6 @@ FOUNDATION_EXPORT NSString *const kMX3PIDMediumMSISDN;
 
 @end
 
-
-/**
- This class describes a third party protocol instance.
- */
-@interface MXThirdPartyProtocolInstance : MXJSONModel
-
-    /**
-     The network identifier.
-     */
-    @property (nonatomic) NSString *networkId;
-
-    /**
-     The fields (domain...).
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSObject*> *fields;
-
-    /**
-     The instance id.
-     */
-    @property (nonatomic) NSString *instanceId;
-
-    /**
-     The description.
-     */
-    @property (nonatomic) NSString *desc;
-
-    /**
-     The dedicated bot.
-     */
-    @property (nonatomic) NSString *botUserId;
-
-    /**
-     The icon URL.
-     */
-    @property (nonatomic) NSString *icon;
-
-@end
-
-/**
- This class describes a third party server protocol.
- */
-@interface MXThirdPartyProtocol : MXJSONModel
-
-    /**
-     The user fields (domain, nick, username...).
-     */
-    @property (nonatomic) NSArray<NSString*> *userFields;
-
-    /**
-     The location fields (domain, channels, room...).
-     */
-    @property (nonatomic) NSArray<NSString*> *locationFields;
-
-    /**
-     The field types.
-     */
-    @property (nonatomic) NSDictionary<NSString*, NSDictionary<NSString*, NSString*>* > *fieldTypes;
-
-    /**
-     The instances.
-     */
-    @property (nonatomic) NSArray<MXThirdPartyProtocolInstance*> *instances;
-@end
-
-/**
- `MXThirdpartyProtocolsResponse` represents the response of a thirdpartyProtocols request.
- */
-@interface MXThirdpartyProtocolsResponse : MXJSONModel
-
-    /**
-     Available protocols. 
-     The key is the protocol name; the value, the protocol description.
-     */
-    @property (nonatomic) NSDictionary<NSString*, MXThirdPartyProtocol*> *protocols;
-
-@end
-
-
 /**
  Login flow types
  */
@@ -400,6 +322,11 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
      'thirdPartyInviteToken' is the token of this event. Else, nil.
      */
     @property (nonatomic) NSString *thirdPartyInviteToken;
+
+    /**
+     Flag to indicate whether it's a direct room. Only applicable if the membership is `invite`.
+     */
+    @property (nonatomic) BOOL isDirect;
 
 @end
 
@@ -727,7 +654,7 @@ typedef enum : NSUInteger
 
     // The condition is a custom condition. Refer to its `MXPushRuleConditionString` version
     MXPushRuleConditionTypeCustom = 1000
-} MXPushRuleConditionType;
+} MXPushRuleConditionType NS_REFINED_FOR_SWIFT;
 
 /**
  Push rule condition kind definitions - String version
@@ -1418,7 +1345,7 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     /**
      The user private data.
      */
-    @property (nonatomic) NSDictionary *accountData;
+    @property (nonatomic) NSDictionary<NSString*, id> *accountData;
 
     /**
      The opaque token for the end.
@@ -1457,181 +1384,6 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) MXGroupsSyncResponse *groups;
 
 @end
-
-#pragma mark - Voice over IP
-#pragma mark -
-
-/**
- `MXCallOffer` represents a call session description.
- */
-@interface MXCallSessionDescription : MXJSONModel
-
-    /**
-     The type of session description. Can be 'offer' or 'answer'.
-     */
-    @property (nonatomic) NSString *type;
-
-    /**
-     The SDP text of the session description.
-     */
-    @property (nonatomic) NSString *sdp;
-
-@end
-
-/**
- `MXCallInviteEventContent` represents the content of a m.call.invite event.
- */
-@interface MXCallInviteEventContent : MXJSONModel
-
-    /**
-     A unique identifier for the call.
-     */
-    @property (nonatomic) NSString *callId;
-
-    /**
-     The session description.
-     */
-    @property (nonatomic) MXCallSessionDescription *offer;
-
-    /**
-     The version of the VoIP specification this message adheres to.
-     */
-    @property (nonatomic) NSUInteger version;
-
-    /**
-     The time in milliseconds that the invite is valid for. 
-     Once the invite age exceeds this value, clients should discard it.
-     They should also no longer show the call as awaiting an answer in the UI.
-     */
-    @property (nonatomic) NSUInteger lifetime;
-
-    /**
-     Indicate whether the invitation is for a video call.
-     */
-    - (BOOL)isVideoCall;
-
-@end
-
-/**
- `MXCallCandidate` represents a candidate description.
- */
-@interface MXCallCandidate : MXJSONModel
-
-    /**
-     The SDP media type this candidate is intended for.
-     */
-    @property (nonatomic) NSString *sdpMid;
-
-    /**
-     The index of the SDP 'm' line this candidate is intended for.
-     */
-    @property (nonatomic) NSUInteger sdpMLineIndex;
-
-    /**
-     The SDP 'a' line of the candidate.
-     */
-    @property (nonatomic) NSString *candidate;
-
-@end
-
-/**
- `MXCallCandidatesEventContent` represents the content of a m.call.candidates event.
- */
-@interface MXCallCandidatesEventContent : MXJSONModel
-
-    /**
-     The ID of the call this event relates to.
-     */
-    @property (nonatomic) NSString *callId;
-
-    /**
-     The version of the VoIP specification this message adheres to.
-     */
-    @property (nonatomic) NSUInteger version;
-
-    /**
-     Array of object describing the candidates (@see MXCallCandidate).
-     */
-    @property (nonatomic) NSArray *candidates;
-
-@end
-
-/**
- `MXCallAnswerEventContent` represents the content of a m.call.answer event.
- */
-@interface MXCallAnswerEventContent : MXJSONModel
-
-    /**
-     A unique identifier for the call.
-     */
-    @property (nonatomic) NSString *callId;
-
-    /**
-     The version of the VoIP specification this message adheres to.
-     */
-    @property (nonatomic) NSUInteger version;
-
-    /**
-     The session description.
-     */
-    @property (nonatomic) MXCallSessionDescription *answer;
-
-@end
-
-/**
- `MXCallHangupEventContent` represents the content of a m.call.hangup event.
- */
-@interface MXCallHangupEventContent : MXJSONModel
-
-    /**
-     A unique identifier for the call.
-     */
-    @property (nonatomic) NSString *callId;
-
-    /**
-     The version of the VoIP specification this message adheres to.
-     */
-    @property (nonatomic) NSUInteger version;
-
-@end
-
-/**
- `MXTurnServerResponse` represents the response to turnServer request.
- It provides TURN server configuration advised by the homeserver.
- */
-@interface MXTurnServerResponse : MXJSONModel
-
-    /**
-     The username of the Matrix user on the TURN server.
-     */
-    @property (nonatomic) NSString *username;
-
-    /**
-     The associated password.
-     */
-    @property (nonatomic) NSString *password;
-
-    /**
-     The list URIs of TURN servers - including STUN servers.
-     The URI scheme obeys to http://tools.ietf.org/html/rfc7064#section-3.1 
-     and http://tools.ietf.org/html/rfc7065#section-3.1
-     */
-    @property (nonatomic) NSArray *uris;
-
-    /**
-     Time To Live. The time is seconds this data is still valid.
-     It is computed by the user's homeserver when the request is made.
-     Then, the SDK updates the property each time it is read.
-     */
-    @property (nonatomic) NSUInteger ttl;
-
-    /**
-     The `ttl` value transcoded to an absolute date, a timestamp in milliseconds
-     based on the device clock.
-     */
-    @property (nonatomic) uint64_t ttlExpirationLocalTs;
-@end
-
 
 #pragma mark - Crypto
 /**
@@ -1945,3 +1697,33 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
     @property (nonatomic) NSArray<MXGroupUser*> *chunk;
 
 @end
+
+#pragma mark - Dehydration
+
+/**
+ `MXDehydratedDevice` represents the dehydrated device of the current user.
+ */
+@interface MXDehydratedDevice : MXJSONModel
+
+    /**
+     A unique identifier of the device.
+     */
+    @property (nonatomic) NSString *deviceId;
+
+    /**
+     The encrypted account data of the dehydrated device (libolm's pickle format)
+     */
+    @property (nonatomic) NSString *account;
+
+    /**
+     The algorithm used for encrypting the account data
+     */
+    @property (nonatomic) NSString *algorithm;
+
+    /**
+     The passphrase used for encrypting the account data (optional)
+     */
+    @property (nonatomic) NSString *passphrase;
+
+@end
+

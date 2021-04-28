@@ -20,21 +20,21 @@
 
 #import "MXOlmDevice.h"
 
-#import <OLMKit/OLMKit.h>
+@import OLMKit;
 
 #import "MXTools.h"
 #import "MXCryptoTools.h"
+#import "MXRealmCryptoStore.h"
 
-@interface MXOlmDevice ()
+#import "MXKeyProvider.h"
+#import "MXRawDataKey.h"
+
+#import "MXOlmKitInterface.h"
+
+@interface MXOlmDevice () <OLMKitPickleKeyDelegate>
 {
     // The OLMKit utility instance.
     OLMUtility *olmUtility;
-
-    // The outbound group session.
-    // They are not stored in 'store' to avoid to remember to which devices we sent the session key.
-    // Plus, in cryptography, it is good to refresh sessions from time to time.
-    // The key is the session id, the value the outbound group session.
-    NSMutableDictionary<NSString*, OLMOutboundGroupSession*> *outboundGroupSessionStore;
 
     // Store a set of decrypted message indexes for each group session.
     // This partially mitigates a replay attack where a MITM resends a group
@@ -67,6 +67,15 @@
     if (self)
     {
         store = theStore;
+        
+        // It is up to the app to provide an encryption key that it safely manages.
+        // If provided, this key will be used as a global pickle key for all olm pickes.
+        // Else, libolm will create pickle keys internally.
+        if ([MXKeyProvider.sharedInstance hasKeyForDataOfType:MXCryptoOlmPickleKeyDataType isMandatory:NO])
+        {
+            NSLog(@"[MXOlmDevice] initWithStore: Use a global pickle key for libolm");
+            OLMKit.sharedInstance.pickleKeyDelegate = self;
+        }
 
         // Retrieve the account from the store
         OLMAccount *olmAccount = store.account;
@@ -86,7 +95,6 @@
 
         olmUtility = [[OLMUtility alloc] init];
 
-        outboundGroupSessionStore = [NSMutableDictionary dictionary];
         inboundGroupSessionMessageIndexes = [NSMutableDictionary dictionary];
 
         _deviceCurve25519Key = olmAccount.identityKeys[@"curve25519"];
@@ -290,27 +298,27 @@
 
 
 #pragma mark - Outbound group session
-- (NSString *)createOutboundGroupSession
+
+- (MXOlmOutboundGroupSession *)createOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
     OLMOutboundGroupSession *session = [[OLMOutboundGroupSession alloc] initOutboundGroupSession];
-    outboundGroupSessionStore[session.sessionIdentifier] = session;
-
-    return session.sessionIdentifier;
+    return [store storeOutboundGroupSession:session withRoomId:roomId];
 }
 
-- (NSString *)sessionKeyForOutboundGroupSession:(NSString *)sessionId
+- (void)storeOutboundGroupSession:(MXOlmOutboundGroupSession *)session
 {
-    return outboundGroupSessionStore[sessionId].sessionKey;
+    NSLog(@"[MXOlmDevice] storing Outbound Group Session For Room With ID %@", session.roomId);
+    [store storeOutboundGroupSession:session.session withRoomId:session.roomId];
 }
 
-- (NSUInteger)messageIndexForOutboundGroupSession:(NSString *)sessionId
+- (MXOlmOutboundGroupSession *)outboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
-    return outboundGroupSessionStore[sessionId].messageIndex;
+    return [store outboundGroupSessionWithRoomId:roomId];
 }
 
-- (NSString *)encryptGroupMessage:(NSString *)sessionId payloadString:(NSString *)payloadString
+- (void)discardOutboundGroupSessionForRoomWithRoomId:(NSString *)roomId
 {
-    return [outboundGroupSessionStore[sessionId] encryptMessage:payloadString error:nil];
+    [store removeOutboundGroupSessionWithRoomId:roomId];
 }
 
 
@@ -576,6 +584,21 @@
     }
 
     return inboundGroupSessionKey;
+}
+
+
+#pragma mark - OLMKitPickleKeyDelegate
+
+- (NSData *)pickleKey
+{
+    // If this delegate is called, we must have a key to provide
+    MXKeyData *keyData = [[MXKeyProvider sharedInstance] keyDataForDataOfType:MXCryptoOlmPickleKeyDataType isMandatory:YES expectedKeyType:kRawData];
+    if (keyData && [keyData isKindOfClass:[MXRawDataKey class]])
+    {
+        return ((MXRawDataKey *)keyData).key;
+    }
+    
+    return nil;
 }
 
 
