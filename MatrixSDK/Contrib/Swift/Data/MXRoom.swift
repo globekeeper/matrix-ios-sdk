@@ -186,6 +186,7 @@ public extension MXRoom {
         - size: the original size of the image.
         - mimeType:  the image mimetype.
         - thumbnail: optional thumbnail image (may be nil).
+        - caption: optional caption text for image (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -204,8 +205,8 @@ public extension MXRoom {
      - returns: a `MXHTTPOperation` instance.
      */
 
-    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, caption: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, caption: caption, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -217,6 +218,7 @@ public extension MXRoom {
      - parameters:
         - localURL: the local filesystem path of the video to send.
         - thumbnail: the UIImage hosting a video thumbnail.
+        - caption: optional caption text for video (may be nil).
         - localEcho: a pointer to a MXEvent object.
      
              This pointer is set to an actual MXEvent object
@@ -234,8 +236,8 @@ public extension MXRoom {
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendVideo(localURL, withThumbnail: thumbnail, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendVideo(localURL: URL, thumbnail: MXImage?, caption: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
+        return __sendVideo(localURL, withThumbnail: thumbnail, caption: caption, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

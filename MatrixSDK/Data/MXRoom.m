@@ -825,6 +825,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #elif TARGET_OS_OSX
                  andThumbnail:(NSImage*)thumbnail
 #endif
+                      caption:(NSString*)caption
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -868,6 +869,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                      @"size": @(imageData.length)
                                                      } mutableCopy]
                                          } mutableCopy];
+    
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
     
     __block MXEvent *event;
     __block id uploaderObserver;
@@ -1054,6 +1059,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 #elif TARGET_OS_OSX
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
+                      caption:(NSString*)caption
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -1095,6 +1101,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                                                      } mutableCopy]
                                          } mutableCopy];
     
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
+
     __block MXEvent *event;
     __block id uploaderObserver;
 
