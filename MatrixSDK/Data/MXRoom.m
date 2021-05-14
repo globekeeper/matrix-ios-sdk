@@ -768,6 +768,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)sendTextMessage:(NSString*)text
                       formattedText:(NSString*)formattedText
+                           location:(NSDictionary*)location
                           localEcho:(MXEvent**)localEcho
                             success:(void (^)(NSString *eventId))success
                             failure:(void (^)(NSError *error))failure
@@ -779,7 +780,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // This is a simple text message
         msgContent = @{
                        @"msgtype": kMXMessageTypeText,
-                       @"body": text
+                       @"body": text,
+                       @"location": location
                        };
     }
     else
@@ -788,6 +790,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         msgContent = @{
                        @"msgtype": kMXMessageTypeText,
                        @"body": text,
+                       @"location": location,
                        @"formatted_body": formattedText,
                        @"format": kMXRoomMessageFormatHTML
                        };
@@ -800,14 +803,16 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation *)sendTextMessage:(NSString *)text
+                            location:(NSDictionary*)location
                              success:(void (^)(NSString *))success
                              failure:(void (^)(NSError *))failure
 {
-    return [self sendTextMessage:text formattedText:nil localEcho:nil success:success failure:failure];
+    return [self sendTextMessage:text formattedText:nil location:location localEcho:nil success:success failure:failure];
 }
 
 - (MXHTTPOperation*)sendEmote:(NSString*)emoteBody
                 formattedText:(NSString*)formattedBody
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -819,7 +824,8 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         // This is a simple text message
         msgContent = @{
                        @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody
+                       @"body": emoteBody,
+                       @"location": location
                        };
     }
     else
@@ -828,6 +834,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
         msgContent = @{
                        @"msgtype": kMXMessageTypeEmote,
                        @"body": emoteBody,
+                       @"location": location,
                        @"formatted_body": formattedBody,
                        @"format": kMXRoomMessageFormatHTML
                        };
@@ -848,6 +855,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                  andThumbnail:(NSImage*)thumbnail
 #endif
                       caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -883,6 +891,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeImage,
                                          @"body": filename,
+                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": [@{
                                                      @"mimetype": mimetype,
@@ -1082,6 +1091,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                 withThumbnail:(NSImage*)videoThumbnail
 #endif
                       caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure
@@ -1111,6 +1121,7 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeVideo,
                                          @"body": @"Video",
+                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": [@{
                                                      @"thumbnail_url": fakeMediaURI,
@@ -1351,36 +1362,44 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
 {
-    return [self sendFile:fileLocalURL mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:YES];
+    return [self sendFile:fileLocalURL mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:YES];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeFile mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
                     mimeType:(NSString*)mimeType
+                      caption:(NSString*)caption
+                     location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
           keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
                      msgType:(NSString*)msgType
                     mimeType:(NSString*)mimeType
+                     caption:(NSString*)caption
+                    location:(NSDictionary*)location
                    localEcho:(MXEvent**)localEcho
                      success:(void (^)(NSString *eventId))success
                      failure:(void (^)(NSError *error))failure
@@ -1423,13 +1442,18 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": msgType,
                                          @"body": filename,
+                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": @{
                                                  @"mimetype": mimeType,
                                                  @"size": @(fileData.length)
                                                  }
                                          } mutableCopy];
-    
+
+    if (caption) {
+        msgContent[@"info"][@"caption"] = caption;
+    }
+
     __block MXEvent *event;
     __block id uploaderObserver;
 
