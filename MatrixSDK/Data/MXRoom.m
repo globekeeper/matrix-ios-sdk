@@ -774,26 +774,28 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                             failure:(void (^)(NSError *error))failure
 {
     // Prepare the message content
-    NSDictionary *msgContent;
+    NSMutableDictionary *msgContent;
     if (!formattedText)
     {
         // This is a simple text message
-        msgContent = @{
+        msgContent = [@{
                        @"msgtype": kMXMessageTypeText,
-                       @"body": text,
-                       @"location": location
-                       };
+                       @"body": text
+                       } mutableCopy];
     }
     else
     {
         // Send the HTML formatted string
-        msgContent = @{
+        msgContent = [@{
                        @"msgtype": kMXMessageTypeText,
                        @"body": text,
-                       @"location": location,
                        @"formatted_body": formattedText,
                        @"format": kMXRoomMessageFormatHTML
-                       };
+                       } mutableCopy];
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     return [self sendMessageWithContent:msgContent
@@ -818,26 +820,28 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
                       failure:(void (^)(NSError *error))failure
 {
     // Prepare the message content
-    NSDictionary *msgContent;
+    NSMutableDictionary *msgContent;
     if (!formattedBody)
     {
         // This is a simple text message
-        msgContent = @{
+        msgContent = [@{
                        @"msgtype": kMXMessageTypeEmote,
-                       @"body": emoteBody,
-                       @"location": location
-                       };
+                       @"body": emoteBody
+                       } mutableCopy];
     }
     else
     {
         // Send the HTML formatted string
-        msgContent = @{
+        msgContent = [@{
                        @"msgtype": kMXMessageTypeEmote,
                        @"body": emoteBody,
-                       @"location": location,
                        @"formatted_body": formattedBody,
                        @"format": kMXRoomMessageFormatHTML
-                       };
+                       } mutableCopy];
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     return [self sendMessageWithContent:msgContent
@@ -891,7 +895,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeImage,
                                          @"body": filename,
-                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": [@{
                                                      @"mimetype": mimetype,
@@ -903,6 +906,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (caption) {
         msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
     
     __block MXEvent *event;
@@ -1121,7 +1128,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": kMXMessageTypeVideo,
                                          @"body": @"Video",
-                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": [@{
                                                      @"thumbnail_url": fakeMediaURI,
@@ -1136,6 +1142,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     
     if (caption) {
         msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
 
     __block MXEvent *event;
@@ -1442,7 +1452,6 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
     NSMutableDictionary *msgContent = [@{
                                          @"msgtype": msgType,
                                          @"body": filename,
-                                         @"location": location,
                                          @"url": fakeMediaURI,
                                          @"info": @{
                                                  @"mimetype": mimeType,
@@ -1452,6 +1461,10 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 
     if (caption) {
         msgContent[@"info"][@"caption"] = caption;
+    }
+
+    if (location) {
+        msgContent[@"location"] = location;
     }
 
     __block MXEvent *event;
