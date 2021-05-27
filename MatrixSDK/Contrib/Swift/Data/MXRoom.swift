@@ -206,7 +206,7 @@ public extension MXRoom {
      */
 
     @nonobjc @discardableResult func sendImage(data imageData: Data, size: CGSize, mimeType: String, thumbnail: MXImage?, location: [AnyHashable:Any]?, caption: String? = nil, localEcho: inout MXEvent?, completion: @escaping (_ response: MXResponse<String?>) -> Void) -> MXHTTPOperation {
-        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, location: location, caption: caption, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
+        return __sendImage(imageData, withImageSize: size, mimeType: mimeType, andThumbnail: thumbnail, caption: caption, location: location, localEcho: &localEcho, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     

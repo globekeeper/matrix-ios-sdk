@@ -399,8 +399,8 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
 #elif TARGET_OS_OSX
                  andThumbnail:(NSImage*)thumbnail
 #endif
-                     location:(NSDictionary*)location
                       caption:(NSString*)caption
+                     location:(NSDictionary*)location
                     localEcho:(MXEvent**)localEcho
                       success:(void (^)(NSString *eventId))success
                       failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -476,12 +476,12 @@ FOUNDATION_EXPORT NSString *const kMXRoomDidFlushDataNotification;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
-                    location:(NSDictionary*)location
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+                         mimeType:(NSString*)mimeType
+                         location:(NSDictionary*)location
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
 
 /**
  Cancel a sending operation.

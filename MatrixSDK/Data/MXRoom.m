@@ -1394,15 +1394,14 @@ NSString *const kMXRoomInitialSyncNotification = @"kMXRoomInitialSyncNotificatio
 }
 
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
-                      caption:(NSString*)caption
-                     location:(NSDictionary*)location
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName
+                         mimeType:(NSString*)mimeType
+                         location:(NSDictionary*)location
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName
 {
-    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType caption:caption location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
+    return [self sendFile:fileLocalURL msgType:kMXMessageTypeAudio mimeType:mimeType caption:NULL location:location localEcho:localEcho success:success failure:failure keepActualFilename:keepActualName];
 }
 
 - (MXHTTPOperation*)sendFile:(NSURL*)fileLocalURL
