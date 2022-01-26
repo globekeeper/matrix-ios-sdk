@@ -519,12 +519,12 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     if (self.state != MXCallStateEnded)
     {
         // Create the hangup event
-        NSMutableDictionary *content = @{
+        NSMutableDictionary *content = [@{
             @"call_id": _callId,
             @"version": kMXCallVersion,
             @"party_id": self.partyId,
             @"reason": [MXTools callHangupReasonString:reason]
-        };
+        } mutableCopy];
 
         if (self.duration > 0) {
             content[@"duration"] = @(self.duration);
