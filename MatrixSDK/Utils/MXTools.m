@@ -627,9 +627,18 @@ NSCharacterSet *uriComponentCharset;
 
 + (NSString*)serverNameInMatrixIdentifier:(NSString *)identifier
 {
-    // This converts something:example.org into a server domain
-    //  by splitting on colons and ignoring the first entry ("something").
-    return [identifier componentsSeparatedByString:@":"].lastObject;
+
+  // This converts something:example.org into a server domain
+  // by splitting on colons and ignoring the first entry ("something").
+  NSArray* serverParts = [identifier componentsSeparatedByString:@":"];
+
+  // Regular expression will check port name in host, like: server:1234 or @name:server:1234
+  NSRange range = [identifier rangeOfString:@"[^\\:]+:[0-9]{4,5}" options:NSRegularExpressionSearch];
+  if (range.location != NSNotFound) {
+    return [identifier substringWithRange:range];
+  } else {
+    return serverParts.lastObject;
+  }
 }
 
 
