@@ -18,8 +18,9 @@
 #import "MXNoStore.h"
 
 #import "MXEventsEnumeratorOnArray.h"
+#import "MXVoidRoomSummaryStore.h"
 
-@interface MXNoStore ()
+@interface MXNoStore () <MXEventsEnumeratorDataSource>
 {
     // key: roomId, value: the pagination token
     NSMutableDictionary<NSString*, NSString*> *paginationTokens;
@@ -41,6 +42,9 @@
     // key: roomId, value: the text message the user typed
     NSMutableDictionary *partialTextMessages;
 
+    // key: roomId, value: the text message the user typed
+    NSMutableDictionary *partialAttributedTextMessages;
+
     NSString *eventStreamToken;
 
     // All matrix users known by the user
@@ -54,6 +58,8 @@
 @end
 
 @implementation MXNoStore
+
+@synthesize roomSummaryStore;
 
 @synthesize eventStreamToken, userAccountData, syncFilterId;
 
@@ -69,8 +75,10 @@
         hasLoadedAllRoomMembersForRooms = [NSMutableDictionary dictionary];
         lastMessages = [NSMutableDictionary dictionary];
         partialTextMessages = [NSMutableDictionary dictionary];
+        partialAttributedTextMessages = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
+        roomSummaryStore = [[MXVoidRoomSummaryStore alloc] init];
     }
     return self;
 }
@@ -164,6 +172,11 @@
     {
         [partialTextMessages removeObjectForKey:roomId];
     }
+    if (partialAttributedTextMessages[roomId])
+    {
+        [partialAttributedTextMessages removeObjectForKey:roomId];
+    }
+    [roomSummaryStore removeSummaryOfRoom:roomId];
 }
 
 - (void)deleteAllData
@@ -175,6 +188,8 @@
     [hasLoadedAllRoomMembersForRooms removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [partialAttributedTextMessages removeAllObjects];
+    [roomSummaryStore removeAllSummaries];
 }
 
 - (void)storePaginationTokenOfRoom:(NSString*)roomId andToken:(NSString*)token
@@ -233,7 +248,7 @@
     // of MXNoStore is to not store messages so that all paginations are made
     // via requests to the homeserver.
     // So, return an empty enumerator.
-    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[]];
+    return [[MXEventsEnumeratorOnArray alloc] initWithEventIds:@[] dataSource:nil];
 }
 
 - (id<MXEventsEnumerator>)messagesEnumeratorForRoom:(NSString *)roomId withTypeIn:(NSArray *)types
@@ -241,7 +256,11 @@
     // [MXStore messagesEnumeratorForRoom: withTypeIn: ignoreMemberProfileChanges:] is used
     // to get the last message of the room which must not be nil.
     // So return an enumerator with the last message we have without caring of its type.
-    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:@[lastMessages[roomId]]];
+    MXEvent *event = lastMessages[roomId];
+    if (event) {
+        return [[MXEventsEnumeratorOnArray alloc] initWithEventIds:@[event.eventId] dataSource:self];
+    }
+    return [[MXEventsEnumeratorOnArray alloc] initWithEventIds:@[] dataSource:nil];
 }
 
 - (NSArray<MXEvent *> *)relationsForEvent:(NSString *)eventId inRoom:(NSString *)roomId relationType:(NSString *)relationType
@@ -338,6 +357,11 @@
 {
 }
 
+- (NSArray<NSString *> *)allFilterIds
+{
+    return @[];
+}
+
 - (void)filterWithFilterId:(nonnull NSString*)filterId
                    success:(nonnull void (^)(MXFilterJSONModel * _Nullable filter))success
                    failure:(nullable void (^)(NSError * _Nullable error))failure
@@ -367,6 +391,23 @@
 - (NSString *)partialTextMessageOfRoom:(NSString *)roomId
 {
     return partialTextMessages[roomId];
+}
+
+- (void)storePartialAttributedTextMessageForRoom:(NSString *)roomId partialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
+{
+    if (partialAttributedTextMessage)
+    {
+        partialAttributedTextMessages[roomId] = partialAttributedTextMessage;
+    }
+    else
+    {
+        [partialAttributedTextMessages removeObjectForKey:roomId];
+    }
+}
+
+- (NSAttributedString *)partialAttributedTextMessageOfRoom:(NSString *)roomId
+{
+    return partialAttributedTextMessages[roomId];
 }
 
 - (BOOL)isPermanent
@@ -401,9 +442,14 @@
     }
 }
 
-- (NSUInteger)localUnreadEventCount:(NSString*)roomId withTypeIn:(NSArray*)types
+- (NSUInteger)localUnreadEventCount:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray *)types
 {
     return 0;
+}
+
+- (NSArray<MXEvent *> *)newIncomingEventsInRoom:(NSString *)roomId threadId:(NSString *)threadId withTypeIn:(NSArray<MXEventTypeString> *)types
+{
+    return @[];
 }
 
 - (MXWellKnown *)homeserverWellknown
@@ -411,6 +457,22 @@
     return nil;
 }
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown *)homeserverWellknown
+{
+}
+
+- (MXCapabilities *)homeserverCapabilities
+{
+    return nil;
+}
+- (void)storeHomeserverCapabilities:(MXCapabilities *)homeserverCapabilities
+{
+}
+
+- (MXMatrixVersions *)supportedMatrixVersions
+{
+    return nil;
+}
+- (void)storeSupportedMatrixVersions:(MXMatrixVersions *)supportedMatrixVersions
 {
 }
 
@@ -431,24 +493,20 @@
     [hasReachedHomeServerPaginations removeAllObjects];
     [lastMessages removeAllObjects];
     [partialTextMessages removeAllObjects];
+    [partialAttributedTextMessages removeAllObjects];
     [users removeAllObjects];
     [groups removeAllObjects];
 }
 
-#pragma mark - MXRoomSummaryStore
+#pragma mark - MXEventsEnumeratorDataSource
 
-- (NSArray<NSString *> *)rooms
+- (MXEvent *)eventWithEventId:(NSString *)eventId
 {
-    return @[];
-}
-
-- (void)storeSummaryForRoom:(NSString *)roomId summary:(id<MXRoomSummaryProtocol>)summary
-{
-    
-}
-
-- (id<MXRoomSummaryProtocol>)summaryOfRoom:(NSString *)roomId
-{
+    for (MXEvent *event in lastMessages.allValues) {
+        if ([event.eventId isEqualToString:eventId]) {
+            return event;
+        }
+    }
     return nil;
 }
 

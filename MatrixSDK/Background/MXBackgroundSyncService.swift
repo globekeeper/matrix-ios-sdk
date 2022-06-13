@@ -66,7 +66,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials) {
+    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil, unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
@@ -76,7 +76,7 @@ public enum MXBackgroundSyncServiceError: Error {
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
-        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil)
+        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler, unauthenticatedHandler: unauthenticatedHandler)
         restClient.completionQueue = processingQueue
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
@@ -179,7 +179,7 @@ public enum MXBackgroundSyncServiceError: Error {
     /// - Parameter roomId: The room identifier to fetch.
     /// - Returns: Summary of room.
     public func roomSummary(forRoomId roomId: String) -> MXRoomSummaryProtocol? {
-        let summary = store.summary(ofRoom: roomId)
+        let summary = store.roomSummaryStore.summary(ofRoom: roomId)
         return syncResponseStoreManager.roomSummary(forRoomId: roomId, using: summary)
     }
     
@@ -407,7 +407,7 @@ public enum MXBackgroundSyncServiceError: Error {
                     throw MXBackgroundSyncServiceError.unknown
             }
             
-            let olmResult = try olmDevice.decryptGroupMessage(ciphertext, roomId: event.roomId, inTimeline: nil, sessionId: sessionId, senderKey: senderKey)
+            let olmResult = try olmDevice.decryptGroupMessage(ciphertext, isEditEvent: event.isEdit(), roomId: event.roomId, inTimeline: nil, sessionId: sessionId, senderKey: senderKey)
             
             let decryptionResult = MXEventDecryptionResult()
             decryptionResult.clearEvent = olmResult.payload
@@ -453,7 +453,7 @@ public enum MXBackgroundSyncServiceError: Error {
     
     private func decryptMessageWithOlm(message: [AnyHashable: Any], theirDeviceIdentityKey: String) -> String? {
         let sessionIds = olmDevice.sessionIds(forDevice: theirDeviceIdentityKey)
-        let messageBody = message["body"] as? String
+        let messageBody = message[kMXMessageBodyKey] as? String
         let messageType = message["type"] as? UInt ?? 0
         
         for sessionId in sessionIds ?? [] {
@@ -579,13 +579,15 @@ public enum MXBackgroundSyncServiceError: Error {
             return
         }
         
+        let sharedHistory = (content[kMXSharedHistoryKeyName] as? Bool) ?? false
         olmDevice.addInboundGroupSession(sessionId,
                                          sessionKey: sessionKey,
                                          roomId: roomId,
                                          senderKey: senderKey,
                                          forwardingCurve25519KeyChain: forwardingKeyChain,
                                          keysClaimed: keysClaimed,
-                                         exportFormat: exportFormat)
+                                         exportFormat: exportFormat,
+                                         sharedHistory: sharedHistory)
     }
     
     private func updateBackgroundServiceStoresIfNeeded() {
@@ -624,6 +626,26 @@ public enum MXBackgroundSyncServiceError: Error {
             // right time to clean the cryptoStore.
             MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             cryptoStore.reset()
+        }
+    }
+    
+    /// Fetch room account data for given roomId.
+    /// - Parameters:
+    ///   - roomId: The room identifier for the desired room.
+    ///   - completion: Completion block to be called. Always called in main thread.
+    public func roomAccountData(forRoomId roomId: String,
+                                completion: @escaping (MXResponse<MXRoomAccountData>) -> Void) {
+        processingQueue.async {
+            guard let accountData = self.store.accountData?(ofRoom: roomId) else {
+                Queues.dispatchQueue.async {
+                    completion(.failure(MXBackgroundSyncServiceError.unknown))
+                }
+                return
+            }
+            
+            Queues.dispatchQueue.async {
+                completion(.success(accountData))
+            }
         }
     }
     

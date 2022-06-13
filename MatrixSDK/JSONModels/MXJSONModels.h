@@ -25,6 +25,7 @@
 #import "MXLoginTerms.h"
 #import "MXWellKnown.h"
 #import "MXCrossSigningInfo.h"
+#import "MXEnumConstants.h"
 
 @class MXEvent, MXDeviceInfo, MXKey, MXUser;
 
@@ -173,6 +174,18 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
 @end
 
 /**
+ `MXUsernameAvailability` represents the response returned when checking for username availability.
+ */
+@interface MXUsernameAvailability : MXJSONModel
+
+    /**
+     A flag to indicate that the username is available. This should always be true when the server replies with 200 OK.
+     */
+    @property (nonatomic) BOOL available;
+
+@end
+
+/**
  `MXAuthenticationSession` represents an authentication session returned by the home server.
  */
 @interface MXAuthenticationSession : MXJSONModel
@@ -223,6 +236,16 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) NSString *accessToken;
 
     /**
+     The lifetime in milliseconds of the access token. (optional)
+     */
+    @property (nonatomic) uint64_t expiresInMs;
+
+    /**
+     The refresh token, which can be used to obtain new access tokens. (optional)
+    */
+    @property (nonatomic) NSString *refreshToken;
+
+    /**
      The device id.
      */
     @property (nonatomic) NSString *deviceId;
@@ -233,7 +256,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) MXWellKnown *wellknown;
 
 @end
-
 
 /**
  `MXThirdPartyIdentifier` represents the response to /account/3pid GET request.
@@ -261,7 +283,6 @@ FOUNDATION_EXPORT NSString *const kMXLoginIdentifierTypePhone;
     @property (nonatomic) uint64_t addedAt;
 
 @end
-
 
 /**
  `MXCreateRoomResponse` represents the response to createRoom request.
@@ -390,13 +411,13 @@ FOUNDATION_EXPORT NSString *const kMXRoomTagServerNotice;
 /**
  Presence definitions
  */
-typedef enum : NSUInteger
+typedef NS_ENUM(NSUInteger, MXPresence)
 {
     MXPresenceUnknown,    // The home server did not provide the information
     MXPresenceOnline,
     MXPresenceUnavailable,
     MXPresenceOffline
-} MXPresence;
+};
 
 /**
  Presence definitions - String version
@@ -1368,6 +1389,17 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+/**
+ `MXRoomJoinRuleResponse` represents the enhanced join rule response as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083)
+ */
+@interface MXRoomJoinRuleResponse : MXJSONModel
+
+@property (nonatomic) MXRoomJoinRule joinRule;
+
+@property (nonatomic, nullable) NSArray<NSString *> *allowedParentIds;
+
+@end
+
 #pragma mark - Dehydration
 
 /**
@@ -1397,3 +1429,84 @@ FOUNDATION_EXPORT NSString *const kMXPushRuleScopeStringDevice;
 
 @end
 
+#pragma mark - Homeserver Capabilities
+
+@interface MXRoomVersionInfo: NSObject
+
+    /**
+     * version fo the room
+     */
+    @property (nonatomic) NSString *version;
+
+    /**
+     * Status of the room version: "stable" or "unstable"
+     */
+    @property (nonatomic) NSString *statusString;
+
+@end
+
+/**
+ * give the list of capabilities of the server and their related room versions
+ *
+ *  "room_capabilities": {
+ *      "knock" : {
+ *              "preferred": "7",
+ *              "support" : ["7"]
+ *      },
+ *      "restricted" : {
+ *              "preferred": "9",
+ *              "support" : ["8", "9"]
+ *      }
+ * }
+ */
+@interface MXRoomCapabilitySupport: MXJSONModel
+
+    /**
+     * Preferred version for this capability
+     */
+    @property (nonatomic) NSString *preferred;
+
+    /**
+     * List of room versions that support this capability
+     */
+    @property (nonatomic) NSArray<NSString *> *support;
+
+@end
+
+@interface MXRoomVersionCapabilities: MXJSONModel
+
+    /**
+     * Actual default version used for creating rooms in this server
+     */
+    @property (nonatomic) NSString *defaultRoomVersion;
+
+    /**
+     * Keys are capabilities defined per spec, as for now knock or restricted
+     */
+    @property (nonatomic) NSArray<MXRoomVersionInfo *> *supportedVersions;
+
+    /**
+     * Keys are capabilities defined per spec, as for now knock or restricted
+     */
+    @property (nonatomic, nullable) NSDictionary<NSString *, MXRoomCapabilitySupport *> *roomCapabilities;
+
+@end
+
+/**
+ `MXHomeserverCapabilities` the capabilities of the current homeserver
+ */
+@interface MXHomeserverCapabilities : MXJSONModel
+
+    /**
+     * True if it is possible to change the password of the account.
+     */
+    @property (nonatomic) BOOL canChangePassword;
+
+    /**
+     * Room versions supported by the server
+     * This capability describes the default and available room versions a server supports, and at what level of stability.
+     * Clients should make use of this capability to determine if users need to be encouraged to upgrade their rooms.
+     */
+    @property (nonatomic, nullable) MXRoomVersionCapabilities *roomVersions;
+
+@end

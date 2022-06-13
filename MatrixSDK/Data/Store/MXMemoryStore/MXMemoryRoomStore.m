@@ -20,7 +20,7 @@
 #import "MXEventsEnumeratorOnArray.h"
 #import "MXEventsByTypesEnumeratorOnArray.h"
 
-@interface MXMemoryRoomStore ()
+@interface MXMemoryRoomStore () <MXEventsEnumeratorDataSource>
 {
 }
 
@@ -85,17 +85,26 @@
     [messagesByEventIds removeAllObjects];
 }
 
+- (NSArray <NSString *>*)allEventIds
+{
+    NSMutableArray *eventIds = [[NSMutableArray alloc] initWithCapacity:messages.count];
+    for (MXEvent *event in messages) {
+        [eventIds addObject:event.eventId];
+    }
+    return eventIds.copy;
+}
+
 - (id<MXEventsEnumerator>)messagesEnumerator
 {
-    return [[MXEventsEnumeratorOnArray alloc] initWithMessages:messages];
+    return [[MXEventsEnumeratorOnArray alloc] initWithEventIds:[self allEventIds] dataSource:self];
 }
 
 - (id<MXEventsEnumerator>)enumeratorForMessagesWithTypeIn:(NSArray*)types
 {
-    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithMessages:messages andTypesIn:types];
+    return [[MXEventsByTypesEnumeratorOnArray alloc] initWithEventIds:[self allEventIds] andTypesIn:types dataSource:self];
 }
 
-- (NSArray*)eventsAfter:(NSString *)eventId except:(NSString*)userId withTypeIn:(NSSet*)types
+- (NSArray<MXEvent*>*)eventsAfter:(NSString *)eventId threadId:(NSString *)threadId except:(NSString *)userId withTypeIn:(NSSet<MXEventTypeString>*)types
 {
     NSMutableArray* list = [[NSMutableArray alloc] init];
 
@@ -109,7 +118,10 @@
             if (NO == [event.eventId isEqualToString:eventId])
             {
                 // Keep events matching filters
-                if ((!types || [types containsObject:event.type]) && ![event.sender isEqualToString:userId])
+                BOOL typeAllowed = !types || [types containsObject:event.type];
+                BOOL threadAllowed = !threadId || [event.threadId isEqualToString:threadId];
+                BOOL senderAllowed = ![event.sender isEqualToString:userId];
+                if (typeAllowed && threadAllowed && senderAllowed)
                 {
                     [list insertObject:event atIndex:0];
                 }

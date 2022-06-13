@@ -29,6 +29,8 @@ NSString *const kMXErrCodeStringNotJSON                 = @"M_NOT_JSON";
 NSString *const kMXErrCodeStringNotFound                = @"M_NOT_FOUND";
 NSString *const kMXErrCodeStringLimitExceeded           = @"M_LIMIT_EXCEEDED";
 NSString *const kMXErrCodeStringUserInUse               = @"M_USER_IN_USE";
+NSString *const kMXErrCodeStringInvalidUsername         = @"M_INVALID_USERNAME";
+NSString *const kMXErrCodeStringExclusiveResource       = @"M_EXCLUSIVE";
 NSString *const kMXErrCodeStringRoomInUse               = @"M_ROOM_IN_USE";
 NSString *const kMXErrCodeStringBadPagination           = @"M_BAD_PAGINATION";
 NSString *const kMXErrCodeStringUnauthorized            = @"M_UNAUTHORIZED";
@@ -52,6 +54,9 @@ NSString *const kMXErrCodeStringPasswordInDictionary    = @"M_PASSWORD_IN_DICTIO
 NSString *const kMXErrCodeStringWeakPassword            = @"M_WEAK_PASSWORD";
 NSString *const kMXErrCodeStringTermsNotSigned          = @"M_TERMS_NOT_SIGNED";
 NSString *const kMXErrCodeStringInvalidPepper           = @"M_INVALID_PEPPER";
+
+/* Used for client side generated errors */
+NSString *const kMXErrCodeStringClientError        = @"CLIENT_ERROR";
 
 NSString *const kMXErrorStringInvalidToken      = @"Invalid token";
 

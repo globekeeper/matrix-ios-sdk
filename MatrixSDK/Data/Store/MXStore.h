@@ -32,12 +32,16 @@
 
 @class MXSpaceGraphData;
 @class MXStoreService;
+@class MXCapabilities;
+@class MXMatrixVersions;
 
 /**
  The `MXStore` protocol defines an interface that must be implemented in order to store
  Matrix data handled during a `MXSession`.
  */
-@protocol MXStore <NSObject, MXRoomSummaryStore>
+@protocol MXStore <NSObject>
+
+@property (nonatomic, readonly) id<MXRoomSummaryStore> _Nonnull roomSummaryStore;
 
 #pragma mark - Store Management
 
@@ -223,12 +227,33 @@
 #pragma mark -
 /**
  Store the text message partially typed by the user but not yet sent.
- 
+
+ @deprecated use storePartialAttributedTextMessageForRoom
+
  @param roomId the id of the room.
  @param partialTextMessage the text to store. Nil to reset it.
  */
+- (void)storePartialTextMessageForRoom:(nonnull NSString*)roomId
+                    partialTextMessage:(nonnull NSString*)partialTextMessage __deprecated_msg("use storePartialAttributedTextMessageForRoom");
+
+/**
+ The text message typed by the user but not yet sent.
+
+ @deprecated use partialAttributedTextMessageOfRoom
+
+ @param roomId the id of the room.
+ @return the text message. Can be nil.
+ */
+- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId __deprecated_msg("use partialAttributedTextMessageOfRoom");
+
+/**
+ Store the text message partially typed by the user but not yet sent.
+
+ @param roomId the id of the room.
+ @param partialAttributedTextMessage the text to store. Nil to reset it.
+ */
 // @TODO(summary): Move to MXRoomSummary
-- (void)storePartialTextMessageForRoom:(nonnull NSString*)roomId partialTextMessage:(nonnull NSString*)partialTextMessage;
+- (void)storePartialAttributedTextMessageForRoom:(nonnull NSString*)roomId partialAttributedTextMessage:(nonnull NSAttributedString*)partialAttributedTextMessage;
 
 /**
  The text message typed by the user but not yet sent.
@@ -236,8 +261,7 @@
  @param roomId the id of the room.
  @return the text message. Can be nil.
  */
-- (NSString* _Nullable)partialTextMessageOfRoom:(nonnull NSString*)roomId;
-
+- (NSAttributedString* _Nullable)partialAttributedTextMessageOfRoom:(nonnull NSString*)roomId;
 
 /**
  Returns the receipts list for an event in a dedicated room.
@@ -286,10 +310,26 @@
  for a room may be higher than the returned value.
  
  @param roomId the room id.
+ @param threadId the thread id to count unread events in. Pass nil not to filter by any thread.
  @param types an array of event types strings (MXEventTypeString).
  @return The number of unread events which have their type listed in the provided array.
  */
-- (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId withTypeIn:(nullable NSArray*)types;
+- (NSUInteger)localUnreadEventCount:(nonnull NSString*)roomId threadId:(nullable NSString*)threadId withTypeIn:(nullable NSArray*)types;
+
+/**
+ Incoming events since the last user receipt data.
+
+ @discussion: The returned count is relative to the local storage. The actual unread messages
+ for a room may be higher than the returned value.
+
+ @param roomId the room id.
+ @param threadId the thread id to consider events in. Pass nil not to filter by any thread.
+ @param types an array of event types strings to consider
+ @return Filtered events that came after the user receipt.
+ */
+- (nonnull NSArray<MXEvent*>*)newIncomingEventsInRoom:(nonnull NSString*)roomId
+                                             threadId:(nullable NSString*)threadId
+                                           withTypeIn:(nullable NSArray<MXEventTypeString>*)types;
 
 /**
  Indicate if the MXStore implementation stores data permanently.
@@ -317,6 +357,30 @@
  @param homeserverWellknown the .well-known data to store.
  */
 - (void)storeHomeserverWellknown:(nonnull MXWellKnown*)homeserverWellknown;
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities * _Nullable homeserverCapabilities;
+
+/**
+ Store the homeserver capabilities.
+
+ @param homeserverCapabilities the homeserver capabilities to store.
+ */
+- (void)storeHomeserverCapabilities:(nonnull MXCapabilities*)homeserverCapabilities;
+
+/**
+ Supported Matrix versions by the homeserver.
+ */
+@property (nonatomic, readonly) MXMatrixVersions * _Nullable supportedMatrixVersions;
+
+/**
+ Store the supported Matrix versions.
+
+ @param supportedMatrixVersions the supported Matrix versions to store.
+ */
+- (void)storeSupportedMatrixVersions:(nonnull MXMatrixVersions*)supportedMatrixVersions;
 
 #pragma mark - Room Messages
 
@@ -476,6 +540,11 @@
  @param filterId the id of this filter on the homeserver.
  */
 - (void)storeFilter:(nonnull MXFilterJSONModel*)filter withFilterId:(nonnull NSString*)filterId;
+
+/**
+ Retrieve a list of all stored filter ids.
+ */
+- (nonnull NSArray <NSString *> *)allFilterIds;
 
 /**
  Retrieve a filter with a given id.

@@ -17,17 +17,33 @@
 #import <Foundation/Foundation.h>
 
 #import "MXJSONModel.h"
+#import "MXInReplyTo.h"
 
 NS_ASSUME_NONNULL_BEGIN
+
+extern NSString *const kMXEventContentRelatesToKeyRelationType;
+extern NSString *const kMXEventContentRelatesToKeyEventId;
+extern NSString *const kMXEventContentRelatesToKeyKey;
+extern NSString *const kMXEventContentRelatesToKeyIsReplyFallback;
+extern NSString *const kMXEventContentRelatesToKeyInReplyTo;
 
 /**
  JSON model for MXEvent.content.relates_to.
  */
 @interface MXEventContentRelatesTo : MXJSONModel
 
-@property (nonatomic, readonly) NSString *relationType;     // Ex: MXEventRelationTypeAnnotation
-@property (nonatomic, readonly) NSString *eventId;
+@property (nonatomic, readonly, nullable) NSString *relationType;     // Ex: MXEventRelationTypeAnnotation
+@property (nonatomic, readonly, nullable) NSString *eventId;
 @property (nonatomic, readonly, nullable) NSString *key;
+@property (nonatomic, readonly) BOOL isReplyFallback;
+@property (nonatomic, readonly, nullable) MXInReplyTo *inReplyTo;
+
+- (instancetype)initWithRelationType:(NSString *)relationType
+                             eventId:(NSString *)eventId;
+
+- (instancetype)initWithRelationType:(NSString *)relationType
+                             eventId:(NSString *)eventId
+                                 key:(nullable NSString *)key;
 
 @end
 

@@ -24,6 +24,7 @@
 #import "MXDeviceListOperation.h"
 #import "MXFileStore.h"
 #import "MXNoStore.h"
+#import "MXTools.h"
 
 @interface MatrixSDKTestsE2EData ()
 
@@ -208,7 +209,7 @@
 
         __block NSUInteger messagesCount = 0;
 
-        [roomFromBobPOV liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [roomFromBobPOV liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             [liveTimeline listenToEventsOfTypes:@[kMXEventTypeStringRoomMessage] onEvent:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *roomState) {
                 if (++messagesCount == 5)
                 {
@@ -219,15 +220,15 @@
 
 
         // Send messages in expected order
-        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] threadId:nil success:^(NSString *eventId) {
 
-            [roomFromBobPOV sendTextMessage:messagesFromBob[0] success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messagesFromBob[0] threadId:nil success:^(NSString *eventId) {
 
-                [roomFromBobPOV sendTextMessage:messagesFromBob[1] success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:messagesFromBob[1] threadId:nil success:^(NSString *eventId) {
 
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] success:^(NSString *eventId) {
+                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] threadId:nil success:^(NSString *eventId) {
 
-                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] success:nil failure:nil];
+                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] threadId:nil success:nil failure:nil];
 
                     } failure:nil];
 
@@ -293,6 +294,19 @@
                  withPassword:(NSString*)password
                    onComplete:(void (^)(MXSession *newSession))onComplete
 {
+    [self loginUserOnANewDevice:testCase
+                    credentials:credentials
+                   withPassword:password
+                          store:[[MXNoStore alloc] init]
+                     onComplete:onComplete];
+}
+
+- (void)loginUserOnANewDevice:(XCTestCase*)testCase
+                  credentials:(MXCredentials*)credentials
+                 withPassword:(NSString*)password
+                        store:(id<MXStore>)store
+                   onComplete:(void (^)(MXSession *newSession))onComplete
+{
     [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = YES;
     
     MXRestClient *mxRestClient = [[MXRestClient alloc] initWithHomeServer:credentials.homeServer
@@ -301,19 +315,25 @@
     
     [mxRestClient loginWithLoginType:kMXLoginFlowTypePassword username:credentials.userId password:password success:^(MXCredentials *credentials2) {
         
-        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil];
+        MXRestClient *mxRestClient2 = [[MXRestClient alloc] initWithCredentials:credentials2 andOnUnrecognizedCertificateBlock:nil andPersistentTokenDataHandler:nil andUnauthenticatedHandler:nil];
         [matrixSDKTestsData retain:mxRestClient2];
         
         MXSession *newSession = [[MXSession alloc] initWithMatrixRestClient:mxRestClient2];
         [matrixSDKTestsData retain:newSession];
         
-        [newSession start:^{
-            [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
-            
-            onComplete(newSession);
-            
+        MXWeakify(newSession);
+        [newSession setStore:store success:^{
+            MXStrongifyAndReturnIfNil(newSession);
+            [newSession start:^{
+                [MXSDKOptions sharedInstance].enableCryptoWhenStartingMXSession = NO;
+                
+                onComplete(newSession);
+                
+            } failure:^(NSError *error) {
+                [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
+            }];
         } failure:^(NSError *error) {
-            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up intial test conditions - error: %@", error];
+            [matrixSDKTestsData breakTestCase:testCase reason:@"Cannot set up store - error: %@", error];
         }];
         
     } failure:^(NSError *error) {
@@ -345,7 +365,7 @@
          [aliceSession1.crypto.crossSigning setupWithPassword:MXTESTS_ALICE_PWD success:^{
              [bobSession.crypto.crossSigning setupWithPassword:MXTESTS_BOB_PWD success:^{
                  
-                 [self loginUserOnANewDevice:self credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
+                 [self loginUserOnANewDevice:testCase credentials:aliceSession1.matrixRestClient.credentials withPassword:MXTESTS_ALICE_PWD onComplete:^(MXSession *aliceSession2) {
                      
                      NSString *aliceUserId = aliceSession1.matrixRestClient.credentials.userId;
                      NSString *bobUserId = bobSession.matrixRestClient.credentials.userId;

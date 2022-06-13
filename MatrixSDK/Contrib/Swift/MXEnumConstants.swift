@@ -51,6 +51,9 @@ public enum MXRoomJoinRule: Equatable, Hashable {
     /// A user who wishes to join the room must first receive an invite to the room from someone already inside of the room.
     case invite
     
+    /// The room is public to any member of spaces declared as `allowed`. It will be private otherwise.
+    case restricted
+    
     /// Reserved keyword which is not implemented by homeservers.
     case `private`, knock
     
@@ -60,11 +63,12 @@ public enum MXRoomJoinRule: Equatable, Hashable {
         case .invite: return kMXRoomJoinRuleInvite
         case .private: return kMXRoomJoinRulePrivate
         case .knock: return kMXRoomJoinRuleKnock
+        case .restricted: return kMXRoomJoinRuleRestricted
         }
     }
     
     public init?(identifier: String?) {
-        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock]
+        let joinRules: [MXRoomJoinRule] = [.public, .invite, .private, .knock, .restricted]
         guard let value = joinRules.first(where: { $0.identifier == identifier}) else { return nil }
         self = value
     }
@@ -156,33 +160,6 @@ public enum MXRoomPreset: Equatable, Hashable {
     }
 }
 
-
-
-/**
- The direction of an event in the timeline.
- */
-public enum MXTimelineDirection: Equatable, Hashable {
-    
-    /// Forwards when the event is added to the end of the timeline.
-    /// These events come from the /sync stream or from forwards pagination.
-    case forwards
-    
-    /// Backwards when the event is added to the start of the timeline.
-    /// These events come from a back pagination.
-    case backwards
-    
-    public var identifier: __MXTimelineDirection {
-        switch self {
-        case .forwards: return __MXTimelineDirectionForwards
-        case .backwards: return __MXTimelineDirectionBackwards
-        }
-    }
-    
-    public init(identifer _identifier: __MXTimelineDirection) {
-        self = (_identifier == __MXTimelineDirectionForwards ? .forwards : .backwards)
-    }
-}
-
 extension MXSessionState: CustomStringConvertible {
     
     public var description: String {
@@ -211,10 +188,6 @@ extension MXSessionState: CustomStringConvertible {
             return "pauseRequested"
         case .initialSyncFailed:
             return "initialSyncFailed"
-        case .unknownToken:
-            return "unknownToken"
-        case .softLogout:
-            return "softLogout"
         @unknown default:
             return "\(self.rawValue)"
         }

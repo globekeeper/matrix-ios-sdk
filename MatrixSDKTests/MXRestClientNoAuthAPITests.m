@@ -168,6 +168,78 @@
     [self waitForExpectationsWithTimeout:10 handler:nil];
 }
 
+- (void)testUsernameAvailability
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    // Test with a random string as other tests may have already registered the test acounts
+    MXHTTPOperation *operation = [mxRestClient isUsernameAvailable:@"notyetregistered" success:^(MXUsernameAvailability *availability) {
+        
+        XCTAssertTrue(availability.available, @"The username should be available for registration.");
+        [expectation fulfill];
+        
+    } failure:^(NSError *error) {
+        
+        XCTFail(@"The request should not fail - the username should be available");
+        [expectation fulfill];
+        
+    }];
+    operation.maxNumberOfTries = 1;
+    
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testUsernameAvailabilityForExistingUsername
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    [self createTestAccount:^{
+        MXHTTPOperation *operation = [mxRestClient isUsernameAvailable:MXTESTS_USER success:^(MXUsernameAvailability *availability) {
+            
+            XCTFail(@"The request should fail - the username should already be taken");
+            [expectation fulfill];
+            
+            } failure:^(NSError *error) {
+                
+                MXError *mxError = [[MXError alloc] initWithNSError:error];
+                
+                XCTAssertNotNil(mxError);
+                XCTAssertTrue([mxError.errcode isEqualToString:kMXErrCodeStringUserInUse], @"The error should indicate that the username is in use");
+                
+                [expectation fulfill];
+                
+            }];
+        operation.maxNumberOfTries = 1;
+    }];
+    
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
+- (void)testUsernameAvailabilityForInvalidUsername
+{
+    XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
+    
+    // Test a username that only has digits which is disallowed by the spec.
+    MXHTTPOperation *operation = [mxRestClient isUsernameAvailable:@"123456789" success:^(MXUsernameAvailability *availability) {
+        
+        XCTFail(@"The request should fail - the username should already be taken");
+        [expectation fulfill];
+        
+    } failure:^(NSError *error) {
+        
+        MXError *mxError = [[MXError alloc] initWithNSError:error];
+        
+        XCTAssertNotNil(mxError);
+        XCTAssertTrue([mxError.errcode isEqualToString:kMXErrCodeStringInvalidUsername], @"The error should indicate that the username is invalid");
+        
+        [expectation fulfill];
+        
+    }];
+    operation.maxNumberOfTries = 1;
+    
+    [self waitForExpectationsWithTimeout:10 handler:nil];
+}
+
 - (void)testRegisterWithDummyLoginType
 {
     XCTestExpectation *expectation = [self expectationWithDescription:@"asyncTest"];
@@ -453,7 +525,6 @@
 
         // Result must be returned on the main queue by default
         XCTAssert([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), dispatch_get_main_queue());
 
         [expectation fulfill];
 
@@ -477,7 +548,7 @@
     MXHTTPOperation *operation = [client publicRoomsOnServer:nil limit:-1 since:nil filter:nil thirdPartyInstanceId:nil includeAllNetworks:NO success:^(MXPublicRoomsResponse *publicRoomsResponse) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+        XCTAssertEqual(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), "aQueueFromAnotherThread");
 
         [expectation fulfill];
 
@@ -507,7 +578,7 @@
     } failure:^(NSError *error) {
 
         XCTAssertFalse([[NSThread currentThread] isMainThread]);
-        XCTAssertEqual(dispatch_get_current_queue(), client.completionQueue);
+        XCTAssertEqual(dispatch_queue_get_label(DISPATCH_CURRENT_QUEUE_LABEL), "aQueueFromAnotherThread");
 
         [expectation fulfill];
     }];

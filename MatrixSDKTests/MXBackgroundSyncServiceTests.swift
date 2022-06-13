@@ -678,7 +678,7 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                                 self.bgSyncService?.event(withEventId: "aRandomEventId", inRoom: roomId) { _ in
                                     
                                     // -> MXBackgroundSyncService should have detected that the MXSession ran in parallel.
-                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same                                    
+                                    //    It must have reset its cache. syncResponseStore.prevBatch must not be the same
                                     XCTAssertNotEqual(syncResponseStoreSyncToken, syncResponseStoreManager.syncToken())
 
                                     expectation?.fulfill()
@@ -868,15 +868,18 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
                 
                 // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
-                    
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { response in
+                    switch response {
+                    case .success(let event):
+                        XCTAssertNotNil(event.clear)
+
+                        // -> The background service cache must be reset after session resume
+                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                        expectation.fulfill()
+                    case .failure(let error):
+                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                        expectation.fulfill()
+                    }
                 }
             })
         }
@@ -939,15 +942,18 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
                 
                 // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
-                    
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { response in
+                    switch response {
+                    case .success(let event):
+                        XCTAssertNotNil(event.clear)
+
+                        // -> The background service cache must be reset after session resume
+                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                        expectation.fulfill()
+                    case .failure(let error):
+                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                        expectation.fulfill()
+                    }
                 }
             })
         }
@@ -1004,15 +1010,18 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
                 
                 // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
-                    
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { response in
+                    switch response {
+                    case .success(let event):
+                        XCTAssertNotNil(event.clear)
+
+                        // -> The background service cache must be reset after session resume
+                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                        expectation.fulfill()
+                    case .failure(let error):
+                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                        expectation.fulfill()
+                    }
                 }
             })
         }
@@ -1075,15 +1084,18 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                 XCTAssertNotNil(bobSession.store.event(withEventId: lastEventId, inRoom: roomId))
                 
                 // -> Bob session must have the key to decrypt the first message
-                bobSession.event(withEventId: firstEventId, inRoom: roomId) { (event) in
-                    XCTAssertNotNil(event?.clear)
-                    
-                    // -> The background service cache must be reset after session resume
-                    XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                    expectation.fulfill()
-                } failure: { (error) in
-                    XCTFail("The request should not fail - Error: \(String(describing: error))");
-                    expectation.fulfill()
+                bobSession.event(withEventId: firstEventId, inRoom: roomId) { response in
+                    switch response {
+                    case .success(let event):
+                        XCTAssertNotNil(event.clear)
+
+                        // -> The background service cache must be reset after session resume
+                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                        expectation.fulfill()
+                    case .failure(let error):
+                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                        expectation.fulfill()
+                    }
                 }
             })
         }
@@ -1258,22 +1270,27 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     bobSession.resume {
                         
                         // -> Bob session must have the key to decrypt the first and the last message
-                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
-                            bobSession.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                XCTAssertNotNil(firstEvent?.clear)
-                                XCTAssertNotNil(lastEvent?.clear)
-                                
-                                // -> The background service cache must be reset after session restart
-                                XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                                expectation.fulfill()
-                                
-                            } failure: { (error) in
+                        bobSession.event(withEventId: firstEventId, inRoom: roomId) { firstResponse in
+                            switch firstResponse {
+                            case .success(let firstEvent):
+                                bobSession.event(withEventId: lastEventId, inRoom: roomId) { lastResponse in
+                                    switch lastResponse {
+                                    case .success(let lastEvent):
+                                        XCTAssertNotNil(firstEvent.clear)
+                                        XCTAssertNotNil(lastEvent.clear)
+
+                                        // -> The background service cache must be reset after session restart
+                                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                                        expectation.fulfill()
+                                    case .failure(let error):
+                                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                                        expectation.fulfill()
+                                    }
+                                }
+                            case .failure(let error):
                                 XCTFail("The request should not fail - Error: \(String(describing: error))");
                                 expectation.fulfill()
                             }
-                        } failure: { (error) in
-                            XCTFail("The request should not fail - Error: \(String(describing: error))");
-                            expectation.fulfill()
                         }
                     }
                 }
@@ -1323,23 +1340,29 @@ class MXBackgroundSyncServiceTests: XCTestCase {
                     bobSession2.start(completion: { (_) in
                         
                         // -> Bob session must have the key to decrypt the first and the last message
-                        bobSession2.event(withEventId: firstEventId, inRoom: roomId) { (firstEvent) in
-                            bobSession2.event(withEventId: lastEventId, inRoom: roomId) { (lastEvent) in
-                                XCTAssertNotNil(firstEvent?.clear)
-                                XCTAssertNotNil(lastEvent?.clear)
-                                
-                                // -> The background service cache must be reset after session restart
-                                let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
-                                XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
-                                expectation.fulfill()
-                                
-                            } failure: { (error) in
+                        bobSession2.event(withEventId: firstEventId, inRoom: roomId) { firstResponse in
+                            switch firstResponse {
+                            case .success(let firstEvent):
+                                bobSession2.event(withEventId: lastEventId, inRoom: roomId) { lastResponse in
+                                    switch lastResponse {
+                                    case .success(let lastEvent):
+                                        XCTAssertNotNil(firstEvent.clear)
+                                        XCTAssertNotNil(lastEvent.clear)
+
+                                        // -> The background service cache must be reset after session restart
+                                        let syncResponseStore = MXSyncResponseFileStore(withCredentials: bobCredentials)
+                                        XCTAssertEqual(syncResponseStore.syncResponseIds.count, 0)
+                                        expectation.fulfill()
+                                    case .failure(let error):
+                                        XCTFail("The request should not fail - Error: \(String(describing: error))");
+                                        expectation.fulfill()
+                                    }
+
+                                }
+                            case .failure(let error):
                                 XCTFail("The request should not fail - Error: \(String(describing: error))");
                                 expectation.fulfill()
                             }
-                        } failure: { (error) in
-                            XCTFail("The request should not fail - Error: \(String(describing: error))");
-                            expectation.fulfill()
                         }
                     })
                 })
@@ -1438,13 +1461,15 @@ extension MXBackgroundSyncServiceTests {
     }
 }
 
-private extension MXRoom {
+extension MXRoom {
     
     /// Send multiple text messages. If any of sending operations is failed, returns immediately with the error. Otherwise waits for all messages to be sent before calling the completion handler.
     /// - Parameters:
     ///   - messages: Messages to be sent
     ///   - completion: Completion block
-    func sendTextMessages(messages: [String], completion: @escaping (MXResponse<[String]>) -> Void) {
+    func sendTextMessages(messages: [String],
+                          threadId: String? = nil,
+                          completion: @escaping (MXResponse<[String]>) -> Void) {
         let dispatchGroup = DispatchGroup()
         var eventIDs: [String] = []
         var failed = false
@@ -1452,7 +1477,7 @@ private extension MXRoom {
         for message in messages {
             dispatchGroup.enter()
             var localEcho: MXEvent?
-            sendTextMessage(message, localEcho: &localEcho) { (response) in
+            sendTextMessage(message, threadId: threadId, localEcho: &localEcho) { (response) in
                 switch response {
                 case .success(let eventId):
                     if let eventId = eventId {

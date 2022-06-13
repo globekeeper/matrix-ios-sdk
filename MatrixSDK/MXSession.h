@@ -123,25 +123,7 @@ typedef NS_ENUM(NSUInteger, MXSessionState)
      @discussion
      The Matrix session will stay in this state until a new call of [MXSession start:failure:].
      */
-    MXSessionStateInitialSyncFailed,
-
-    /**
-     The access token is no more valid.
-
-     @discussion
-     This can happen when the user made a forget password request for example.
-     The Matrix session is no more usable. The user must log in again.
-     */
-    MXSessionStateUnknownToken,
-
-    /**
-     The user is logged out (invalid token) but they still have their local storage.
-     The user should log back in to rehydrate the client.
-
-     @discussion
-     This happens when the homeserver admin has signed the user out.
-     */
-    MXSessionStateSoftLogout
+    MXSessionStateInitialSyncFailed
 
 };
 
@@ -363,6 +345,11 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 
 @class MXSpaceService;
+@class MXHomeserverCapabilitiesService;
+@class MXThreadingService;
+@class MXCapabilities;
+@class MXEventStreamService;
+@class MXLocationService;
 
 #pragma mark - MXSession
 /**
@@ -497,6 +484,26 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
  The module that manages spaces.
  */
 @property (nonatomic, readonly) MXSpaceService *spaceService;
+
+/**
+ Capabilities of the current homeserver
+ */
+@property (nonatomic, readonly) MXHomeserverCapabilitiesService *homeserverCapabilitiesService;
+
+/**
+ The module that manages threads.
+ */
+@property (nonatomic, readonly) MXThreadingService *threadingService NS_REFINED_FOR_SWIFT;
+
+/**
+ Service  used to monitor live events of the session.
+ */
+@property (nonatomic, readonly) MXEventStreamService *eventStreamService;
+
+/**
+ The module that manages location sharing.
+ */
+@property (nonatomic, readonly) MXLocationService *locationService;
 
 /**
  Flag indicating the session can be paused.
@@ -778,7 +785,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure;
+- (MXHTTPOperation*)supportedMatrixVersions:(void (^)(MXMatrixVersions *matrixVersions))success failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  The antivirus server URL (nil by default).
@@ -923,7 +930,17 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoom instance.
  */
-- (MXRoom  *)roomWithRoomId:(NSString*)roomId;
+- (MXRoom *)roomWithRoomId:(NSString*)roomId;
+
+/**
+ Get the MXRoom instance of a room.
+ Create it if does not exist yet. The room will be created locally if needed, won't have any effect on the home server. Posts `kMXSessionNewRoomNotification`.
+ 
+ @param roomId The id to the user.
+ 
+ @return the MXRoom instance.
+ */
+- (MXRoom *)getOrCreateRoom:(NSString*)roomId;
 
 /**
  Get the MXRoom instance of the room that owns the passed room alias.
@@ -1034,7 +1051,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)eventWithEventId:(NSString*)eventId
                               inRoom:(NSString *)roomId
                              success:(void (^)(MXEvent *event))success
-                             failure:(void (^)(NSError *error))failure;
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Rooms summaries
@@ -1046,13 +1063,6 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the MXRoomSummary instance.
  */
 - (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
-
-/**
- Get the list of all rooms summaries.
-
- @return an array of MXRoomSummary.
- */
-- (NSArray<MXRoomSummary*>*)roomsSummaries;
 
 /**
  Recompute all room summaries last message.
@@ -1086,12 +1096,16 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 /**
  Delegate for updating room summaries.
  By default, it is the one returned by [MXRoomSummaryUpdater roomSummaryUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomSummaryUpdating> roomSummaryUpdateDelegate;
 
 /**
  Delegate for updating room account data.
  By default, it is the one returned by [MXRoomAccountDataUpdater roomAccountDataUpdaterForSession:].
+ 
+ This property is strong as the only other reference to the delegate is a weak ref in the updaterPerSession table.
  */
 @property id<MXRoomAccountDataUpdating> roomAccountDataUpdateDelegate;
 
@@ -1487,6 +1501,12 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 - (MXHTTPOperation*)refreshHomeserverWellknown:(void (^)(MXWellKnown *homeserverWellknown))success
                                        failure:(void (^)(NSError *error))failure;
 
+#pragma mark - Homeserver capabilities
+
+/**
+ The homeserver capabilities.
+ */
+@property (nonatomic, readonly) MXCapabilities *homeserverCapabilities NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Matrix filters
 /**
@@ -1623,5 +1643,13 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
  @return the virtual room identifier for the given native room. May be nil.
  */
 - (NSString *)virtualRoomOf:(NSString *)nativeRoomId;
+
+#pragma mark - Presence
+
+/**
+ Preferred presence status for this session. Session will provide this value on syncs
+ while the application is in foreground. Defaults to MXPresenceOnline.
+ */
+@property (nonatomic) MXPresence preferredSyncPresence;
 
 @end

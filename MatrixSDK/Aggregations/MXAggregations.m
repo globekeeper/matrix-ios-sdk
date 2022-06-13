@@ -30,6 +30,8 @@
 #import "MXEventEditsListener.h"
 #import "MXAggregationPaginatedResponse_Private.h"
 
+#import "MatrixSDKSwiftHeader.h"
+
 @interface MXAggregations ()
 
 @property (nonatomic, weak) MXSession *mxSession;
@@ -37,6 +39,9 @@
 @property (nonatomic) MXAggregatedReactionsUpdater *aggregatedReactionsUpdater;
 @property (nonatomic) MXAggregatedEditsUpdater *aggregatedEditsUpdater;
 @property (nonatomic) MXAggregatedReferencesUpdater *aggregatedReferencesUpdater;
+
+@property (nonatomic, strong, readwrite) MXBeaconAggregations *beaconAggregations;
+@property (nonatomic, strong) id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore;
 
 @end
 
@@ -85,12 +90,16 @@
     {
         [self.aggregatedEditsUpdater removeListener:listener];
     }
+    else if ([listener isKindOfClass:[MXBeaconInfoSummaryPerRoomListener class]] || [listener isKindOfClass:[MXBeaconInfoSummaryAllRoomListener class]])
+    {
+        [self.beaconAggregations removeListener:listener];
+    }
 }
 
 - (MXHTTPOperation*)reactionsEventsForEvent:(NSString*)eventId
                                      inRoom:(NSString*)roomId
                                        from:(nullable NSString*)from
-                                      limit:(NSUInteger)limit
+                                      limit:(NSInteger)limit
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
@@ -98,7 +107,8 @@
                                                        inRoom:roomId
                                                  relationType:MXEventRelationTypeAnnotation
                                                     eventType:kMXEventTypeStringReaction
-                                                         from:from                                                    
+                                                         from:from
+                                                    direction:MXTimelineDirectionBackwards
                                                         limit:limit
                                                       success:success
                                                       failure:failure];
@@ -126,18 +136,26 @@
                               isEncrypted:(BOOL)isEncrypted
                                    inRoom:(NSString*)roomId
                                      from:(nullable NSString*)from
-                                    limit:(NSUInteger)limit
+                                    limit:(NSInteger)limit
                                   success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                   failure:(void (^)(NSError *error))failure
 {
     NSString *eventType = isEncrypted ? kMXEventTypeStringRoomEncrypted : kMXEventTypeStringRoomMessage;
-    return [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReplace eventType:eventType from:from limit:limit success:success failure:failure];
+    return [self.mxSession.matrixRestClient relationsForEvent:eventId
+                                                       inRoom:roomId
+                                                 relationType:MXEventRelationTypeReplace
+                                                    eventType:eventType
+                                                         from:from
+                                                    direction:MXTimelineDirectionBackwards
+                                                        limit:limit
+                                                      success:success
+                                                      failure:failure];
 }
 
 - (MXHTTPOperation*)referenceEventsForEvent:(NSString*)eventId
                                      inRoom:(NSString*)roomId
                                        from:(nullable NSString*)from
-                                      limit:(NSUInteger)limit
+                                      limit:(NSInteger)limit
                                     success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
                                     failure:(void (^)(NSError *error))failure
 {
@@ -183,7 +201,14 @@
     
     if (!event)
     {
-        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId inRoom:roomId relationType:MXEventRelationTypeReference eventType:nil from:from limit:limit success:^(MXAggregationPaginatedResponse *paginatedResponse) {
+        operation = [self.mxSession.matrixRestClient relationsForEvent:eventId
+                                                                inRoom:roomId
+                                                          relationType:MXEventRelationTypeReference
+                                                             eventType:nil
+                                                                  from:from
+                                                             direction:MXTimelineDirectionBackwards
+                                                                 limit:limit
+                                                               success:^(MXAggregationPaginatedResponse *paginatedResponse) {
             processPaginatedResponse(paginatedResponse);
         } failure:failure];
     }
@@ -206,6 +231,7 @@
 {
     MXLogDebug(@"[MXAggregations] Reset data")
     [self.store deleteAll];
+    [self.beaconInfoSummaryStore deleteAllBeaconInfoSummaries];
 }
 
 
@@ -225,6 +251,13 @@
                                                                                   matrixStore:mxSession.store];
         self.aggregatedReferencesUpdater = [[MXAggregatedReferencesUpdater alloc] initWithMatrixSession:self.mxSession
                                                                                            matrixStore:mxSession.store];
+        
+        // TODO: Persist MXBeaconInfoSummary to a file database
+        id<MXBeaconInfoSummaryStoreProtocol> beaconInfoSummaryStore = [MXBeaconInfoSummaryMemoryStore new];
+        
+        self.beaconInfoSummaryStore = beaconInfoSummaryStore;
+        
+        self.beaconAggregations = [[MXBeaconAggregations alloc] initWithSession:self.mxSession store:beaconInfoSummaryStore];
 
         [self registerListener];
     }
@@ -244,6 +277,7 @@
 - (void)resetDataInRoom:(NSString *)roomId
 {
     [self.aggregatedReactionsUpdater resetDataInRoom:roomId];
+    [self.beaconAggregations clearDataInRoomWithId:roomId];
 }
 
 
@@ -254,6 +288,7 @@
     [self.mxSession listenToEvents:^(MXEvent *event, MXTimelineDirection direction, id customObject) {
 
         switch (event.eventType) {
+            case MXEventTypePollStart:
             case MXEventTypeRoomMessage:
                 if (direction == MXTimelineDirectionForwards
                     && [event.relatesTo.relationType isEqualToString:MXEventRelationTypeReplace])
@@ -268,6 +303,15 @@
                 if (direction == MXTimelineDirectionForwards)
                 {
                     [self.aggregatedReactionsUpdater handleRedaction:event];
+                }
+                break;
+            case MXEventTypeBeaconInfo:
+                [self.beaconAggregations handleBeaconInfoWithEvent:event];
+                break;
+            case MXEventTypeBeacon:
+                if (direction == MXTimelineDirectionForwards)
+                {
+                    [self.beaconAggregations handleBeaconWithEvent:event];
                 }
                 break;
             default:

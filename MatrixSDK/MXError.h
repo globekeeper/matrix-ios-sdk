@@ -32,6 +32,9 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringNotJSON;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringNotFound;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringLimitExceeded;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringUserInUse;
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringInvalidUsername;
+/// The resource being requested is reserved by an application service, or the application service making the request has not created the resource.
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringExclusiveResource;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringRoomInUse;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringBadPagination;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringUnauthorized;
@@ -55,6 +58,8 @@ FOUNDATION_EXPORT NSString *const kMXErrCodeStringPasswordInDictionary;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringWeakPassword;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringTermsNotSigned;
 FOUNDATION_EXPORT NSString *const kMXErrCodeStringInvalidPepper;
+
+FOUNDATION_EXPORT NSString *const kMXErrCodeStringClientError;
 
 FOUNDATION_EXPORT NSString *const kMXErrorStringInvalidToken;
 

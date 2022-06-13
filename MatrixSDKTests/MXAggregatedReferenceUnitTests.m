@@ -33,39 +33,38 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 - (void)testReferenceEventManually
 {
     NSDictionary *messageEventDict = @{
-                                       @"content": @{
-                                               @"body": kOriginalMessageText,
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$messageeventid:matrix.org",
-                                       @"origin_server_ts": @(1560253386247),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(6117832)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: kOriginalMessageText,
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$messageeventid:matrix.org",
+        @"origin_server_ts": @(1560253386247),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(6117832)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
 
     NSDictionary *referenceEventDict = @{
-                                       @"content": @{
-                                               @"body": kThreadedMessage1Text,
-                                               @"msgtype": @"m.text",
-                                               @"m.relates_to": @{
-                                                       @"event_id": @"$messageeventid:matrix.org",
-                                                       @"rel_type": @"m.replace"
-                                                       },
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$replaceeventid:matrix.org",
-                                       @"origin_server_ts": @(1560254175300),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(5328779)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: kThreadedMessage1Text,
+            kMXMessageTypeKey: kMXMessageTypeText,
+            kMXEventRelationRelatesToKey: @{
+                kMXEventContentRelatesToKeyEventId: @"$messageeventid:matrix.org",
+                kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReplace
+            }
+        },
+        @"event_id": @"$replaceeventid:matrix.org",
+        @"origin_server_ts": @(1560254175300),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(5328779)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
 
 
     MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];

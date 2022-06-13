@@ -72,6 +72,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 @implementation MXRoomSummary
 
+@synthesize hasAnyUnread = _hasAnyUnread;
+@synthesize hasAnyNotification = _hasAnyNotification;
+@synthesize hasAnyHighlight = _hasAnyHighlight;
+
 - (instancetype)init
 {
     self = [super init];
@@ -99,6 +103,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         store = theStore;
 
         [self setMatrixSession:mxSession];
+        [self commonInit];
     }
 
     return self;
@@ -110,6 +115,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = model.roomId;
         [self updateWith:model];
+        [self commonInit];
     }
     return self;
 }
@@ -120,8 +126,30 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _roomId = spaceChildInfo.childRoomId;
         _spaceChildInfo = spaceChildInfo;
+        [self commonInit];
     }
     return self;
+}
+
+- (void)commonInit
+{
+    // Listen to the event sent state changes
+    // This is used to follow evolution of local echo events
+    // (ex: when a sentState change from sending to sentFailed)
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
+
+    // Listen to the event id change
+    // This is used to follow evolution of local echo events
+    // when they changed their local event id to the final event id
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
+
+    // Listen to data being flush in a room
+    // This is used to update the room summary in case of a state event redaction
+    // We may need to update the room displayname when it happens
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
+
+    // Listen to event edits within the room
+    [self registerEventEditsListener];
 }
 
 - (void)destroy
@@ -138,25 +166,6 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         _mxSession = mxSession;
         store = mxSession.store;
-        [self updateWith:[store summaryOfRoom:_roomId]];
-
-        // Listen to the event sent state changes
-        // This is used to follow evolution of local echo events
-        // (ex: when a sentState change from sending to sentFailed)
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeSentState:) name:kMXEventDidChangeSentStateNotification object:nil];
-
-        // Listen to the event id change
-        // This is used to follow evolution of local echo events
-        // when they changed their local event id to the final event id
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(eventDidChangeIdentifier:) name:kMXEventDidChangeIdentifierNotification object:nil];
-
-        // Listen to data being flush in a room
-        // This is used to update the room summary in case of a state event redaction
-        // We may need to update the room displayname when it happens
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(roomDidFlushData:) name:kMXRoomDidFlushDataNotification object:nil];
-
-        // Listen to event edits within the room
-        [self registerEventEditsListener];
     }
 }
 
@@ -165,8 +174,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
+    _storedHash = self.hash;
     
-    [store storeSummaryForRoom:_roomId summary:self];
+    [store.roomSummaryStore storeSummary:self];
     
     if (commit && [store respondsToSelector:@selector(commit)])
     {
@@ -219,6 +229,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _topic = summary.topic;
     _creatorUserId = summary.creatorUserId;
     _aliases = summary.aliases;
+    _historyVisibility = summary.historyVisibility;
     _joinRule = summary.joinRule;
     _membership = summary.membership;
     _membershipTransitionState = summary.membershipTransitionState;
@@ -232,12 +243,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     _localUnreadEventCount = summary.localUnreadEventCount;
     _notificationCount = summary.notificationCount;
     _highlightCount = summary.highlightCount;
+    _hasAnyUnread = summary.hasAnyUnread;
+    _hasAnyNotification = summary.hasAnyNotification;
+    _hasAnyHighlight = summary.hasAnyHighlight;
     _directUserId = summary.directUserId;
     _others = [summary.others mutableCopy];
     _favoriteTagOrder = summary.favoriteTagOrder;
     _dataTypes = summary.dataTypes;
     _sentStatus = summary.sentStatus;
     _parentSpaceIds = summary.parentSpaceIds;
+    _userIdsSharingLiveBeacon = summary.userIdsSharingLiveBeacon;
     
     if (!_others)
     {
@@ -320,7 +335,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 - (MXHTTPOperation *)fetchLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                        onComplete:(void (^)(void))onComplete
                                                           failure:(void (^)(NSError *))failure
-                                                         timeline:(MXEventTimeline *)timeline
+                                                         timeline:(id<MXEventTimeline>)timeline
                                                         operation:(MXHTTPOperation *)operation commit:(BOOL)commit
 {
     // Sanity checks
@@ -343,9 +358,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     // Get the room timeline
     if (!timeline)
     {
-        [room liveTimeline:^(MXEventTimeline *liveTimeline) {
+        [room liveTimeline:^(id<MXEventTimeline> liveTimeline) {
             // Use a copy of the live timeline to avoid any conflicts with listeners to the unique live timeline
-            MXEventTimeline *timeline = [liveTimeline copy];
+            id<MXEventTimeline> timeline = [liveTimeline copyWithZone:nil];
             [timeline resetPagination];
             [self fetchLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:onComplete failure:failure timeline:timeline operation:operation commit:commit];
         }];
@@ -361,7 +376,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     
     // Process every message received by back pagination
     __block BOOL lastMessageUpdated = NO;
+    MXWeakify(timeline);
     [timeline listenToEvents:^(MXEvent *event, MXTimelineDirection direction, MXRoomState *eventState) {
+        MXStrongifyAndReturnIfNil(timeline);
         if (direction == MXTimelineDirectionBackwards
             && !lastMessageUpdated)
         {
@@ -374,7 +391,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         // First, for performance reason, read messages only from the store
         // Do it one by one to decrypt the minimal number of events.
-        MXHTTPOperation *newOperation = [timeline paginate:1 direction:MXTimelineDirectionBackwards onlyFromStore:YES complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:1
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:YES
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done
@@ -398,7 +418,10 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         NSUInteger paginationCount = MIN(maxServerPaginationCount, MXRoomSummaryPaginationChunkSize);
         MXLogDebug(@"[MXRoomSummary] fetchLastMessage: paginate %@ (%@) messages from the server in %@", @(paginationCount), @(maxServerPaginationCount), _roomId);
         
-        MXHTTPOperation *newOperation = [timeline paginate:paginationCount direction:MXTimelineDirectionBackwards onlyFromStore:NO complete:^{
+        MXHTTPOperation *newOperation = [timeline paginate:paginationCount
+                                                 direction:MXTimelineDirectionBackwards
+                                             onlyFromStore:NO
+                                                  complete:^{
             if (lastMessageUpdated)
             {
                 // We are done
@@ -481,7 +504,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
                                      success:^(MXEvent *event) {
                 MXEvent *editedEvent = [event editedEventFromReplacementEvent:replaceEvent];
                 [self handleEvent:editedEvent];
-            } failure:nil];
+            } failure:^(NSError *error) {
+                MXLogError(@"[MXRoomSummary] registerEventEditsListener: event fetch failed: %@", error);
+            }];
         }
     }];
 }
@@ -524,6 +549,13 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)setIsEncrypted:(BOOL)isEncrypted
 {
+    // This should never happen
+    if (_isEncrypted && !isEncrypted)
+    {
+        MXLogError(@"[MXRoomSummary] setIsEncrypted: Attempt to reset isEncrypted for room %@. Ignote it. Call stack: %@", self.roomId, [NSThread callStackSymbols]);
+        return;
+    }
+    
     _isEncrypted = isEncrypted;
     
     if (_isEncrypted && [MXSDKOptions sharedInstance].computeE2ERoomSummaryTrust)
@@ -733,7 +765,9 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 {
     BOOL updated = NO;
 
-    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.room.roomId withTypeIn:self.mxSession.unreadEventTypes];
+    NSUInteger localUnreadEventCount = [self.mxSession.store localUnreadEventCount:self.roomId
+                                                                          threadId:nil
+                                                                        withTypeIn:self.mxSession.unreadEventTypes];
     
     if (self.localUnreadEventCount != localUnreadEventCount)
     {
@@ -932,10 +966,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _hiddenFromUser = [aDecoder decodeBoolForKey:@"hiddenFromUser"];
         _storedHash = [aDecoder decodeIntegerForKey:@"storedHash"];
         _dataTypes = (MXRoomSummaryDataTypes)[aDecoder decodeIntegerForKey:@"dataTypes"];
+        _historyVisibility = [aDecoder decodeObjectForKey:@"historyVisibility"];
         _joinRule = [aDecoder decodeObjectForKey:@"joinRule"];
         _sentStatus = (MXRoomSummarySentStatus)[aDecoder decodeIntegerForKey:@"sentStatus"];
         _favoriteTagOrder = [aDecoder decodeObjectForKey:@"favoriteTagOrder"];
         _parentSpaceIds = [aDecoder decodeObjectForKey:@"parentSpaceIds"];
+        _userIdsSharingLiveBeacon = [aDecoder decodeObjectForKey:@"userIdsSharingLiveBeacon"];
         
         // Compute the trust if asked to do it automatically
         // or maintain its computation it has been already calcutated
@@ -986,10 +1022,12 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeBool:_hiddenFromUser forKey:@"hiddenFromUser"];
     [aCoder encodeInteger:self.hash forKey:@"storedHash"];
     [aCoder encodeInteger:_dataTypes forKey:@"dataTypes"];
+    [aCoder encodeObject:_historyVisibility forKey:@"historyVisibility"];
     [aCoder encodeObject:_joinRule forKey:@"joinRule"];
     [aCoder encodeInteger:_sentStatus forKey:@"sentStatus"];
     [aCoder encodeObject:_favoriteTagOrder forKey:@"favoriteTagOrder"];
     [aCoder encodeObject:_parentSpaceIds forKey:@"parentSpaceIds"];
+    [aCoder encodeObject:_userIdsSharingLiveBeacon forKey:@"userIdsSharingLiveBeacon"];
 }
 
 - (NSString *)description
@@ -1016,11 +1054,19 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + _localUnreadEventCount;
     result = prime * result + _notificationCount;
     result = prime * result + _highlightCount;
+    result = prime * result + @(_hasAnyUnread).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyNotification).unsignedIntegerValue;
+    result = prime * result + @(_hasAnyHighlight).unsignedIntegerValue;
     result = prime * result + _dataTypes;
     result = prime * result + _sentStatus;
     result = prime * result + [_lastMessage.eventId hash];
     result = prime * result + [_lastMessage.text hash];
 
+    result = [NSNumber numberWithUnsignedInteger:result].hash;
+    while (result > INT64_MAX)
+    {
+        result -= INT64_MAX;
+    }
     return result;
 }
 

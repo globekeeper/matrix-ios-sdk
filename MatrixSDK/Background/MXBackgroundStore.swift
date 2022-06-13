@@ -124,7 +124,7 @@ class MXBackgroundStore: NSObject, MXStore {
     func open(with credentials: MXCredentials, onComplete: (() -> Void)?, failure: ((Error?) -> Void)? = nil) {
     }
     
-    func storeEvent(forRoom roomId: String, event: MXEvent, direction: __MXTimelineDirection) {
+    func storeEvent(forRoom roomId: String, event: MXEvent, direction: MXTimelineDirection) {
     }
     
     func replace(_ event: MXEvent, inRoom roomId: String) {
@@ -165,11 +165,11 @@ class MXBackgroundStore: NSObject, MXStore {
     }
     
     func messagesEnumerator(forRoom roomId: String) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+        return MXEventsEnumeratorOnArray(eventIds: [], dataSource: nil)
     }
     
     func messagesEnumerator(forRoom roomId: String, withTypeIn types: [Any]?) -> MXEventsEnumerator {
-        return MXEventsEnumeratorOnArray(messages: [])
+        return MXEventsEnumeratorOnArray(eventIds: [], dataSource: nil)
     }
     
     func relations(forEvent eventId: String, inRoom roomId: String, relationType: String) -> [MXEvent] {
@@ -200,11 +200,20 @@ class MXBackgroundStore: NSObject, MXStore {
     
     func deleteGroup(_ groupId: String) {
     }
-    
+
+    @available(*, deprecated, message: "use storePartialAttributedTextMessage")
     func storePartialTextMessage(forRoom roomId: String, partialTextMessage: String) {
     }
-    
+
+    @available(*, deprecated, message: "use partialAttributedTextMessage")
     func partialTextMessage(ofRoom roomId: String) -> String? {
+        return nil
+    }
+
+    func storePartialAttributedTextMessage(forRoom roomId: String, partialAttributedTextMessage: NSAttributedString) {
+    }
+
+    func partialAttributedTextMessage(ofRoom roomId: String) -> NSAttributedString? {
         return nil
     }
     
@@ -228,13 +237,25 @@ class MXBackgroundStore: NSObject, MXStore {
         }
     }
     
-    func localUnreadEventCount(_ roomId: String, withTypeIn types: [Any]?) -> UInt {
+    func localUnreadEventCount(_ roomId: String, threadId: String?, withTypeIn types: [Any]?) -> UInt {
         return 0
+    }
+
+    func newIncomingEvents(inRoom roomId: String, threadId: String?, withTypeIn types: [String]?) -> [MXEvent] {
+        return []
     }
     
     var homeserverWellknown: MXWellKnown?
     
     func storeHomeserverWellknown(_ homeserverWellknown: MXWellKnown) {
+    }
+
+    var homeserverCapabilities: MXCapabilities?
+    func storeHomeserverCapabilities(_ homeserverCapabilities: MXCapabilities) {
+    }
+
+    var supportedMatrixVersions: MXMatrixVersions?
+    func storeSupportedMatrixVersions(_ supportedMatrixVersions: MXMatrixVersions) {
     }
     
     func loadRoomMessages(forRoom roomId: String, completion: (() -> Void)? = nil) {
@@ -259,19 +280,45 @@ class MXBackgroundStore: NSObject, MXStore {
         return []
     }
     
-    //  MARK: - MXRoomSummaryStore
+    var roomSummaryStore: MXRoomSummaryStore {
+        return self
+    }
+    
+}
+
+//  MARK: - MXRoomSummaryStore
+
+extension MXBackgroundStore: MXRoomSummaryStore {
     
     var rooms: [String] {
         return []
     }
     
-    func storeSummary(forRoom roomId: String, summary: MXRoomSummaryProtocol) {
+    var countOfRooms: UInt {
+        return 0
+    }
+    
+    func storeSummary(_ summary: MXRoomSummaryProtocol) {
         
     }
     
     //  Fetch real soom summary
     func summary(ofRoom roomId: String) -> MXRoomSummaryProtocol? {
-        return fileStore.summary(ofRoom: roomId)
+        return fileStore.roomSummaryStore.summary(ofRoom: roomId)
+    }
+    
+    func removeSummary(ofRoom roomId: String) {
+        
+    }
+    
+    func removeAllSummaries() {
+        
+    }
+    
+    func fetchAllSummaries(_ completion: @escaping ([MXRoomSummaryProtocol]) -> Void) {
+        DispatchQueue.main.async {
+            completion([])
+        }
     }
     
 }

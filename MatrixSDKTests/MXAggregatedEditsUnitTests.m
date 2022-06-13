@@ -38,42 +38,42 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
 - (void)testEditingEventManually
 {
     NSDictionary *messageEventDict = @{
-                                       @"content": @{
-                                               @"body": kOriginalMessageText,
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$messageeventid:matrix.org",
-                                       @"origin_server_ts": @(1560253386247),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(6117832)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: kOriginalMessageText,
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$messageeventid:matrix.org",
+        @"origin_server_ts": @(1560253386247),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(6117832)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
     
     NSDictionary *replaceEventDict = @{
-                                       @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMessageText],
-                                               @"m.new_content": @{
-                                                       @"body": kEditedMessageText,
-                                                       @"msgtype": @"m.text"
-                                                       },
-                                               @"m.relates_to": @{
-                                                       @"event_id": @"$messageeventid:matrix.org",
-                                                       @"rel_type": @"m.replace"
-                                                       },
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$replaceeventid:matrix.org",
-                                       @"origin_server_ts": @(1560254175300),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(5328779)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", kEditedMessageText],
+            kMXMessageContentKeyNewContent: @{
+                kMXMessageBodyKey: kEditedMessageText,
+                kMXMessageTypeKey: kMXMessageTypeText
+            },
+            kMXEventRelationRelatesToKey: @{
+                kMXEventContentRelatesToKeyEventId: @"$messageeventid:matrix.org",
+                kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReplace
+            },
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$replaceeventid:matrix.org",
+        @"origin_server_ts": @(1560254175300),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(5328779)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
     
     
     MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];
@@ -84,54 +84,54 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     XCTAssertNotNil(editedEvent);
     XCTAssertTrue(editedEvent.contentHasBeenEdited);
     XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMessageText);
+    XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMessageText);
 }
 
 - (void)testEditingFormattedEventManually
 {
     NSDictionary *messageEventDict = @{
-                                       @"content": @{
-                                               @"body": kOriginalMarkdownMessageText,
-                                               @"formatted_body": kOriginalMarkdownMessageFormattedText,
-                                               @"format": kMXRoomMessageFormatHTML,
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$messageeventid:matrix.org",
-                                       @"origin_server_ts": @(1560253386247),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(6117832)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: kOriginalMarkdownMessageText,
+            @"formatted_body": kOriginalMarkdownMessageFormattedText,
+            @"format": kMXRoomMessageFormatHTML,
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$messageeventid:matrix.org",
+        @"origin_server_ts": @(1560253386247),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(6117832)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
     
     NSDictionary *replaceEventDict = @{
-                                       @"content": @{
-                                               @"body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText],
-                                               @"formatted_body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageFormattedText],
-                                               @"format": kMXRoomMessageFormatHTML,
-                                               @"m.new_content": @{
-                                                       @"body": kEditedMarkdownMessageText,
-                                                       @"formatted_body": kEditedMarkdownMessageFormattedText,
-                                                       @"format": kMXRoomMessageFormatHTML,
-                                                       @"msgtype": @"m.text"
-                                                       },
-                                               @"m.relates_to": @{
-                                                       @"event_id": @"$messageeventid:matrix.org",
-                                                       @"rel_type": @"m.replace"
-                                                       },
-                                               @"msgtype": @"m.text"
-                                               },
-                                       @"event_id": @"$replaceeventid:matrix.org",
-                                       @"origin_server_ts": @(1560254175300),
-                                       @"sender": @"@billsam:matrix.org",
-                                       @"type": @"m.room.message",
-                                       @"unsigned": @{
-                                               @"age": @(5328779)
-                                               },
-                                       @"room_id": @"!roomid:matrix.org"
-                                       };
+        @"content": @{
+            kMXMessageBodyKey: [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageText],
+            @"formatted_body": [NSString stringWithFormat:@"* %@", kEditedMarkdownMessageFormattedText],
+            @"format": kMXRoomMessageFormatHTML,
+            kMXMessageContentKeyNewContent: @{
+                kMXMessageBodyKey: kEditedMarkdownMessageText,
+                @"formatted_body": kEditedMarkdownMessageFormattedText,
+                @"format": kMXRoomMessageFormatHTML,
+                kMXMessageTypeKey: kMXMessageTypeText
+            },
+            kMXEventRelationRelatesToKey: @{
+                kMXEventContentRelatesToKeyEventId: @"$messageeventid:matrix.org",
+                kMXEventContentRelatesToKeyRelationType: MXEventRelationTypeReplace
+            },
+            kMXMessageTypeKey: kMXMessageTypeText
+        },
+        @"event_id": @"$replaceeventid:matrix.org",
+        @"origin_server_ts": @(1560254175300),
+        @"sender": @"@billsam:matrix.org",
+        @"type": kMXEventTypeStringRoomMessage,
+        @"unsigned": @{
+            @"age": @(5328779)
+        },
+        @"room_id": @"!roomid:matrix.org"
+    };
     
     
     MXEvent *messageEvent = [MXEvent modelFromJSON:messageEventDict];
@@ -143,7 +143,7 @@ static NSString* const kEditedMarkdownMessageFormattedText = @"<strong>I meant H
     XCTAssertTrue(editedEvent.contentHasBeenEdited);
     XCTAssertEqualObjects(editedEvent.unsignedData.relations.replace.eventId, replaceEvent.eventId);
     
-    XCTAssertEqualObjects(editedEvent.content[@"body"], kEditedMarkdownMessageText);
+    XCTAssertEqualObjects(editedEvent.content[kMXMessageBodyKey], kEditedMarkdownMessageText);
     XCTAssertEqualObjects(editedEvent.content[@"formatted_body"], kEditedMarkdownMessageFormattedText);
 }
 

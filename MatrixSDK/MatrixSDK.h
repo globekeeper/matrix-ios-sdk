@@ -46,6 +46,10 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXTools.h"
 #import "MXThrottler.h"
 #import "NSData+MatrixSDK.h"
+#import "MXMatrixVersions.h"
+#import "MXCapabilities.h"
+#import "MXRoomVersionsCapability.h"
+#import "MXBooleanCapability.h"
 
 #import "MXSDKOptions.h"
 
@@ -98,7 +102,10 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXEventAnnotationChunk.h"
 #import "MXEventAnnotation.h"
 #import "MXEventReferenceChunk.h"
-
+#import "MXEventReplace.h"
+#import "MXInReplyTo.h"
+#import "MXEventRelationThread.h"
+#import "MXEventContentLocation.h"
 
 #import "MXReplyEventParser.h"
 
@@ -155,6 +162,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXOlmDecryption.h"
 #import "MXCachedSyncResponse.h"
 #import "MXBackgroundCryptoStore.h"
+#import "MXSharedHistoryKeyService.h"
 
 //  Sync response models
 #import "MXSyncResponse.h"
@@ -175,3 +183,6 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXInvitedGroupSync.h"
 #import "MXGroupSyncProfile.h"
 #import "MXDehydrationService.h"
+#import "MXBeaconInfo.h"
+#import "MXBeacon.h"
+#import "MXEventAssetType.h"

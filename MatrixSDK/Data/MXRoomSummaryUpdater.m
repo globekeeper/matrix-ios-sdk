@@ -23,6 +23,7 @@
 #import "MXRoom.h"
 #import "MXSession.h"
 #import "MXRoomNameDefaultStringLocalizer.h"
+#import "MXBeaconInfo.h"
 
 #import "NSArray+MatrixSDK.h"
 
@@ -44,7 +45,9 @@
 
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        updaterPerSession = [[NSMapTable alloc] init];
+        updaterPerSession = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsWeakMemory
+                                                      valueOptions:NSPointerFunctionsWeakMemory
+                                                          capacity:1];
     });
 
     MXRoomSummaryUpdater *updater = [updaterPerSession objectForKey:mxSession];
@@ -101,6 +104,11 @@
         // Do not display update events in the summary
         return NO;
     }
+    else if (event.isInThread)
+    {
+        // do not display thread events in the summary
+        return NO;
+    }
 
     // Accept redacted event only if configured
     if (_ignoreRedactedEvent && event.isRedactedEvent)
@@ -137,7 +145,9 @@
 {
     BOOL hasRoomMembersChange = NO;
     BOOL updated = NO;
-
+    
+    NSMutableSet<NSString*>* userIdsSharingLiveBeacon = [summary.userIdsSharingLiveBeacon mutableCopy] ?: [NSMutableSet new] ;
+    
     for (MXEvent *event in stateEvents)
     {
         switch (event.eventType)
@@ -229,12 +239,27 @@
                 updated = YES;
                 [self checkRoomCreateStateEventPredecessorAndUpdateObsoleteRoomSummaryIfNeededWithCreateContent:createContent summary:summary session:session roomState:roomState];
                 [self checkRoomIsVirtualWithCreateEvent:event summary:summary session:session];
-            }
-                break;
                 
+                break;
+            }
+
+            case MXEventTypeBeaconInfo:
+            {
+                [self updateUserIdsSharingLiveBeacon:userIdsSharingLiveBeacon withStateEvent:event];
+                break;
+            }
+            case MXEventTypeRoomHistoryVisibility:
+                summary.historyVisibility = roomState.historyVisibility;
+                break;
             default:
                 break;
         }
+    }
+    
+    if (![userIdsSharingLiveBeacon isEqualToSet:summary.userIdsSharingLiveBeacon])
+    {
+        summary.userIdsSharingLiveBeacon = userIdsSharingLiveBeacon;
+        updated = YES;
     }
 
     if (hasRoomMembersChange)
@@ -784,6 +809,43 @@
     
     // Only accept membership join or invite for given user id
     return [self isMembershipEventJoinOrInvite:event forUserId:userId]; 
+}
+
+#pragma mark Beacon info
+
+- (BOOL)updateUserIdsSharingLiveBeacon:(NSMutableSet<NSString*>*)userIdsSharingLiveBeacon withStateEvent:(MXEvent*)stateEvent
+{
+    MXBeaconInfo *beaconInfo = [[MXBeaconInfo alloc] initWithMXEvent:stateEvent];
+    
+    NSString *userId = beaconInfo.userId;
+    
+    if (!beaconInfo || !userId)
+    {
+        return NO;
+    }
+        
+    BOOL updated = NO;
+    
+    BOOL isUserExist = [userIdsSharingLiveBeacon containsObject:userId];
+    
+    if (beaconInfo.isLive)
+    {
+        if (!isUserExist)
+        {
+            [userIdsSharingLiveBeacon addObject:userId];
+            updated = YES;
+        }
+    }
+    else
+    {
+        if (isUserExist)
+        {
+            [userIdsSharingLiveBeacon removeObject:userId];
+            updated = YES;
+        }
+    }
+    
+    return updated;
 }
 
 @end

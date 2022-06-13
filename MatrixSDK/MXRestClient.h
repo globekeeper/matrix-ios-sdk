@@ -30,7 +30,6 @@
 #import "MXError.h"
 #import "MXRoomEventFilter.h"
 #import "MXInvite3PID.h"
-#import "MXEventTimeline.h"
 #import "MXJSONModels.h"
 #import "MXFilterJSONModel.h"
 #import "MXMatrixVersions.h"
@@ -43,12 +42,16 @@
 #import "MXTurnServerResponse.h"
 #import "MXSpaceChildrenResponse.h"
 #import "MXURLPreview.h"
+#import "MXTaggedEvents.h"
+#import "MXCredentials.h"
+#import "MXRoomAliasResolution.h"
 
 @class MXThirdpartyProtocolsResponse;
 @class MXThirdPartyUsersResponse;
 @class MXSyncResponse;
 @class MXDeviceListResponse;
 @class MXSpaceChildrenRequestParameters;
+@class MXCapabilities;
 
 #pragma mark - Constants definitions
 /**
@@ -116,6 +119,18 @@ FOUNDATION_EXPORT NSString *const kMXMembersOfRoomParametersNotMembership;
  */
 typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^success)(NSString *accessToken), void (^failure)(NSError *error));
 
+/**
+ Block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
+
+ @param error The error from the failed refresh.
+ */
+typedef void(^MXRestClientUnauthenticatedHandler)(MXError *error, BOOL isSoftLogout, BOOL isRefreshTokenAuth, void (^completion)(void));
+
+/**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
+ @param handler A closure that accepts the current persisted credentials. These can optionally be updated and saved back initWithCredentials returning YES from the closure.
+ */
+typedef void (^MXRestClientPersistTokenDataHandler)(void (^handler)(NSArray <MXCredentials*> *credentials, void (^shouldPersistCompletion)(BOOL didUpdateCredentials)));
 
 /**
  `MXRestClient` makes requests to Matrix servers.
@@ -128,9 +143,29 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 @interface MXRestClient : NSObject
 
 /**
+ Notification name sent when the refresh/access tokens should be updated in the credential. userInfo contains 'kMXCredentialsNewRefreshTokenDataKey'.
+ */
+extern NSString *const MXCredentialsUpdateTokensNotification;
+
+/**
+ A key for getting the refresh response from `MXCredentialsWillUpdateTokensNotification` userInfo.
+ */
+extern NSString *const kMXCredentialsNewRefreshTokenDataKey;
+
+/**
  Credentials for the Matrix Client-Server API.
  */
 @property (nonatomic, readonly) MXCredentials *credentials;
+
+/**
+ Block called when the rest client failed to refresh it's tokens and session is now unauthenticated.
+ */
+@property (nonatomic, copy) MXRestClientUnauthenticatedHandler unauthenticatedHandler;
+
+/**
+ Block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new data to disk if it is not.
+ */
+@property (nonatomic, copy) MXRestClientPersistTokenDataHandler persistTokenDataHandler;
 
 /**
  The homeserver URL.
@@ -213,7 +248,26 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
  @return a MXRestClient instance.
  */
--(id)initWithCredentials:(MXCredentials*)credentials andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock NS_REFINED_FOR_SWIFT;
+
+-(id)initWithCredentials:(MXCredentials*)credentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+NS_REFINED_FOR_SWIFT;
+
+/**
+ Create an instance based on a matrix user account.
+
+ @param credentials the response to a login or a register request.
+ @param onUnrecognizedCertBlock the block called to handle unrecognized certificate (nil if unrecognized certificates are ignored).
+ @param persistentTokenDataHandler the block called when the rest client needs to check the persisted refresh token data is valid and optionally persist new refresh data to disk if it is not.
+ @param unauthenticatedHandler the block called when the rest client has become unauthenticated(E.g. refresh failed or server invalidated an access token).
+ @return a MXRestClient instance.
+ */
+
+-(id)initWithCredentials:(MXCredentials*)credentials
+andOnUnrecognizedCertificateBlock:(MXHTTPClientOnUnrecognizedCertificate)onUnrecognizedCertBlock
+andPersistentTokenDataHandler: (MXRestClientPersistTokenDataHandler)persistentTokenDataHandler
+andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHandler
+NS_REFINED_FOR_SWIFT;
 
 - (void)close;
 
@@ -243,6 +297,17 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)wellKnow:(void (^)(MXWellKnown *wellKnown))success
                      failure:(void (^)(NSError *error))failure;
 
+/**
+ Get the capabilities of the homeserver.
+
+ @param success A block object called when the operation succeeds. It provides
+                the capabilities.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)capabilities:(void (^)(MXCapabilities *capabilities))success
+                         failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Registration operations
 /**
@@ -260,13 +325,27 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 /**
  Check whether a username is already in use.
 
- @username the user name to test (This value must not be nil).
+ @param username the user name to test (This value must not be nil).
  @param callback A block object called when the operation is completed.
 
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)isUserNameInUse:(NSString*)username
-                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT;
+                           callback:(void (^)(BOOL isUserNameInUse))callback NS_REFINED_FOR_SWIFT __deprecated_msg("Use isUsernameAvailable instead.");
+
+/**
+ Checks whether a username is available.
+
+ @param username the user name to test (This value must not be nil).
+ @param success A block object called when the operation succeeds. It provides the server response
+ as an MXUsernameAvailability instance.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)isUsernameAvailable:(NSString*)username
+                                success:(void (^)(MXUsernameAvailability *availability))success
+                                failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 /**
  Get the list of register flows supported by the home server.
 
@@ -759,6 +838,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a generic non state event to a room.
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param eventTypeString the type of the event. @see MXEventType.
  @param content the content that will be sent to the server as a JSON object.
  @param txnId the transaction id to use. If nil, one will be generated.
@@ -769,6 +849,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendEventToRoom:(NSString*)roomId
+                           threadId:(NSString*)threadId
                           eventType:(MXEventTypeString)eventTypeString
                             content:(NSDictionary*)content
                               txnId:(NSString*)txnId
@@ -799,6 +880,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param msgType the type of the message. @see MXMessageType.
  @param content the message content that will be sent to the server as a JSON object.
  @param success A block object called when the operation succeeds. It returns
@@ -808,6 +890,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendMessageToRoom:(NSString*)roomId
+                             threadId:(NSString*)threadId
                               msgType:(MXMessageType)msgType
                               content:(NSDictionary*)content
                               success:(void (^)(NSString *eventId))success
@@ -817,6 +900,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  Send a text message to a room
 
  @param roomId the id of the room.
+ @param threadId the identifier of the thread for the event to be sent. If nil, the event will be sent to the room.
  @param text the text to send.
  @param success A block object called when the operation succeeds. It returns
  the event id of the event generated on the home server
@@ -825,6 +909,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendTextMessageToRoom:(NSString*)roomId
+                                 threadId:(NSString*)threadId
                                      text:(NSString*)text
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -946,6 +1031,8 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 /**
  Set the join rule of a room.
 
+ @deprecated join rules have been enhanced to support `restricted` rule. You should now call [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:].
+
  @param roomId the id of the room.
  @param joinRule the rule to set.
  @param success A block object called when the operation succeeds.
@@ -956,10 +1043,29 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
                            joinRule:(MXRoomJoinRule)joinRule
                             success:(void (^)(void))success
+                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:] instead");
+
+/**
+ Set the join rule of a room.
+
+ @param joinRule the rule to set.
+ @param roomId the id of the room.
+ @param allowedParentIds Optional: list of allowedParentIds (required only for `restricted` join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083) )
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)setRoomJoinRule:(MXRoomJoinRule)joinRule
+                      forRoomWithId:(NSString*)roomId
+                   allowedParentIds:(NSArray<NSString *> *)allowedParentIds
+                            success:(void (^)(void))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Get the join rule of a room.
+ 
+ @deprecated join rules have been enhanced to support `restricted` rule. You should now call [joinRuleOfRoomWithId:success:failure:].
 
  @param roomId the id of the room.
  @param success A block object called when the operation succeeds. It provides the room join rule.
@@ -969,7 +1075,20 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
  */
 - (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
                            success:(void (^)(MXRoomJoinRule joinRule))success
-                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [joinRuleOfRoomWithId:success:failure:] instead");
+
+/**
+ Get the enhanced join rule of a room.
+
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds. It provides the room enhanced join rule as per [MSC3083](https://github.com/matrix-org/matrix-doc/pull/3083.
+ @param failure A block object called when the operation fails.
+
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)joinRuleOfRoomWithId:(NSString*)roomId
+                                 success:(void (^)(MXRoomJoinRuleResponse *joinRule))success
+                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the guest access of a room.
@@ -1274,7 +1393,7 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
 - (MXHTTPOperation*)messagesForRoom:(NSString*)roomId
                                from:(NSString*)from
                           direction:(MXTimelineDirection)direction
-                              limit:(NSUInteger)limit
+                              limit:(NSInteger)limit
                              filter:(MXRoomEventFilter*)roomEventFilter
                             success:(void (^)(MXPaginationResponse *paginatedResponse))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
@@ -1498,6 +1617,21 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 via:(NSArray<NSString *>*)via
                             success:(void (^)(MXPublicRoom *room))success
                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+/**
+ Upgrade a room to a new version
+ 
+ @param roomId the id of the room.
+ @param roomVersion the new room version
+ @param success A block object called when the operation succeeds. It provides the ID of the replacement room.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)upgradeRoomWithId:(NSString*)roomId
+                                   to:(NSString*)roomVersion
+                              success:(void (^)(NSString *replacementRoomId))success
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Room tags operations
 /**
@@ -1891,18 +2025,19 @@ typedef MXHTTPOperation* (^MXRestClientIdentityServerAccessTokenHandler)(void (^
                                 failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
- Get the room ID corresponding to this room alias
+ Resolve given room alias to a room identifier and a list of servers aware of this identifier
 
  @param roomAlias the alias of the room to look for.
 
- @param success A block object called when the operation succeeds. It provides the ID of the room.
+ @param success A block object called when the operation succeeds.
+                It provides a resolution object containing room ID and a list of servers
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)roomIDForRoomAlias:(NSString*)roomAlias
-                               success:(void (^)(NSString *roomId))success
-                               failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+- (MXHTTPOperation*)resolveRoomAlias:(NSString *)roomAlias
+                             success:(void (^)(MXRoomAliasResolution *resolution))success
+                             failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 
 #pragma mark - Third party Lookup API
@@ -2764,6 +2899,7 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
  @param relationType (optional) the type of relation.
  @param eventType (optional) event type to filter by.
  @param from the token to start getting results from.
+ @param direction direction from the token.
  @param limit (optional, use -1 to not defined this value) the maximum number of messages to return.
 
  @param success A block object called when the operation succeeds. It provides a `MXAggregationPaginatedResponse` object.
@@ -2776,9 +2912,10 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
                          relationType:(NSString*)relationType
                             eventType:(NSString*)eventType
                                  from:(NSString*)from
-                                limit:(NSUInteger)limit
+                            direction:(MXTimelineDirection)direction
+                                limit:(NSInteger)limit
                               success:(void (^)(MXAggregationPaginatedResponse *paginatedResponse))success
-                              failure:(void (^)(NSError *error))failure;
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 #pragma mark - Spaces
 
@@ -2786,12 +2923,26 @@ Note: Clients should consider avoiding this endpoint for URLs posted in encrypte
 /// @param spaceId The room id of the queried space.
 /// @param suggestedOnly If `true`, return only child events and rooms where the `m.space.child` event has `suggested: true`.
 /// @param limit A limit to the maximum number of children to return per space. `-1` for no limit
+/// @param maxDepth The maximum depth in the tree (from the root room) to return. The deepest depth returned will not include children events. `-1` for no limit
+/// @param paginationToken Pagination token given to retrieve the next set of rooms.
 /// @param success A block object called when the operation succeeds. It provides a `MXSpaceChildrenResponse` object.
 /// @param failure A block object called when the operation fails.
 /// @return a MXHTTPOperation instance.
 - (MXHTTPOperation*)getSpaceChildrenForSpaceWithId:(NSString*)spaceId
                                      suggestedOnly:(BOOL)suggestedOnly
                                              limit:(NSInteger)limit
+                                          maxDepth:(NSInteger)maxDepth
+                                   paginationToken:(NSString*)paginationToken
                                            success:(void (^)(MXSpaceChildrenResponse *spaceChildrenResponse))success
                                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
+#pragma mark - Homeserver capabilities
+
+/// Get the capabilities of the home server
+/// @param success A block object called when the operation succeeds. It provides a `MXHomeserverCapabilities` object.
+/// @param failure A block object called when the operation fails.
+/// @return a MXHTTPOperation instance.
+- (MXHTTPOperation*)homeServerCapabilitiesWithSuccess:(void (^)(MXHomeserverCapabilities *capabilities))success
+                                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
+
 @end
