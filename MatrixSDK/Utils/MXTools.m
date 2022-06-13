@@ -627,9 +627,26 @@ NSCharacterSet *uriComponentCharset;
 
 + (NSString*)serverNameInMatrixIdentifier:(NSString *)identifier
 {
-    // This converts something:example.org into a server domain
-    //  by splitting on colons and ignoring the first entry ("something").
-    return [identifier componentsSeparatedByString:@":"].lastObject;
+  
+  // This converts something:example.org into a server domain
+  // by splitting on colons and ignoring the first entry ("something").
+  NSArray* serverParts = [identifier componentsSeparatedByString:@":"];
+  
+  if (serverParts.count == 2) {
+    
+    NSString* port = serverParts.lastObject;
+    
+    // In case of server domain containing port eg. example.org:1234
+    // perform this sanity check
+    NSCharacterSet* notDigits = [[NSCharacterSet decimalDigitCharacterSet] invertedSet];
+    if ([port rangeOfCharacterFromSet:notDigits].location == NSNotFound) {
+      return identifier;
+    } else {
+      return serverParts.lastObject;
+    }
+  } else {
+    return identifier;
+  }
 }
 
 
