@@ -43,7 +43,7 @@ API_AVAILABLE(ios(10.0))
 - (void)startCall:(MXCall *)call;
 - (void)endCall:(MXCall *)call;
 
-- (void)reportIncomingCall:(MXCall *)call;
+- (void)reportIncomingCall:(MXCall *)call completion:(void (^)(NSError *_Nullable error))completion;
 
 - (void)reportCall:(MXCall *)call startedConnectingAtDate:(nullable NSDate *)date;
 - (void)reportCall:(MXCall *)call connectedAtDate:(nullable NSDate *)date;

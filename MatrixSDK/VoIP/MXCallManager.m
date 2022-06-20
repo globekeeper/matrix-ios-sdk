@@ -746,7 +746,7 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             [self.callKitAdapter startCall:call];
             break;
         case MXCallStateRinging:
-            [self.callKitAdapter reportIncomingCall:call];
+        [self.callKitAdapter reportIncomingCall:call completion:^(NSError * _Nullable error) { }];
             break;
         case MXCallStateConnecting:
             [self.callKitAdapter reportCall:call startedConnectingAtDate:nil];

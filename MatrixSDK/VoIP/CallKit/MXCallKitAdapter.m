@@ -191,7 +191,7 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
     }
 }
 
-- (void)reportIncomingCall:(MXCall *)call {
+- (void)reportIncomingCall:(MXCall *)call completion:(void (^)(NSError *_Nullable error))completion {
     NSUUID *callUUID = call.callUUID;
     
     if (self.calls[callUUID])
@@ -232,8 +232,10 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         {
             [call hangupWithReason:MXCallHangupReasonUnknownError];
             [self.calls removeObjectForKey:callUUID];
+            completion(error);
             return;
         }
+      completion(nil);
     }];
     
 }
