@@ -345,10 +345,6 @@ NSString *const kMXRoomInviteStateEventIdPrefix = @"invite-";
         if (direction == MXTimelineDirectionBackwards)
         {
             paginationToken = [self->store paginationTokenOfRoom:self.state.roomId];
-            if (nil == paginationToken)
-            {
-                paginationToken = @"END";
-            }
         }
         else
         {

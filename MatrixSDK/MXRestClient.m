@@ -2699,8 +2699,10 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     // All query parameters are optional. Fill the request parameters on demand
     NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
 
-    parameters[@"from"] = from;
-
+    if (from) {
+      parameters[@"from"] = from;
+    }
+    
     if (direction == MXTimelineDirectionForwards)
     {
         parameters[@"dir"] = kMXTimelineDirectionForwards;
