@@ -2949,7 +2949,7 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                              success:(void (^)(MXEvent *event))success
                              failure:(void (^)(NSError *error))failure
 {
-    NSString *path = [NSString stringWithFormat:@"%@/events/%@",
+    NSString *path = [NSString stringWithFormat:@"%@/event/%@",
                       apiPathPrefix,
                       [MXTools encodeURIComponent:eventId]];
 
