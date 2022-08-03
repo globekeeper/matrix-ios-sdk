@@ -1085,6 +1085,26 @@ public extension MXRestClient {
         return __members(ofRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+  /**
+   Get a value of a state event of a room.
+   
+   This is equivalent to the events returned under the 'state' key for this room in initialSyncOfRoom.
+   
+   See [the matrix documentation on state events](http://matrix.org/docs/api/client-server/#!/-rooms/get_state_events)
+   for more detail.
+   
+   - parameters:
+   - roomId: the id of the room.
+   - completion: A block object called when the operation completes.
+   - response: Provides the raw home server JSON response on success.
+   
+   - returns: a `MXHTTPOperation` instance.
+   */
+  @nonobjc @discardableResult func state(eventType type: String, ofRoom roomId: String, completion: @escaping (_ response: MXResponse<[String: Any]>) -> Void) -> MXHTTPOperation {
+    return __value(ofStateEvent: type, inRoom: roomId, success: currySuccess(completion), failure: curryFailure(completion))
+  }
+  
+  
     /**
      Get a list of all the current state events for this room.
      

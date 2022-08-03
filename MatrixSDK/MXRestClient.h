@@ -914,6 +914,20 @@ NS_REFINED_FOR_SWIFT;
                                   success:(void (^)(NSString *eventId))success
                                   failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
+/**
+ Generic method to get the value of a state event of a room.
+ 
+ @param eventType the type of the state event.
+ @param roomId the id of the room.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)valueOfStateEvent:(MXEventTypeString)eventType
+                               inRoom:(NSString*)roomId
+                              success:(void (^)(NSDictionary *JSONResponse))success
+                              failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**
  Set the topic of a room.
