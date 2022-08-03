@@ -137,7 +137,7 @@
                 }];
             }];
 
-            [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
+            [room sendTextMessage:@"Hello" location:nil threadId:nil success:nil failure:^(NSError *error) {
                 XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                 [expectation fulfill];
             }];
@@ -176,7 +176,7 @@
                     }];
                 }];
 
-                [room sendTextMessage:@"Hello" threadId:nil success:nil failure:^(NSError *error) {
+                [room sendTextMessage:@"Hello" location:nil threadId:nil success:nil failure:^(NSError *error) {
                     XCTFail(@"Cannot set up intial test conditions - error: %@", error);
                     [expectation fulfill];
                 }];

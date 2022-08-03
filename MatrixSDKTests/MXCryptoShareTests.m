@@ -84,11 +84,11 @@
 
         // - Bob sends messages
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV sendTextMessage:messages[0] threadId:nil success:^(NSString *eventId) {
-            [roomFromBobPOV sendTextMessage:messages[1] threadId:nil success:^(NSString *eventId) {
-                [roomFromBobPOV sendTextMessage:messages[2] threadId:nil success:^(NSString *eventId) {
-                    [roomFromBobPOV sendTextMessage:messages[3] threadId:nil success:^(NSString *eventId) {
-                        [roomFromBobPOV sendTextMessage:messages[4] threadId:nil success:nil failure:nil];
+        [roomFromBobPOV sendTextMessage:messages[0] location:nil threadId:nil success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messages[1] location:nil threadId:nil success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:messages[2] location:nil threadId:nil success:^(NSString *eventId) {
+                    [roomFromBobPOV sendTextMessage:messages[3] location:nil threadId:nil success:^(NSString *eventId) {
+                        [roomFromBobPOV sendTextMessage:messages[4] location:nil threadId:nil success:nil failure:nil];
                     } failure:nil];
                 } failure:nil];
             } failure:nil];
@@ -778,7 +778,7 @@
         success();
     }];
     
-    [room sendTextMessage:message threadId:nil success:nil failure:failure];
+    [room sendTextMessage:message location:nil threadId:nil success:nil failure:failure];
 }
 
 /**

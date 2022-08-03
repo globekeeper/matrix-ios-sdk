@@ -832,7 +832,7 @@
         }];
         
         // Send first message
-        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage threadId:nil localEcho:nil success:^(NSString *eventId) {
+        [room sendTextMessage:firstMessage formattedText:firstFormattedMessage location:nil threadId:nil localEcho:nil success:^(NSString *eventId) {
             MXLogDebug(@"Send first message with success");
         } failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);

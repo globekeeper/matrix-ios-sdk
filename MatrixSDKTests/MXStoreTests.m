@@ -529,8 +529,8 @@
                             }
 
                             // Try with 2 more live events
-                            [room sendTextMessage:@"How is the pagination #2?" threadId:nil success:nil failure:nil];
-                            [room sendTextMessage:@"How is the pagination #3?" threadId:nil success:nil failure:nil];
+                          [room sendTextMessage:@"How is the pagination #2?" location: nil threadId:nil success:nil failure:nil];
+                            [room sendTextMessage:@"How is the pagination #3?" location: nil threadId:nil success:nil failure:nil];
 
                         } failure:^(NSError *error) {
                             XCTFail(@"The request should not fail - NSError: %@", error);
@@ -586,7 +586,7 @@
                 // Start checking pagination from the cache
                 [room2liveTimeline resetPagination];
 
-                [room sendTextMessage:@"How is the pagination #1?" threadId:nil success:nil failure:nil];
+                [room sendTextMessage:@"How is the pagination #1?" location: nil  threadId:nil success:nil failure:nil];
 
             } failure:^(NSError *error) {
                 XCTFail(@"The request should not fail - NSError: %@", error);
@@ -992,7 +992,7 @@
         }];
     }];
 
-    [room sendTextMessage:@"This is text message" threadId:nil success:^(NSString *eventId) {
+    [room sendTextMessage:@"This is text message" location: nil threadId:nil success:^(NSString *eventId) {
 
         messageEventId = eventId;
 

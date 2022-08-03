@@ -63,7 +63,7 @@
              
              // Send a message to a have megolm key in the store
              MXRoom *room = [aliceSession roomWithRoomId:roomId];
-             [room sendTextMessage:@"message" threadId:nil success:^(NSString *eventId) {
+             [room sendTextMessage:@"message" location:nil threadId:nil success:^(NSString *eventId) {
                  
                  readyToTest(aliceSession, roomId, expectation);
                  

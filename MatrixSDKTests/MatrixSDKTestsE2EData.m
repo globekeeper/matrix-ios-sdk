@@ -220,15 +220,15 @@
 
 
         // Send messages in expected order
-        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] threadId:nil success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:messagesFromAlice[0] location:nil threadId:nil success:^(NSString *eventId) {
 
-            [roomFromBobPOV sendTextMessage:messagesFromBob[0] threadId:nil success:^(NSString *eventId) {
+            [roomFromBobPOV sendTextMessage:messagesFromBob[0] location:nil threadId:nil success:^(NSString *eventId) {
 
-                [roomFromBobPOV sendTextMessage:messagesFromBob[1] threadId:nil success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:messagesFromBob[1] location:nil threadId:nil success:^(NSString *eventId) {
 
-                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] threadId:nil success:^(NSString *eventId) {
+                    [roomFromBobPOV sendTextMessage:messagesFromBob[2] location:nil threadId:nil success:^(NSString *eventId) {
 
-                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] threadId:nil success:nil failure:nil];
+                        [roomFromAlicePOV sendTextMessage:messagesFromAlice[1] location:nil threadId:nil success:nil failure:nil];
 
                     } failure:nil];
 

@@ -61,7 +61,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
 {
     [matrixSDKTestsData doMXSessionTestWithBobAndARoom:self andStore:[[MXMemoryStore alloc] init] readyToTest:^(MXSession *mxSession, MXRoom *room, XCTestExpectation *expectation) {
 
-        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText location:nil threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
                 kMXMessageTypeKey: kMXMessageTypeText,
@@ -235,7 +235,7 @@ static NSString* const kThreadedMessage1Text = @"Morning!";
         
         MXRoom *room = [mxSession roomWithRoomId:roomId];
 
-        [room sendTextMessage:kOriginalMessageText threadId:nil success:^(NSString *eventId) {
+        [room sendTextMessage:kOriginalMessageText location:nil threadId:nil success:^(NSString *eventId) {
 
             NSDictionary *eventContent = @{
                 kMXMessageTypeKey: kMXMessageTypeText,
