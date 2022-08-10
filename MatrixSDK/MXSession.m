@@ -61,6 +61,7 @@ NSString *const kMXSessionDirectRoomsDidChangeNotification = @"kMXSessionDirectR
 NSString *const kMXSessionVirtualRoomsDidChangeNotification = @"kMXSessionVirtualRoomsDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeNotification = @"kMXSessionAccountDataDidChangeNotification";
 NSString *const kMXSessionAccountDataDidChangeIdentityServerNotification = @"kMXSessionAccountDataDidChangeIdentityServerNotification";
+NSString *const kMXSessionAccountDataDidChangeBreadcrumbsNotification = @"kMXSessionAccountDataDidChangeBreadcrumbsNotification";
 NSString *const kMXSessionDidCorruptDataNotification = @"kMXSessionDidCorruptDataNotification";
 NSString *const kMXSessionCryptoDidCorruptDataNotification = @"kMXSessionCryptoDidCorruptDataNotification";
 NSString *const kMXSessionNewGroupInviteNotification = @"kMXSessionNewGroupInviteNotification";
@@ -394,9 +395,17 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Create myUser from the store
                 MXUser *myUser = [self.store userWithUserId:self->matrixRestClient.credentials.userId];
-
+                
                 // My user is a MXMyUser object
-                self->_myUser = (MXMyUser*)myUser;
+                if ([myUser isKindOfClass:[MXMyUser class]])
+                {
+                    self->_myUser = (MXMyUser *)myUser;
+                }
+                else
+                {
+                    self->_myUser = [[MXMyUser alloc] initWithUserId:myUser.userId andDisplayname:myUser.displayname andAvatarUrl:myUser.avatarUrl];
+                }
+                
                 self->_myUser.mxSession = self;
                 
                 // Use the cached agreement to identity server terms.
@@ -413,28 +422,71 @@ typedef void (^MXOnResumeDone)(void);
 
                 // Load MXRoomSummaries from the store
                 NSDate *startDate2 = [NSDate date];
-                NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
-                
-                MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
 
-                // Create MXRooms from their states stored in the store
-                NSDate *startDate3 = [NSDate date];
-                for (NSString *roomId in roomIds)
+                dispatch_group_t dispatchGroupRooms = dispatch_group_create();
+                NSUInteger numberOfSummaries = self.store.roomSummaryStore.countOfRooms;
+                taskProfile.units = numberOfSummaries;
+                NSArray<NSString *> *roomIDs = self.store.roomIds;
+                BOOL fixSummariesLastMessages = NO;
+                if (numberOfSummaries < roomIDs.count)
                 {
-                    [self loadRoom:roomId];
+                    MXLogWarning(@"[MXFileStore] Detected missing rooms, expected: %tu, got: %tu", roomIDs.count, numberOfSummaries);
+
+                    fixSummariesLastMessages = YES;
+                    //  remove all room summaries
+                    [self.store.roomSummaryStore removeAllSummaries];
+
+                    //  recreate room summaries
+                    for (NSString *roomID in roomIDs)
+                    {
+                        dispatch_group_enter(dispatchGroupRooms);
+
+                        [MXRoomState loadRoomStateFromStore:self.store
+                                                 withRoomId:roomID
+                                              matrixSession:self
+                                                 onComplete:^(MXRoomState *roomState) {
+                            MXRoomSummary *summary = [self getOrCreateRoomSummary:roomID];
+                            [self.roomSummaryUpdateDelegate session:self
+                                                  updateRoomSummary:summary
+                                                    withStateEvents:roomState.stateEvents
+                                                          roomState:roomState];
+                            [summary save:YES];
+                            dispatch_group_leave(dispatchGroupRooms);
+                        }];
+                    }
                 }
 
-                MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
-                
-                taskProfile.units = self->rooms.count;
-                [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
-                
-                MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
-                
-                [self setState:MXSessionStateStoreDataReady];
-                
-                // The SDK client can use this data
-                onStoreDataReady();
+                dispatch_group_notify(dispatchGroupRooms, dispatch_get_main_queue(), ^{
+
+                    NSArray<NSString*> *roomIds = self.store.roomSummaryStore.rooms;
+
+                    MXLogDebug(@"[MXSession] Read %lu room ids in %.0fms", (unsigned long)roomIds.count, [[NSDate date] timeIntervalSinceDate:startDate2] * 1000);
+
+                    // Create MXRooms from their states stored in the store
+                    NSDate *startDate3 = [NSDate date];
+                    for (NSString *roomId in roomIds)
+                    {
+                        [self loadRoom:roomId];
+                    }
+
+                    MXLogDebug(@"[MXSession] Built %lu MXRooms in %.0fms", (unsigned long)self->rooms.count, [[NSDate date] timeIntervalSinceDate:startDate3] * 1000);
+
+                    if (fixSummariesLastMessages)
+                    {
+                        [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
+                                                                                 force:YES
+                                                                            completion:nil];
+                    }
+
+                    taskProfile.units = self->rooms.count;
+                    [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
+                    MXLogDebug(@"[MXSession] Total time to mount SDK data from MXStore: %.0fms", taskProfile.duration * 1000);
+
+                    [self setState:MXSessionStateStoreDataReady];
+
+                    // The SDK client can use this data
+                    onStoreDataReady();
+                });
             }
             else
             {
@@ -478,6 +530,8 @@ typedef void (^MXOnResumeDone)(void);
            storeCompletion:(void (^)(void))storeCompletion
 {
     MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
+    
+    [self.crypto handleSyncResponse:syncResponse];
     
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -1816,8 +1870,16 @@ typedef void (^MXOnResumeDone)(void);
                     [self refreshIdentityServerServiceTerms];
                 }
             }
+            
+            if ([event[@"type"] isEqualToString:kMXAccountDataTypeBreadcrumbs])
+            {
+                [[NSNotificationCenter defaultCenter] postNotificationName:kMXSessionAccountDataDidChangeBreadcrumbsNotification
+                                                                    object:self
+                                                                  userInfo:nil];
+            }
         }
 
+        [self validateAccountData];
         self.store.userAccountData = _accountData.accountData;
         
         // Trigger a global notification for the account data update
@@ -1827,6 +1889,20 @@ typedef void (^MXOnResumeDone)(void);
                                                                 object:self
                                                               userInfo:nil];
         }
+    }
+}
+
+/**
+ Private method to validate local account data and report any potential state corruption
+ */
+- (void)validateAccountData
+{
+    // Detecting an issue where more than one valid SSSS key is present on the client
+    // https://github.com/vector-im/element-ios/issues/4569
+    NSInteger keysCount = self.crypto.secretStorage.numberOfValidKeys;
+    if (keysCount > 1)
+    {
+        MXLogError(@"[MXSession] validateAccountData: Detected %ld valid SSSS keys, should only have one at most", keysCount)
     }
 }
 
@@ -4401,6 +4477,35 @@ typedef void (^MXOnResumeDone)(void);
     }];
 }
 
+- (void)updateBreadcrumbsWithRoomWithId:(NSString *)roomId
+                                success:(void (^)(void))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSDictionary<NSString *, NSArray *> *breadcrumbs = [self.accountData accountDataForEventType:kMXAccountDataTypeBreadcrumbs];
+    
+    NSMutableArray<NSString *> *recentRoomIds = breadcrumbs[kMXAccountDataTypeRecentRoomsKey] ? [NSMutableArray arrayWithArray:breadcrumbs[kMXAccountDataTypeRecentRoomsKey]] : [NSMutableArray array];
+    
+    NSInteger index = [recentRoomIds indexOfObject:roomId];
+    if (index != NSNotFound)
+    {
+        [recentRoomIds removeObjectAtIndex:index];
+    }
+    [recentRoomIds insertObject:roomId atIndex:0];
+    
+    [self setAccountData:@{kMXAccountDataTypeRecentRoomsKey : recentRoomIds}
+                 forType:kMXAccountDataTypeBreadcrumbs
+                 success:^{
+        if (success)
+        {
+            success();
+        }
+    } failure:^(NSError *error) {
+        if (failure)
+        {
+            failure(error);
+        }
+    }];
+}
 
 #pragma mark - Homeserver information
 - (MXWellKnown *)homeserverWellknown

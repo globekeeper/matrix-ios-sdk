@@ -31,6 +31,8 @@
 #import "MXCallSessionDescription.h"
 #import "MXCallRejectReplacementEventContent.h"
 
+MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 @interface MXTools : NSObject
 
 + (MXEventTypeString)eventTypeString:(MXEventType)eventType;
@@ -63,7 +65,7 @@
 
  @return the transaction id.
  */
-+ (NSString*)generateTransactionId;
++ (NSString* _Nonnull)generateTransactionId;
 
 /**
  Removing new line characters from NSString.
@@ -354,3 +356,5 @@ FOUNDATION_EXPORT NSString *const kMXToolsRegexStringForMatrixGroupIdentifier;
 + (BOOL)isRunningUnitTests;
 
 @end
+
+MX_ASSUME_MISSING_NULLABILITY_END

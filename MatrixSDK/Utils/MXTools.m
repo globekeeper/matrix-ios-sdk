@@ -27,6 +27,8 @@
 #import <os/proc.h>
 #endif
 
+#warning File has not been annotated with nullability, see MX_ASSUME_MISSING_NULLABILITY_BEGIN
+
 #pragma mark - Constant definition
 NSString *const kMXToolsRegexStringForEmailAddress              = @"[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}";
 
@@ -526,7 +528,7 @@ NSCharacterSet *uriComponentCharset;
     return [[NSProcessInfo processInfo] globallyUniqueString];
 }
 
-+ (NSString *)generateTransactionId
++ (NSString * _Nonnull)generateTransactionId
 {
     return [NSString stringWithFormat:@"m%u.%tu", arc4random_uniform(INT32_MAX), transactionIdCount++];
 }

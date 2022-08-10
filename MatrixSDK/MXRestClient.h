@@ -74,6 +74,7 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIgnoredUserList;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeUserWidgets;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeIdentityServer;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTerms;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeBreadcrumbs;
 FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTermsKey;
 
 /**
@@ -81,6 +82,7 @@ FOUNDATION_EXPORT NSString *const kMXAccountDataTypeAcceptedTermsKey;
  */
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIgnoredUser;
 FOUNDATION_EXPORT NSString *const kMXAccountDataKeyIdentityServer;
+FOUNDATION_EXPORT NSString *const kMXAccountDataTypeRecentRoomsKey;
 
 
 /**
@@ -515,12 +517,15 @@ NS_REFINED_FOR_SWIFT;
 
  @param oldPassword the current password to update.
  @param newPassword the new password.
+ @param logoutDevices flag to logout from all devices.
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
 
  @return a MXHTTPOperation instance.
  */
-- (MXHTTPOperation*)changePassword:(NSString*)oldPassword with:(NSString*)newPassword
+- (MXHTTPOperation*)changePassword:(NSString*)oldPassword
+                              with:(NSString*)newPassword
+                     logoutDevices:(BOOL)logoutDevices
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
@@ -1057,7 +1062,7 @@ NS_REFINED_FOR_SWIFT;
 - (MXHTTPOperation*)setRoomJoinRule:(NSString*)roomId
                            joinRule:(MXRoomJoinRule)joinRule
                             success:(void (^)(void))success
-                            failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:] instead");
+                            failure:(void (^)(NSError *error))failure __deprecated_msg("Use [setRoomJoinRule:forRoomWithId:allowedParentIds:success:failure:] instead");
 
 /**
  Set the join rule of a room.
@@ -1089,7 +1094,7 @@ NS_REFINED_FOR_SWIFT;
  */
 - (MXHTTPOperation*)joinRuleOfRoom:(NSString*)roomId
                            success:(void (^)(MXRoomJoinRule joinRule))success
-                           failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT __deprecated_msg("Use [joinRuleOfRoomWithId:success:failure:] instead");
+                           failure:(void (^)(NSError *error))failure __deprecated_msg("Use [joinRuleOfRoomWithId:success:failure:] instead");
 
 /**
  Get the enhanced join rule of a room.
@@ -1458,7 +1463,7 @@ NS_REFINED_FOR_SWIFT;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)stateOfRoom:(NSString*)roomId
-                        success:(void (^)(NSDictionary *JSONData))success
+                        success:(void (^)(NSArray *JSONData))success
                         failure:(void (^)(NSError *error))failure NS_REFINED_FOR_SWIFT;
 
 /**

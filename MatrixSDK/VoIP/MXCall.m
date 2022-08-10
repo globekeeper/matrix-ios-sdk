@@ -158,9 +158,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         }
 
         callStackCall.delegate = self;
-        
-        callStackCallOperationQueue = [NSOperationQueue mainQueue];
+
+        callStackCallOperationQueue = [[NSOperationQueue alloc] init];
+        callStackCallOperationQueue.qualityOfService = NSQualityOfServiceUserInteractive;
         callStackCallOperationQueue.maxConcurrentOperationCount = 1;
+        callStackCallOperationQueue.underlyingQueue = dispatch_get_main_queue();
         callStackCallOperationQueue.suspended = YES;
 
         // Set up TURN/STUN servers if we have them
@@ -1088,9 +1090,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
     // Incoming call
 
-    if (_state >= MXCallStateRinging)
+    if (_state >= MXCallStateWaitLocalMedia)
     {
-        //  already ringing, do nothing
+        //  already processed invite, do nothing
         return;
     }
 
@@ -1128,9 +1130,13 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     [callStackCallOperationQueue addOperationWithBlock:^{
         MXStrongifyAndReturnIfNil(self);
         
+        MXLogDebug(@"[MXCall][%@] start processing invite block", self.callId)
+        
         MXWeakify(self);
         [self->callStackCall startCapturingMediaWithVideo:self.isVideoCall success:^{
             MXStrongifyAndReturnIfNil(self);
+            
+            MXLogDebug(@"[MXCall][%@] capturing media", self.callId)
             
 #if TARGET_OS_IPHONE
             [self.audioOutputRouter reroute];
@@ -1140,6 +1146,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                      success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
+                MXLogDebug(@"[MXCall][%@] successfully handled offer", self.callId)
                 // Check whether the call has not been ended.
                 if (self.state != MXCallStateEnded)
                 {
@@ -1631,6 +1638,9 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                         break;
                     case MXCallHangupReasonInviteTimeout:
                         _endReason = MXCallEndReasonMissed;
+                        break;
+                    case MXCallHangupReasonUserBusy:
+                        _endReason = MXCallEndReasonBusy;
                         break;
                 }
                 break;
