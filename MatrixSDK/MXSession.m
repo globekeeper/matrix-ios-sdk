@@ -195,6 +195,10 @@ typedef void (^MXOnResumeDone)(void);
  */
 @property (nonatomic) NSUInteger preventPauseCount;
 
+#if TARGET_OS_IPHONE
+@property (nonatomic, strong, readonly) MXUIKitApplicationStateService *applicationStateService;
+#endif
+
 @property (nonatomic, readwrite) MXScanManager *scanManager;
 
 /**
@@ -233,6 +237,9 @@ typedef void (^MXOnResumeDone)(void);
         _accountData = [[MXAccountData alloc] init];
         peekingRooms = [NSMutableArray array];
         _preventPauseCount = 0;
+#if TARGET_OS_IPHONE
+        _applicationStateService = [MXUIKitApplicationStateService new];
+#endif
         directRoomsOperationsQueue = [NSMutableArray array];
         publicisedGroupsByUserId = [[NSMutableDictionary alloc] init];
         nativeToVirtualRoomIds = [NSMutableDictionary dictionary];
@@ -583,7 +590,9 @@ typedef void (^MXOnResumeDone)(void);
                                     dispatch_group_leave(dispatchGroup);
                                 }
                             } failure:^(NSError *error) {
-                                MXLogError(@"[MXSession] handleSyncResponse: event fetch failed: %@", error);
+                                MXLogErrorDetails(@"[MXSession] handleSyncResponse: event fetch failed", @{
+                                    @"error": error ?: @"unknown"
+                                });
                                 dispatch_group_leave(dispatchGroup);
                             }];
                         }
@@ -862,7 +871,9 @@ typedef void (^MXOnResumeDone)(void);
         } failure:^(NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
-            MXLogError(@"[MXSession] startWithSyncFilterId: setStore failed with error: %@", error);
+            MXLogErrorDetails(@"[MXSession] startWithSyncFilterId: setStore failed", @{
+                @"error": error ?: @"unknown"
+            });
 
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
@@ -951,7 +962,9 @@ typedef void (^MXOnResumeDone)(void);
                 // Initial server sync
                 [self serverSyncWithServerTimeout:0 success:onServerSyncDone failure:^(NSError *error) {
 
-                    MXLogError(@"[MXSession] _startWithSyncFilterId: Failed with error %@", error);
+                    MXLogErrorDetails(@"[MXSession] _startWithSyncFilterId: Failed", @{
+                        @"error": error ?: @"unknown"
+                    });
                 
                     [self setState:MXSessionStateInitialSyncFailed];
                     failure(error);
@@ -960,7 +973,9 @@ typedef void (^MXOnResumeDone)(void);
 
             } failure:^(NSError *error) {
 
-                MXLogError(@"[MXSession] Crypto failed to start. Error: %@", error);
+                MXLogErrorDetails(@"[MXSession] Crypto failed to start", @{
+                    @"error": error ?: @"unknown"
+                });
                 
                 [self setState:MXSessionStateInitialSyncFailed];
                 failure(error);
@@ -969,7 +984,9 @@ typedef void (^MXOnResumeDone)(void);
 
         } failure:^(NSError *error) {
             
-            MXLogError(@"[MXSession] Get the user's profile information failed with error %@", error);
+            MXLogErrorDetails(@"[MXSession] Get the user's profile information failed", @{
+                @"error": error ?: @"unknown"
+            });
             
             [self setState:MXSessionStateInitialSyncFailed];
             failure(error);
@@ -1363,6 +1380,17 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] setPreventPauseCount: Actually pause the session");
             [self pause];
         }
+        else
+        {
+#if TARGET_OS_IPHONE
+            // Pause the session if app is already in the background/inactive but pause wasn't requested
+            if (self.applicationStateService.applicationState != UIApplicationStateActive)
+            {
+                MXLogDebug(@"[MXSession] setPreventPauseCount: Pause session on already backgrounded/inactive app");
+                [self pause];
+            }
+#endif
+        }
     }
 }
 
@@ -1378,6 +1406,7 @@ typedef void (^MXOnResumeDone)(void);
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
+    __block StopDurationTracking stopDurationTracking;
     __block MXSyncResponse *syncResponse;
     __block BOOL useLiveResponse = YES;
 
@@ -1409,6 +1438,13 @@ typedef void (^MXOnResumeDone)(void);
             BOOL isInitialSync = !self.isEventStreamInitialised;
             MXTaskProfileName taskName = isInitialSync ? MXTaskProfileNameStartupInitialSync : MXTaskProfileNameStartupIncrementalSync;
             syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:taskName];
+            if (isInitialSync) {
+                // Temporarily tracking performance both by `MXSDKOptions.sharedInstance.profiler` (manually measuring time)
+                // and `MXSDKOptions.sharedInstance.analyticsDelegate` (delegating to performance monitoring tool).
+                // This ambiguity will be resolved in the future
+                NSString *operation = MXSDKOptions.sharedInstance.enableGroupSessionCache ? @"initialSync.enableGroupSessionCache" : @"initialSync.diableGroupSessionCache";
+                stopDurationTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXSession" operation:operation];
+            }
         }
         
         NSString * streamToken = self.store.eventStreamToken;
@@ -1451,6 +1487,9 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
+            if (stopDurationTracking) {
+                stopDurationTracking();
+            }
         }
         
         BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -1663,7 +1702,9 @@ typedef void (^MXOnResumeDone)(void);
         }
         else
         {
-            MXLogError(@"[MXSession] handleServerSyncError: %@", error);
+            MXLogErrorDetails(@"[MXSession] handleServerSyncError", @{
+                @"error": error ?: @"unknown"
+            });
             
             MXError *mxError = [[MXError alloc] initWithNSError:error];
             if (mxError)
@@ -1902,7 +1943,9 @@ typedef void (^MXOnResumeDone)(void);
     NSInteger keysCount = self.crypto.secretStorage.numberOfValidKeys;
     if (keysCount > 1)
     {
-        MXLogError(@"[MXSession] validateAccountData: Detected %ld valid SSSS keys, should only have one at most", keysCount)
+        MXLogErrorDetails(@"[MXSession] validateAccountData: Detected multiple valid SSSS keys, should only have one at most", @{
+            @"count": @(keysCount)
+        });
     }
 }
 
@@ -2017,7 +2060,8 @@ typedef void (^MXOnResumeDone)(void);
 {
     BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
     if (!isInValidState) {
-        MXLogFailure(@"[MXSession] state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]);
+        NSString *message = [NSString stringWithFormat:@"[MXSession] state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
+        MXLogFailure(message);
         if (completion)
         {
             completion();
@@ -2608,7 +2652,11 @@ typedef void (^MXOnResumeDone)(void);
         [self joinRoom:roomId viaServers:nil success:^(MXRoom *room) {
             MXLogDebug(@"[MXSession] joinPendingRoomInvites: Joined room: %@", roomId)
         } failure:^(NSError *error) {
-            MXLogError(@"[MXSession] joinPendingRoomInvites: Failed to join room: %@, error: %@", roomId, error)
+            NSDictionary *details = @{
+                @"error": error ?: @"unknown",
+                @"room_id": roomId ?: @"unknown"
+            };
+            MXLogErrorDetails(@"[MXSession] joinPendingRoomInvites: Failed to join room", details);
             
             if (error.code == kMXRoomAlreadyJoinedErrorCode)
             {
@@ -3050,7 +3098,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     if (eventId == nil)
     {
-        MXLogError(@"[MXSession] eventWithEventId called with no eventId. Call stack: %@", [NSThread callStackSymbols]);
+        MXLogError(@"[MXSession] eventWithEventId called with no eventId");
         if (failure)
         {
             MXError *error = [[MXError alloc] initWithErrorCode:kMXErrCodeStringNotFound
@@ -3236,7 +3284,9 @@ typedef void (^MXOnResumeDone)(void);
                 }
                 
             } failure:^(NSError *error) {
-                MXLogError(@"[MXSession] fixRoomsSummariesLastMessage: event fetch failed: %@", error);
+                MXLogErrorDetails(@"[MXSession] fixRoomsSummariesLastMessage: event fetch failed", @{
+                    @"error": error ?: @"unknown"
+                });
                 dispatch_group_leave(dispatchGroup);
             }];
         }
@@ -4467,12 +4517,16 @@ typedef void (^MXOnResumeDone)(void);
             
         } failure:^(NSError *error) {
             // Something went wrong setting the account data identity service
-            MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+            MXLogErrorDetails(@"[MXSession] Error preparing identity server terms", @{
+                @"error": error ?: @"unknown"
+            });
             failure(error);
         }];
     } failure:^(NSError * _Nonnull error) {
         // Something went wrong getting the identity service's access token.
-        MXLogError(@"[MXSession] Error preparing identity server terms: %@", error);
+        MXLogErrorDetails(@"[MXSession] Error preparing identity server terms", @{
+            @"error": error ?: @"unknown"
+        });
         failure(error);
     }];
 }
@@ -4857,7 +4911,9 @@ typedef void (^MXOnResumeDone)(void);
                 [summary resetLastMessage:nil failure:nil commit:YES];
             }
         } failure:^(NSError *error) {
-            MXLogError(@"[MXSession] onDidDecryptEvent: event fetch failed: %@", error);
+            MXLogErrorDetails(@"[MXSession] onDidDecryptEvent: event fetch failed", @{
+                @"error": error ?: @"unknown"
+            });
         }];
     }
 }

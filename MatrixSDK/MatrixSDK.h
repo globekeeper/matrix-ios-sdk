@@ -73,6 +73,12 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXKeyVerificationRequestByDMJSONModel.h"
 #import "MXSASKeyVerificationStart.h"
 #import "MXQRCodeKeyVerificationStart.h"
+#import "MXKeyBackupAlgorithm.h"
+#import "MXCurve25519BackupAuthData.h"
+#import "MXAes256BackupAuthData.h"
+#import "MXCurve25519KeyBackupAlgorithm.h"
+#import "MXAes256KeyBackupAlgorithm.h"
+#import "MXKeyBackupPassword.h"
 
 #import "MXAes.h"
 
@@ -150,6 +156,7 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXLoginSSOIdentityProviderBrand.h"
 
 //  Bridging to Swift
+#import "MXCryptoConstants.h"
 #import "MXCryptoStore.h"
 #import "MXRealmCryptoStore.h"
 #import "MXCryptoAlgorithms.h"
@@ -187,3 +194,4 @@ FOUNDATION_EXPORT NSString *MatrixSDKVersion;
 #import "MXBeaconInfo.h"
 #import "MXBeacon.h"
 #import "MXEventAssetType.h"
+
