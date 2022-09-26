@@ -148,6 +148,47 @@
     }
 }
 
++ (void)loadRoomStateFromStore:(id<MXStore>)store
+                    withRoomId:(NSString *)roomId
+              matrixRestClient:(MXRestClient *)matrixRestClient
+                    onComplete:(void (^)(MXRoomState *roomState))onComplete
+{
+  NSString *logId = [NSUUID UUID].UUIDString;
+  MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Loading state for room %@", logId, roomId)
+  
+  MXRoomState *roomState = [[MXRoomState alloc] initWithRoomId:roomId andMatrixSession:NULL andDirection:YES];
+  if (roomState)
+  {
+    [store stateOfRoom:roomId success:^(NSArray<MXEvent *> * _Nonnull stateEvents) {
+      if (!stateEvents.count) {
+        MXLogWarning(@"[MXRoomState] loadRoomStateFromStore(%@): No state events stored, loading from api", logId);
+        
+        [matrixRestClient stateOfRoom:roomId success:^(NSArray *JSONData) {
+          NSArray<MXEvent *> *events = [MXEvent modelsFromJSON:JSONData];
+          MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Loaded %lu events from api", logId, events.count);
+          
+          [roomState handleStateEvents:events];
+          onComplete(roomState);
+        } failure:^(NSError *error) {
+          NSDictionary *details = @{
+            @"log_id": logId ?: @"unknown",
+            @"error": error ?: @"unknown"
+          };
+          MXLogErrorDetails(@"[MXRoomState] loadRoomStateFromStore: Failed to load any events from api", details);
+          
+          onComplete(roomState);
+        }];
+      } else {
+        MXLogDebug(@"[MXRoomState] loadRoomStateFromStore(%@): Initializing with %lu state events", logId, stateEvents.count);
+        
+        [roomState handleStateEvents:stateEvents];
+        onComplete(roomState);
+      }
+      
+    } failure:nil];
+  }
+}
+
 - (id)initBackStateWith:(MXRoomState*)state
 {
     self = [state copy];

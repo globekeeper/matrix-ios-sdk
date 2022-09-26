@@ -123,7 +123,7 @@ public enum MXBackgroundSyncServiceError: Error {
                           completion: @escaping (MXResponse<MXRoomState>) -> Void) {
         MXRoomState.load(from: store,
                          withRoomId: roomId,
-                         matrixSession: nil) { (roomState) in
+                         matrixRestClient: restClient) { (roomState) in
                             guard let roomState = roomState else {
                                 Queues.dispatchQueue.async {
                                     completion(.failure(MXBackgroundSyncServiceError.unknown))
