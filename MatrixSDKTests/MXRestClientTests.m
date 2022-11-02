@@ -1453,7 +1453,7 @@
                                                        }];
         }];
 
-        [room sendTextMessage:message location:nil threadId:nil success:^(NSString *eventId) {
+        [room sendTextMessage:message location: nil threadId:nil success:^(NSString *eventId) {
             messageEventId = eventId;
         } failure:nil];
     }];

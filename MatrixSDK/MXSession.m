@@ -215,6 +215,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readonly) MXStoreService *storeService;
 
+@property (nonatomic, readwrite) MXClientInformationService *clientInformationService;
+
 @end
 
 @implementation MXSession
@@ -254,6 +256,8 @@ typedef void (^MXOnResumeDone)(void);
         _eventStreamService = [[MXEventStreamService alloc] init];
         _preferredSyncPresence = MXPresenceOnline;
         _locationService = [[MXLocationService alloc] initWithSession:self];
+        _clientInformationService = [[MXClientInformationService alloc] initWithSession:self
+                                                                                 bundle:NSBundle.mainBundle];
         
         [self setIdentityServer:mxRestClient.identityServer andAccessToken:mxRestClient.credentials.identityServerAccessToken];
         
@@ -1137,6 +1141,8 @@ typedef void (^MXOnResumeDone)(void);
             // Relaunch live events stream (long polling)
             [self serverSyncWithServerTimeout:0 success:nil failure:nil clientTimeout:CLIENT_TIMEOUT_MS setPresence:self.preferredSyncPresenceString];
         }
+
+        [self updateClientInformation];
     }
 
     for (MXPeekingRoom *peekingRoom in peekingRooms)
@@ -1149,6 +1155,10 @@ typedef void (^MXOnResumeDone)(void);
         MXLogDebug(@"[MXSession] _resume: cannot resume from the state: %@", [MXTools readableSessionState:_state]);
         resumeDone();
     }
+}
+
+- (void)updateClientInformation {
+    [self.clientInformationService updateData];
 }
 
 - (void)backgroundSync:(unsigned int)timeout success:(MXOnBackgroundSyncDone)backgroundSyncDone failure:(MXOnBackgroundSyncFail)backgroundSyncfails
@@ -1406,7 +1416,6 @@ typedef void (^MXOnResumeDone)(void);
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
-    __block StopDurationTracking stopDurationTracking;
     __block MXSyncResponse *syncResponse;
     __block BOOL useLiveResponse = YES;
 
@@ -1438,13 +1447,6 @@ typedef void (^MXOnResumeDone)(void);
             BOOL isInitialSync = !self.isEventStreamInitialised;
             MXTaskProfileName taskName = isInitialSync ? MXTaskProfileNameStartupInitialSync : MXTaskProfileNameStartupIncrementalSync;
             syncTaskProfile = [MXSDKOptions.sharedInstance.profiler startMeasuringTaskWithName:taskName];
-            if (isInitialSync) {
-                // Temporarily tracking performance both by `MXSDKOptions.sharedInstance.profiler` (manually measuring time)
-                // and `MXSDKOptions.sharedInstance.analyticsDelegate` (delegating to performance monitoring tool).
-                // This ambiguity will be resolved in the future
-                NSString *operation = MXSDKOptions.sharedInstance.enableGroupSessionCache ? @"initialSync.enableGroupSessionCache" : @"initialSync.diableGroupSessionCache";
-                stopDurationTracking = [MXSDKOptions.sharedInstance.analyticsDelegate startDurationTrackingForName:@"MXSession" operation:operation];
-            }
         }
         
         NSString * streamToken = self.store.eventStreamToken;
@@ -1487,9 +1489,6 @@ typedef void (^MXOnResumeDone)(void);
             syncTaskProfile.units = syncResponse.rooms.join.count;
             
             [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:syncTaskProfile];
-            if (stopDurationTracking) {
-                stopDurationTracking();
-            }
         }
         
         BOOL isInitialSync = !self.isEventStreamInitialised;
@@ -1849,17 +1848,6 @@ typedef void (^MXOnResumeDone)(void);
                     NSMutableSet<NSString*> *directRoomIds = [NSMutableSet set];
                     [directRoomIds unionSet:[self directRoomIds]];
 
-                    NSMutableDictionary<NSString*, NSArray<NSString*>*> *_directRooms;
-                    _directRooms = [directRooms mutableCopy];
-                    /// fixes Thread 1: "*** -[NSMutableSet addObjectsFromArray:]: array argument is not an NSArray" error
-                    for (NSString* key in directRooms) {
-                        /// the check for class kind is needed when event.content has exactly one direct room and MXJSONModelSetDictionary converts it to an NSString and not an NSArray. Ideally the server would always send an array even with one direct room, but that's not always the case, ergo the sanity check on client side.
-                        if ([directRooms[key] isKindOfClass:[NSString class]]) {
-                            _directRooms[key] = @[directRooms[key]];
-                        }
-                    }
-                    directRooms = [_directRooms copy];
-
                     self.directRooms = directRooms;
 
                     // And collect current ones
@@ -1975,16 +1963,25 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events  onComplete:(void (^)(void))onComplete
 {
-    if (events.count == 0)
+    NSMutableArray *supportedEvents = [NSMutableArray arrayWithCapacity:events.count];
+    for (MXEvent *event in events)
+    {
+        if ([MXTools isSupportedToDeviceEvent:event])
+        {
+            [supportedEvents addObject:event];
+        }
+    }
+
+    if (supportedEvents.count == 0)
     {
         onComplete();
         return;
     }
     
-    [self decryptEvents:events inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
+    [self decryptEvents:supportedEvents inTimeline:nil onComplete:^(NSArray<MXEvent *> *failedEvents) {
         dispatch_group_t dispatchGroup = dispatch_group_create();
         
-        for (MXEvent *event in events)
+        for (MXEvent *event in supportedEvents)
         {
             if (!event.decryptionError)
             {
@@ -2757,6 +2754,36 @@ typedef void (^MXOnResumeDone)(void);
     }
     
     return nil;
+}
+
+- (MXHTTPOperation *)getOrCreateDirectJoinedRoomWithUserId:(NSString *)userId
+                                                   success:(void (^)(MXRoom *))success
+                                                   failure:(void (^)(NSError *))failure
+{
+    // Use an existing direct room if any
+    MXRoom *room = [self directJoinedRoomWithUserId:userId];
+    if (room)
+    {
+        success(room);
+        return nil;
+    }
+    
+    // Create a new DM with E2E by default if possible
+    MXWeakify(self);
+    return [self canEnableE2EByDefaultInNewRoomWithUsers:@[userId] success:^(BOOL canEnableE2E) {
+        MXStrongifyAndReturnIfNil(self);
+        
+        MXRoomCreationParameters *roomCreationParameters = [MXRoomCreationParameters parametersForDirectRoomWithUser:userId];
+        
+        if (canEnableE2E)
+        {
+            roomCreationParameters.initialStateEvents = @[
+                                                          [MXRoomCreationParameters initialStateEventForEncryptionWithAlgorithm:kMXCryptoMegolmAlgorithm
+                                                           ]];
+        }
+
+        [self createRoomWithParameters:roomCreationParameters success:success failure:failure];
+    } failure:failure];
 }
 
 // Return ids of all current direct rooms

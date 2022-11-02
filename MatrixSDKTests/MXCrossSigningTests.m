@@ -832,7 +832,7 @@
 
         // - Bob sends a message
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV sendTextMessage:@"An e2e message" location:nil threadId:nil success:^(NSString *eventId) {
+        [roomFromBobPOV sendTextMessage:@"An e2e message" location: nil threadId:nil success:^(NSString *eventId) {
 
             // -> This just must work
             [expectation fulfill];
@@ -856,7 +856,7 @@
 
         // - Bob sends a message
         MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-        [roomFromBobPOV sendTextMessage:@"An e2e message" location:nil threadId:nil success:^(NSString *eventId) {
+        [roomFromBobPOV sendTextMessage:@"An e2e message" location: nil threadId:nil success:^(NSString *eventId) {
 
             XCTFail(@"The operation must fail");
             [expectation fulfill];
@@ -892,7 +892,7 @@
 
                 // - Bob sends a message
                 MXRoom *roomFromBobPOV = [bobSession roomWithRoomId:roomId];
-                [roomFromBobPOV sendTextMessage:@"An e2e message" location:nil threadId:nil success:^(NSString *eventId) {
+                [roomFromBobPOV sendTextMessage:@"An e2e message" location: nil threadId:nil success:^(NSString *eventId) {
 
                     XCTFail(@"The operation must fail");
                     [expectation fulfill];

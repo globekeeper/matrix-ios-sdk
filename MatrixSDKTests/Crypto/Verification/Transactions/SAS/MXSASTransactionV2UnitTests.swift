@@ -17,12 +17,11 @@
 import Foundation
 import XCTest
 
-#if os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 @testable import MatrixSDK
 
-@available(iOS 13.0.0, *)
 class MXSASTransactionV2UnitTests: XCTestCase {
     var verification: CryptoVerificationStub!
     override func setUp() {
@@ -74,6 +73,19 @@ class MXSASTransactionV2UnitTests: XCTestCase {
         
         let emoji = transaction.sasEmoji?.map { $0.emoji }
         XCTAssertEqual(emoji, expectedEmojis)
+    }
+    
+    func test_sasDecimals() {
+        verification.stubbedDecimals = [
+            "123": [1, 3, 10, 20]
+        ]
+        
+        let transaction = makeTransaction(for: .stub(
+            flowId: "123"
+        ))
+        
+        let decimals = transaction.sasDecimal
+        XCTAssertEqual(decimals, "1 3 10 20")
     }
     
     func test_state() {
