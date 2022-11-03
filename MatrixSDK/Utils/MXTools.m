@@ -629,7 +629,6 @@ NSCharacterSet *uriComponentCharset;
 
 + (NSString*)serverNameInMatrixIdentifier:(NSString *)identifier
 {
-
   // This converts something:example.org into a server domain
   // by splitting on colons and ignoring the first entry ("something").
   NSArray* serverParts = [identifier componentsSeparatedByString:@":"];

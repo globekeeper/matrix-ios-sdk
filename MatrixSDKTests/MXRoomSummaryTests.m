@@ -237,7 +237,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [expectation fulfill];
         }];
 
-      [room sendTextMessage:@"new message" location:nil threadId:nil success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" location: nil threadId:nil success:^(NSString *eventId) {
             lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -264,7 +264,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             [expectation fulfill];
         }];
 
-        [room sendTextMessage:@"new message" location:nil threadId:nil success:nil failure:^(NSError *error) {
+        [room sendTextMessage:@"new message" location: nil threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
             [expectation fulfill];
         }];
@@ -762,7 +762,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [room sendTextMessage:@"new message" formattedText:nil location:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" formattedText:nil location: nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -819,7 +819,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil location:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
+        MXHTTPOperation *operation = [room sendTextMessage:@"new message" formattedText:nil location: nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             XCTFail(@"Cannot set up intial test conditions");
             [expectation fulfill];
         } failure:nil];
@@ -925,7 +925,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             }
         }];
 
-        [room sendTextMessage:@"new message" location:nil threadId:nil success:^(NSString *eventId) {
+        [room sendTextMessage:@"new message" location: nil threadId:nil success:^(NSString *eventId) {
 
             newEventId = eventId;
 
@@ -1233,7 +1233,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             }];
         }];
 
-        [room sendTextMessage:message formattedText:nil location:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:message formattedText:nil location: nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1323,7 +1323,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [room sendTextMessage:message formattedText:nil location:nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
+        [room sendTextMessage:message formattedText:nil location: nil threadId:nil localEcho:&localEcho success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);
@@ -1430,7 +1430,7 @@ NSString *uisiString = @"The sender's device has not sent us the keys for this m
             
         }];
 
-        [roomFromAlicePOV sendTextMessage:messageFromAlice location:nil threadId:nil success:^(NSString *eventId) {
+        [roomFromAlicePOV sendTextMessage:messageFromAlice location: nil threadId:nil success:^(NSString *eventId) {
             lastMessageEventId = eventId;
         } failure:^(NSError *error) {
             XCTFail(@"Cannot set up intial test conditions - error: %@", error);

@@ -729,7 +729,7 @@
             [expectation fulfill];
         }];
 
-        [room sendTextMessage:@"Hello" location: nil threadId:nil success:nil failure:^(NSError *error) {
+        [room sendTextMessage:@"Hello" location:nil threadId:nil success:nil failure:^(NSError *error) {
             XCTFail(@"The request should not fail - NSError: %@", error);
             [expectation fulfill];
         }];

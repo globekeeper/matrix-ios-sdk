@@ -18,11 +18,10 @@ import Foundation
 import XCTest
 @testable import MatrixSDK
 
-#if os(iOS)
+#if DEBUG
 
 import MatrixSDKCrypto
 
-@available(iOS 13.0.0, *)
 class MXCrossSigningV2UnitTests: XCTestCase {
     
     var crypto: CryptoCrossSigningStub!

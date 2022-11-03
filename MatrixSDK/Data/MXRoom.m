@@ -381,17 +381,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     return operation;
 }
 
-
-- (void)setPartialTextMessage:(NSString *)partialTextMessage
-{
-    [mxSession.store storePartialTextMessageForRoom:self.roomId partialTextMessage:partialTextMessage];
-}
-
-- (NSString *)partialTextMessage
-{
-    return [mxSession.store partialTextMessageOfRoom:self.roomId];
-}
-
 - (void)setPartialAttributedTextMessage:(NSAttributedString *)partialAttributedTextMessage
 {
     [mxSession.store storePartialAttributedTextMessageForRoom:self.roomId partialAttributedTextMessage:partialAttributedTextMessage];
@@ -1066,7 +1055,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         msgContent[@"info"][@"blurhash"] = blurhash;
     }
-
+    
     if (caption) {
         msgContent[@"info"][@"caption"] = caption;
     }
@@ -1604,6 +1593,30 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                              failure:(void (^)(NSError *error))failure
                   keepActualFilename:(BOOL)keepActualName
 {
+    return [self sendVoiceMessage:fileLocalURL
+          additionalContentParams:nil
+                         mimeType:mimeType
+                         duration:duration
+                          samples:samples
+                         location:location
+                         threadId:threadId
+                        localEcho:localEcho
+                          success:success
+                          failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+             additionalContentParams:(NSDictionary *)additionalContentParams
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                            location:(NSDictionary*)location
+                            threadId:(NSString*)threadId
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
     NSMutableDictionary *extensibleAudioContent = @{kMXMessageContentKeyExtensibleAudioDuration : @(duration)}.mutableCopy;
  
     static NSUInteger scaledWaveformSampleCeiling = 1024;
@@ -1621,10 +1634,16 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         [extensibleAudioContent setObject:scaledSamples forKey:kMXMessageContentKeyExtensibleAudioWaveform];
     }
     
+    NSMutableDictionary *extensibleVoiceMessageContent = @{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
+                                                            kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}.mutableCopy;
+    
+    if (additionalContentParams.count) {
+        [extensibleVoiceMessageContent addEntriesFromDictionary:additionalContentParams];
+    }
+    
     return [self _sendFile:fileLocalURL
                    msgType:kMXMessageTypeAudio
-           additionalTypes:@{kMXMessageContentKeyVoiceMessageMSC3245 : @{},
-                             kMXMessageContentKeyExtensibleAudioMSC1767: extensibleAudioContent}
+           additionalTypes:extensibleVoiceMessageContent
                   mimeType:(mimeType ?: @"audio/ogg")
                    caption:nil
                   location:location
@@ -1727,7 +1746,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         [msgContent addEntriesFromDictionary:additionalTypes];
     }
-
+    
     if (caption) {
         msgContent[@"info"][@"caption"] = caption;
     }

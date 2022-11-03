@@ -164,15 +164,6 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  The text message partially typed by the user but not yet sent.
  The value is stored by the session store. Thus, it can be retrieved
  when the application restarts.
- 
- @deprecated use partialAttributedTextMessage
- */
-@property (nonatomic) NSString *partialTextMessage __deprecated_msg("use partialAttributedTextMessage");
-
-/**
- The text message partially typed by the user but not yet sent.
- The value is stored by the session store. Thus, it can be retrieved
- when the application restarts.
  */
 // @TODO(summary): Move to MXRoomSummary
 @property (nonatomic) NSAttributedString *partialAttributedTextMessage;
@@ -585,20 +576,46 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendAudioFile:(NSURL*)fileLocalURL
-                    mimeType:(NSString*)mimeType
+                         mimeType:(NSString*)mimeType
                      caption:(NSString*)caption
                     location:(NSDictionary*)location
-                    threadId:(NSString*)threadId
-                   localEcho:(MXEvent**)localEcho
-                     success:(void (^)(NSString *eventId))success
-                     failure:(void (^)(NSError *error))failure
-          keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
-
+                         threadId:(NSString*)threadId
+                        localEcho:(MXEvent**)localEcho
+                          success:(void (^)(NSString *eventId))success
+                          failure:(void (^)(NSError *error))failure
+               keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
 
 /**
  Send a voice message to the room.
  
  @param fileLocalURL the local filesystem path of the file to send.
+ @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
+ @param duration the length of the voice message in milliseconds
+ @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
+ @param threadId the identifier of thread to send the event.
+ @param localEcho a pointer to a MXEvent object (@see sendMessageWithContent: for details).
+ @param success A block object called when the operation succeeds. It returns
+ the event id of the event generated on the home server
+ @param failure A block object called when the operation fails.
+ @param keepActualName if YES, the filename in the local storage will be kept while sending.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
+                            threadId:(NSString*)threadId
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName NS_REFINED_FOR_SWIFT;
+
+/**
+ Send a voice message to the room.
+ 
+ @param fileLocalURL the local filesystem path of the file to send.
+ @param additionalContentParams (optional) the additional parameters to the content.
  @param mimeType (optional) the mime type of the file. Defaults to `audio/ogg`
  @param duration the length of the voice message in milliseconds
  @param samples an array of floating point values normalized to [0, 1], boxed within NSNumbers
@@ -613,6 +630,7 @@ FOUNDATION_EXPORT NSInteger const kMXRoomInvalidInviteSenderErrorCode;
  @return a MXHTTPOperation instance.
  */
 - (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+             additionalContentParams:(NSDictionary *)additionalContentParams
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
