@@ -24,6 +24,9 @@ FOUNDATION_EXPORT NSString *const kMXPusherDeviceIdKey;
 
 NS_ASSUME_NONNULL_BEGIN
 
+FOUNDATION_EXPORT NSString *const kMXPusherEnabledKey;
+FOUNDATION_EXPORT NSString *const kMXPusherDeviceIdKey;
+
 @interface MXPusher : MXJSONModel
 
 /**

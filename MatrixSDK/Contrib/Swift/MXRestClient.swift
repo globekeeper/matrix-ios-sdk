@@ -408,7 +408,7 @@ public extension MXRestClient {
     @nonobjc @discardableResult func pushers(completion: @escaping (_ response: MXResponse<[MXPusher]>) -> Void) -> MXHTTPOperation {
         return __pushers(currySuccess(completion), failure: curryFailure(completion))
     }
-    
+
     /**
      Get all push notifications rules.
      
@@ -1750,13 +1750,14 @@ public extension MXRestClient {
      - parameters:
         - roomId: the id of the room.
         - eventId: the id of the event.
+        - threadId: the id of the thread (`nil` for unthreaded RR)
         - completion: A block object called when the operation completes.
         - response: Indicates whether the operation was successful.
      
      - returns: a `MXHTTPOperation` instance.
      */
-    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
-        return __sendReadReceipt(roomId, eventId: eventId, success: currySuccess(completion), failure: curryFailure(completion))
+    @nonobjc @discardableResult func sendReadReceipt(toRoom roomId: String, forEvent eventId: String, threadId: String?, completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __sendReadReceipt(roomId, eventId: eventId, threadId: threadId, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
     
@@ -1940,6 +1941,22 @@ public extension MXRestClient {
         return __deleteDevice(byDeviceId: deviceId, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
     }
     
+    /**
+     Deletes the given devices, and invalidates any access token associated with them.
+     
+     @discussion This API endpoint uses the User-Interactive Authentication API.
+     
+     @param deviceIds The identifiers for devices.
+     @param authParameters The additional authentication information for the user-interactive authentication API.
+     @param success A block object called when the operation succeeds.
+     @param failure A block object called when the operation fails.
+     
+     @return a MXHTTPOperation instance.
+     */
+    @nonobjc @discardableResult func deleteDevices(_ deviceIds: [String], authParameters: [String: Any], completion: @escaping (_ response: MXResponse<Void>) -> Void) -> MXHTTPOperation {
+        return __deleteDevices(byDeviceIds: deviceIds, authParams: authParameters, success: currySuccess(completion), failure: curryFailure(completion))
+    }
+    
     // MARK: - Spaces
     
     /// Get the space children of a given space.
@@ -1995,5 +2012,14 @@ public extension MXRestClient {
         }
         return __relations(forEvent: eventId, inRoom: roomId, relationType: relationType, eventType: eventType, from: from, direction: direction, limit: _limit, success: currySuccess(completion), failure: curryFailure(completion))
     }
-    
+
+    // MARK: - Versions
+
+    /// Get the supported versions of the homeserver
+    /// - Parameters:
+    ///   - completion: A closure called when the operation completes.
+    /// - Returns: a `MXHTTPOperation` instance.
+    @nonobjc @discardableResult func supportedMatrixVersions(completion: @escaping (_ response: MXResponse<MXMatrixVersions>) -> Void) -> MXHTTPOperation {
+        return __supportedMatrixVersions(currySuccess(completion), failure: curryFailure(completion))
+    }
 }

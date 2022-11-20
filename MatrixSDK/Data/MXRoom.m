@@ -124,7 +124,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         _roomId = roomId;
         mxSession = mxSession2;
         
-        if (mxSession.crypto)
+        if ([mxSession.crypto isKindOfClass:[MXLegacyCrypto class]])
         {
             MXMegolmDecryption *decryption = [[MXMegolmDecryption alloc] initWithCrypto:mxSession.crypto];
             sharedHistoryKeyManager = [[MXSharedHistoryKeyManager alloc] initWithRoomId:roomId
@@ -1611,6 +1611,28 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
                             location:(NSDictionary*)location
+                            threadId:(NSString*)threadId
+                           localEcho:(MXEvent**)localEcho
+                             success:(void (^)(NSString *eventId))success
+                             failure:(void (^)(NSError *error))failure
+                  keepActualFilename:(BOOL)keepActualName
+{
+    return [self sendVoiceMessage:fileLocalURL
+          additionalContentParams:nil
+                         mimeType:mimeType
+                         duration:duration
+                          samples:samples
+                         threadId:threadId
+                        localEcho:localEcho
+                          success:success
+                          failure:failure keepActualFilename:keepActualName];
+}
+
+- (MXHTTPOperation*)sendVoiceMessage:(NSURL*)fileLocalURL
+             additionalContentParams:(NSDictionary *)additionalContentParams
+                            mimeType:(NSString*)mimeType
+                            duration:(NSUInteger)duration
+                             samples:(NSArray<NSNumber *> *)samples
                             threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
@@ -3199,6 +3221,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     BOOL managedEvents = false;
     
+    NSString *threadId;
     for (NSString* eventId in event.content)
     {
         NSDictionary *eventDict, *readDict;
@@ -3214,11 +3237,13 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
                 NSNumber *ts;
                 MXJSONModelSetNumber(ts, params[@"ts"]);
+                MXJSONModelSetString(threadId, params[@"thread_id"]);
                 if (ts)
                 {
                     MXReceiptData *data = [[MXReceiptData alloc] init];
                     data.userId = userId;
                     data.eventId = eventId;
+                    data.threadId = threadId;
                     data.ts = ts.longLongValue;
                     
                     managedEvents |= [mxSession.store storeReceipt:data inRoom:self.roomId];
@@ -3230,8 +3255,19 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     // warn only if the receipts are not duplicated ones.
     if (managedEvents)
     {
+        MXThread *thread = [self.mxSession.threadingService threadWithId:threadId];
+        
         // Notify listeners
-        [liveTimeline notifyListeners:event direction:direction];
+        if (thread)
+        {
+            [thread liveTimeline:^(id<MXEventTimeline> liveTimeline) {
+                [liveTimeline notifyListeners:event direction:direction];
+            }];
+        }
+        else
+        {
+            [liveTimeline notifyListeners:event direction:direction];
+        }
     }
     
     return managedEvents;
@@ -3252,7 +3288,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     // Retrieve the current read receipt event id
     NSString *currentReadReceiptEventId;
     NSString *myUserId = mxSession.myUserId;
-    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId threadId:event.threadId forUserId:myUserId];
     if (currentData)
     {
         currentReadReceiptEventId = currentData.eventId;
@@ -3280,8 +3316,9 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                     break;
                 }
                 
-                // Look for the first acknowledgeable event prior the event timestamp
-                if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId)
+                // Look for the first acknowledgeable event prior the event timestamp within the same timeline
+                if (nextEvent.originServerTs <= event.originServerTs && nextEvent.eventId
+                    && (event.threadId == nextEvent.threadId || [event.threadId isEqualToString:nextEvent.threadId]))
                 {
                     updatedReadReceiptEvent = nextEvent;
 
@@ -3305,7 +3342,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     if (updatedReadReceiptEvent)
     {
         // Update the oneself receipts
-        if ([self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)]
+        if ([self storeLocalReceipt:kMXEventTypeStringRead eventId:updatedReadReceiptEvent.eventId threadId:event.threadId ?: kMXEventTimelineMain userId:myUserId ts:(uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000)]
             && [mxSession.store respondsToSelector:@selector(commit)])
         {
             [mxSession.store commit];
@@ -3337,12 +3374,19 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     
     if (readMarkerEventId)
     {
-        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReadReceiptEvent.eventId];
+        [self setReadMarker:readMarkerEventId withReadReceipt:updatedReadReceiptEvent.eventId threadId:event.threadId ?: kMXEventTimelineMain];
     }
     else if (updatedReadReceiptEvent)
     {
+        NSString *threadId = nil;
+        if (MXSDKOptions.sharedInstance.enableThreads)
+        {
+            threadId = updatedReadReceiptEvent.threadId ?: kMXEventTimelineMain;
+        }
+        
         [mxSession.matrixRestClient sendReadReceipt:self.roomId
                                             eventId:updatedReadReceiptEvent.eventId
+                                           threadId:threadId
                                             success:nil
                                             failure:nil];
     }
@@ -3371,40 +3415,45 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
     MXEvent *event;
     NSString* myUserId = mxSession.myUserId;
-    MXReceiptData *currentReceiptData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+    NSDictionary<NSString *, MXReceiptData *> *receiptDataList = [mxSession.store getReceiptsInRoom:self.roomId forUserId:myUserId];
 
-    // Prepare updated read receipt
-    @autoreleasepool
+    for (NSString *threadId in [receiptDataList allKeys])
     {
-        id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
-
-        // Acknowledge the lastest valid event
-        while ((event = messagesEnumerator.nextEvent))
+        MXReceiptData *currentReceiptData = receiptDataList[threadId];
+        
+        // Prepare updated read receipt
+        @autoreleasepool
         {
-            // Sanity check on event id: Do not send read receipt on event without id
-            if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
+            id<MXEventsEnumerator> messagesEnumerator = [mxSession.store messagesEnumeratorForRoom:self.roomId withTypeIn:mxSession.acknowledgableEventTypes];
+
+            // Acknowledge the lastest valid event
+            while ((event = messagesEnumerator.nextEvent))
             {
-                // Check whether this is not the current position of the user
-                if (!currentReceiptData || ![currentReceiptData.eventId isEqualToString:event.eventId])
+                // Sanity check on event id: Do not send read receipt on event without id
+                if (event.eventId && ([event.eventId hasPrefix:kMXRoomInviteStateEventIdPrefix] == NO))
                 {
-                    // Update the oneself receipts
-                    updatedReceiptData = [[MXReceiptData alloc] init];
-                    
-                    updatedReceiptData.userId = myUserId;
-                    updatedReceiptData.eventId = event.eventId;
-                    updatedReceiptData.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
-                    
-                    if ([mxSession.store storeReceipt:updatedReceiptData inRoom:self.roomId])
+                    // Check whether this is not the current position of the user
+                    if (!currentReceiptData || ![currentReceiptData.eventId isEqualToString:event.eventId])
                     {
-                        if ([mxSession.store respondsToSelector:@selector(commit)])
+                        // Update the oneself receipts
+                        updatedReceiptData = [[MXReceiptData alloc] init];
+                        
+                        updatedReceiptData.userId = myUserId;
+                        updatedReceiptData.eventId = event.eventId;
+                        updatedReceiptData.ts = (uint64_t) ([[NSDate date] timeIntervalSince1970] * 1000);
+                        
+                        if ([mxSession.store storeReceipt:updatedReceiptData inRoom:self.roomId])
                         {
-                            [mxSession.store commit];
+                            if ([mxSession.store respondsToSelector:@selector(commit)])
+                            {
+                                [mxSession.store commit];
+                            }
                         }
                     }
+                    
+                    // Break the loop
+                    break;
                 }
-                
-                // Break the loop
-                break;
             }
         }
     }
@@ -3416,24 +3465,32 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
         {
             // A non nil read receipt must be passed in order to not break notifications counters
             // homeserver side
-            readReceiptEventId = currentReceiptData.eventId;
+            readReceiptEventId = receiptDataList[kMXEventTimelineMain].eventId;
         }
 
-        [self setReadMarker:readMarkerEventId withReadReceipt:readReceiptEventId];
+        [self setReadMarker:readMarkerEventId withReadReceipt:readReceiptEventId threadId:event.threadId ?: kMXEventTimelineMain];
     }
     else if (updatedReceiptData)
     {
+        NSString *threadId = nil;
+        if (MXSDKOptions.sharedInstance.enableThreads)
+        {
+            threadId = event.threadId ?: kMXEventTimelineMain;
+        }
+        
         [mxSession.matrixRestClient sendReadReceipt:self.roomId
                                             eventId:updatedReceiptData.eventId
+                                           threadId:threadId
                                             success:nil
                                             failure:nil];
     }
 }
 
-- (void)getEventReceipts:(NSString *)eventId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
+- (void)getEventReceipts:(NSString *)eventId threadId:(NSString *)threadId sorted:(BOOL)sort completion:(void (^)(NSArray<MXReceiptData *> * _Nonnull))completion
 {
     [mxSession.store getEventReceipts:self.roomId
                               eventId:eventId
+                             threadId:threadId
                                sorted:sort
                            completion:^(NSArray<MXReceiptData *> * _Nonnull receipts) {
         NSString *myUserId = self->mxSession.myUserId;
@@ -3445,7 +3502,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }];
 }
 
-- (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId userId:(NSString *)userId ts:(uint64_t)ts
+- (BOOL)storeLocalReceipt:(NSString *)receiptType eventId:(NSString *)eventId threadId:(NSString*)threadId userId:(NSString *)userId ts:(uint64_t)ts
 {
     // Sanity check
     if (!userId)
@@ -3459,32 +3516,43 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     MXReceiptData* receiptData = [[MXReceiptData alloc] init];
     receiptData.userId = userId;
     receiptData.eventId = eventId;
+    receiptData.threadId = threadId;
     receiptData.ts = ts;
 
     if ([mxSession.store storeReceipt:receiptData inRoom:_roomId])
     {
         result = YES;
+        
+        NSDictionary *userModel = @{ @"thread_id": threadId ?: kMXEventTimelineMain, @"ts": @(receiptData.ts)};
+        NSDictionary *jsonModel = @{
+            @"type": kMXEventTypeStringReceipt,
+            @"room_id": _roomId,
+            @"content" : @{
+                    receiptData.eventId : @{
+                            kMXEventTypeStringRead: @{
+                                    receiptData.userId: userModel
+                                    }
+
+                            }
+                    }
+        };
 
         // Notify SDK client about it with a local read receipt
-        MXEvent *receiptEvent = [MXEvent modelFromJSON:
-                                 @{
-                                   @"type": kMXEventTypeStringReceipt,
-                                   @"room_id": _roomId,
-                                   @"content" : @{
-                                           receiptData.eventId : @{
-                                                   kMXEventTypeStringRead: @{
-                                                           receiptData.userId: @{
-                                                                   @"ts": @(receiptData.ts)
-                                                                   }
-                                                           }
+        MXEvent *receiptEvent = [MXEvent modelFromJSON: jsonModel];
 
-                                                   }
-                                           }
-                                   }];
-
-        [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
-            [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
-        }];
+        MXThread *thread = threadId ? [self.mxSession.threadingService threadWithId:threadId] : nil;
+        if (thread)
+        {
+            [thread liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
+                [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
+            }];
+        }
+        else
+        {
+            [self liveTimeline:^(id<MXEventTimeline> theLiveTimeline) {
+                [theLiveTimeline notifyListeners:receiptEvent direction:MXTimelineDirectionForwards];
+            }];
+        }
     }
 
     return YES;
@@ -3497,7 +3565,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     // Sanity check on event id: Do not send read marker on event without id
     if (eventId && ![eventId hasPrefix:kMXEventLocalEventIdPrefix] && ![eventId hasPrefix:kMXRoomInviteStateEventIdPrefix])
     {
-        [self setReadMarker:eventId withReadReceipt:nil];
+        [self setReadMarker:eventId withReadReceipt:nil threadId:nil];
     }
 }
 
@@ -3505,14 +3573,14 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 {
     // Retrieve the current position
     NSString *myUserId = mxSession.myUserId;
-    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId forUserId:myUserId];
+    MXReceiptData* currentData = [mxSession.store getReceiptInRoom:self.roomId threadId:kMXEventTimelineMain forUserId:myUserId];
     if (currentData)
     {
-        [self setReadMarker:currentData.eventId withReadReceipt:nil];
+        [self setReadMarker:currentData.eventId withReadReceipt:nil threadId:nil];
     }
 }
 
-- (void)setReadMarker:(NSString*)eventId withReadReceipt:(NSString*)receiptEventId
+- (void)setReadMarker:(NSString*)eventId withReadReceipt:(NSString*)receiptEventId threadId:(NSString*)threadId
 {
     _accountData.readMarkerEventId = eventId;
     
@@ -3528,7 +3596,18 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
     
     // Update data on the homeserver side
-    [mxSession.matrixRestClient sendReadMarker:self.roomId readMarkerEventId:eventId readReceiptEventId:receiptEventId success:nil failure:nil];
+    [mxSession.matrixRestClient sendReadMarker:self.roomId readMarkerEventId:eventId readReceiptEventId:nil success:nil failure:nil];
+    
+    if (receiptEventId)
+    {
+        // as per MSC3773, read markers do not yet support read receipts with thread ID.
+        // The read receipt with the right threadId should be sent by the client.
+        [mxSession.matrixRestClient sendReadReceipt:self.roomId
+                                            eventId:receiptEventId
+                                           threadId:MXSDKOptions.sharedInstance.enableThreads ? threadId: nil
+                                            success:nil
+                                            failure:nil];
+    }
 }
 
 #pragma mark - Direct chats handling
@@ -3709,7 +3788,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
  */
 - (void)validateEncryptionStateConsistency
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     if (!crypto)
     {
 #ifdef MX_CRYPTO
@@ -3774,7 +3853,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (void)membersTrustLevelSummaryWithForceDownload:(BOOL)forceDownload success:(void (^)(MXUsersTrustLevelSummary *usersTrustLevelSummary))success failure:(void (^)(NSError *error))failure
 {
-    MXCrypto *crypto = mxSession.crypto;
+    id<MXCrypto> crypto = mxSession.crypto;
     
     if (crypto && self.summary.isEncrypted)
     {
@@ -3789,17 +3868,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                 [memberIds addObject:member.userId];
             }
             
-            if (forceDownload)
-            {
-                [crypto trustLevelSummaryForUserIds:memberIds success:success failure:failure];
-            }
-            else
-            {
-                [crypto trustLevelSummaryForUserIds:memberIds onComplete:^(MXUsersTrustLevelSummary *trustLevelSummary) {
-                    success(trustLevelSummary);
-                }];
-            }
-            
+            [crypto trustLevelSummaryForUserIds:memberIds forceDownload:forceDownload success:success failure:failure];
         } failure:failure];
     }
     else

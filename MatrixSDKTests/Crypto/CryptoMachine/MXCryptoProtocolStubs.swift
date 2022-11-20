@@ -57,13 +57,20 @@ class UserIdentitySourceStub: CryptoIdentityStub, MXCryptoUserIdentitySource {
         return verification[userId] ?? false
     }
     
+    func isUserTracked(userId: String) -> Bool {
+        return true
+    }
+    
     func downloadKeys(users: [String]) async throws {
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
@@ -84,6 +91,9 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return nil
     }
     
+    func importCrossSigningKeys(export: CrossSigningKeyExport) {
+    }
+    
     var stubbedIdentities = [String: UserIdentity]()
     func userIdentity(userId: String) -> UserIdentity? {
         stubbedIdentities[userId]
@@ -94,13 +104,20 @@ class CryptoCrossSigningStub: CryptoIdentityStub, MXCryptoCrossSigning {
         return stubbedVerifiedUsers.contains(userId)
     }
     
+    func isUserTracked(userId: String) -> Bool {
+        return true
+    }
+    
     func downloadKeys(users: [String]) async throws {
     }
     
-    func manuallyVerifyUser(userId: String) async throws {
+    func verifyUser(userId: String) async throws {
     }
     
-    func manuallyVerifyDevice(userId: String, deviceId: String) async throws {
+    func verifyDevice(userId: String, deviceId: String) async throws {
+    }
+    
+    func setLocalTrust(userId: String, deviceId: String, trust: LocalTrust) throws {
     }
 }
 
@@ -123,6 +140,10 @@ extension CryptoVerificationStub: MXCryptoVerificationRequesting {
     
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequest {
         .stub(otherUserId: userId, roomId: roomId, ourMethods: methods)
+    }
+    
+    func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequest {
+        .stub(otherUserId: userId, otherDeviceId: deviceId, ourMethods: methods)
     }
     
     func verificationRequests(userId: String) -> [VerificationRequest] {
@@ -227,6 +248,14 @@ class CryptoBackupStub: MXCryptoBackup {
     func importDecryptedKeys(roomKeys: [MXMegolmSessionData], progressListener: ProgressListener) throws -> KeysImportResult {
         roomKeysSpy = roomKeys
         return KeysImportResult(imported: Int64(roomKeys.count), total: Int64(roomKeys.count), keys: [:])
+    }
+    
+    func exportRoomKeys(passphrase: String) throws -> Data {
+        return Data()
+    }
+    
+    func importRoomKeys(_ data: Data, passphrase: String, progressListener: ProgressListener) throws -> KeysImportResult {
+        return KeysImportResult(imported: 0, total: 0, keys: [:])
     }
 }
 
