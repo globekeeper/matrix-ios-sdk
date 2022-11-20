@@ -288,7 +288,11 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringCallHangup,
                                       kMXEventTypeStringCallReject,
                                       kMXEventTypeStringCallNegotiate,
-                                      kMXEventTypeStringSticker
+                                      kMXEventTypeStringSticker,
+                                      kMXEventTypeStringPollStart,
+                                      kMXEventTypeStringPollEnd,
+                                      kMXEventTypeStringPollStartMSC3381,
+                                      kMXEventTypeStringPollEndMSC3381
                                       ];
 
         _unreadEventTypes = @[kMXEventTypeStringRoomName,
@@ -387,7 +391,7 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXCrypto checkCryptoWithMatrixSession:self complete:^(MXCrypto *crypto) {
+        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
             MXStrongifyAndReturnIfNil(self);
             
             self->_crypto = crypto;
@@ -542,13 +546,10 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleSyncResponse: Received %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
-    [self.crypto handleSyncResponse:syncResponse];
-    
     // Check whether this is the initial sync
     BOOL isInitialSync = !self.isEventStreamInitialised;
 
-    // Handle to_device events before everything else to make future decryptions work
-    [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:^{
+    [self handleCryptoSyncResponse:syncResponse onComplete:^{
         
         dispatch_group_t dispatchGroup = dispatch_group_create();
         
@@ -739,26 +740,28 @@ typedef void (^MXOnResumeDone)(void);
         // and their /sync response has been processed
         dispatch_group_notify(dispatchGroup, dispatch_get_main_queue(), ^{
             
-            if (self.crypto)
+            // Legacy crypto requires that we deal with device list changes, OTKs etc at the end of the sync loop.
+            // This will be removed altogether with `MXLegacyCrypto`
+            if ([self.crypto isKindOfClass:[MXLegacyCrypto class]])
             {
                 // Handle device list updates
                 if (syncResponse.deviceLists)
                 {
-                    [self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
+                    [(MXLegacyCrypto *)self.crypto handleDeviceListsChanges:syncResponse.deviceLists];
                 }
                 
                 // Handle one_time_keys_count
                 if (syncResponse.deviceOneTimeKeysCount)
                 {
-                    [self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
+                    [(MXLegacyCrypto *)self.crypto handleDeviceOneTimeKeysCount:syncResponse.deviceOneTimeKeysCount];
                 }
                 
-                [self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
+                [(MXLegacyCrypto *)self.crypto handleDeviceUnusedFallbackKeys:syncResponse.unusedFallbackKeys];
                 
                 // Tell the crypto module to do its processing
-                [self.crypto onSyncCompleted:self.store.eventStreamToken
-                               nextSyncToken:syncResponse.nextBatch
-                                  catchingUp:self.catchingUp];
+                [(MXLegacyCrypto *)self.crypto onSyncCompleted:self.store.eventStreamToken
+                                                 nextSyncToken:syncResponse.nextBatch
+                                                    catchingUp:self.catchingUp];
             }
 
             // Update live event stream token
@@ -1926,9 +1929,14 @@ typedef void (^MXOnResumeDone)(void);
  */
 - (void)validateAccountData
 {
-    // Detecting an issue where more than one valid SSSS key is present on the client
+    if (![self.crypto isKindOfClass:[MXLegacyCrypto class]])
+    {
+        return;
+    }
+    
+    // Detecting an issue in legacy crypto where more than one valid SSSS key is present on the client
     // https://github.com/vector-im/element-ios/issues/4569
-    NSInteger keysCount = self.crypto.secretStorage.numberOfValidKeys;
+    NSInteger keysCount = ((MXLegacyCrypto *)self.crypto).secretStorage.numberOfValidKeys;
     if (keysCount > 1)
     {
         MXLogErrorDetails(@"[MXSession] validateAccountData: Detected multiple valid SSSS keys, should only have one at most", @{
@@ -1961,7 +1969,25 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-- (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events  onComplete:(void (^)(void))onComplete
+// Temporary junction to deal with sync response depending on the variant of crypto
+// that cannot be easily hidden behind a protocol. Legacy implementation will eventually
+// be fully removed.
+- (void)handleCryptoSyncResponse:(MXSyncResponse *)syncResponse
+                      onComplete:(void (^)(void))onComplete
+{
+    if (!self.crypto || [self.crypto isKindOfClass:[MXLegacyCrypto class]])
+    {
+        // Legacy crypto requires pre-processed to-device events before everything else to make future decryptions work
+        [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:onComplete];
+    }
+    else
+    {
+        // New and all future crypto modules can handle the entire sync response in full
+        [self.crypto handleSyncResponse:syncResponse onComplete:onComplete];
+    }
+}
+
+- (void)handleToDeviceEvents:(NSArray<MXEvent *> *)events onComplete:(void (^)(void))onComplete
 {
     NSMutableArray *supportedEvents = [NSMutableArray arrayWithCapacity:events.count];
     for (MXEvent *event in events)
@@ -2018,7 +2044,10 @@ typedef void (^MXOnResumeDone)(void);
     {
         case MXEventTypeRoomKey:
         {
-            [_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
+            {
+                [(MXLegacyCrypto *)_crypto handleRoomKeyEvent:event onComplete:onHandleToDeviceEventDone];
+            }
             break;
         }
 
@@ -2057,7 +2086,7 @@ typedef void (^MXOnResumeDone)(void);
 {
     BOOL isInValidState = _state == MXSessionStateStoreDataReady || _state == MXSessionStatePaused;
     if (!isInValidState) {
-        NSString *message = [NSString stringWithFormat:@"[MXSession] state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
+        NSString *message = [NSString stringWithFormat:@"[MXSession] handleBackgroundSyncCacheIfRequired: state %@ is not valid to handle background sync cache, investigate why the method was called", [MXTools readableSessionState:_state]];
         MXLogFailure(message);
         if (completion)
         {
@@ -2190,7 +2219,7 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        _crypto = [MXCrypto createCryptoWithMatrixSession:self];
+        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
 
         if (_state == MXSessionStateRunning)
         {
@@ -4829,33 +4858,6 @@ typedef void (^MXOnResumeDone)(void);
     }
 }
 
-- (BOOL)decryptEvent:(MXEvent*)event inTimeline:(NSString*)timeline
-{
-    MXEventDecryptionResult *result;
-    if (event.eventType == MXEventTypeRoomEncrypted)
-    {
-        if (_crypto)
-        {
-            // TODO: One day, this method will be async
-            result = [_crypto decryptEvent:event inTimeline:timeline];
-        }
-        else
-        {
-            // Encryption not enabled
-            result = [MXEventDecryptionResult new];
-            result.error = [NSError errorWithDomain:MXDecryptingErrorDomain
-                                               code:MXDecryptingErrorEncryptionNotEnabledCode
-                                           userInfo:@{
-                                               NSLocalizedDescriptionKey: MXDecryptingErrorEncryptionNotEnabledReason
-                                           }];
-        }
-        
-        [event setClearData:result];
-    }
-    
-    return (result.error == nil);
-}
-
 - (void)decryptEvents:(NSArray<MXEvent*> *)events
            inTimeline:(NSString*)timeline
            onComplete:(void (^)(NSArray<MXEvent*> *failedEvents))onComplete
@@ -4915,9 +4917,9 @@ typedef void (^MXOnResumeDone)(void);
 
 - (void)resetReplayAttackCheckInTimeline:(NSString*)timeline
 {
-    if (_crypto)
+    if ([_crypto isKindOfClass:[MXLegacyCrypto class]])
     {
-        [_crypto resetReplayAttackCheckInTimeline:timeline];
+        [(MXLegacyCrypto *)_crypto resetReplayAttackCheckInTimeline:timeline];
     }
 }
 
@@ -4930,6 +4932,12 @@ typedef void (^MXOnResumeDone)(void);
     MXRoomSummary *summary = [self roomSummaryWithRoomId:event.roomId];
     if (summary)
     {
+        if (!summary.lastMessage)
+        {
+            [summary resetLastMessage:nil failure:nil commit:YES];
+            return;
+        }
+
         [self eventWithEventId:summary.lastMessage.eventId
                         inRoom:summary.roomId
                        success:^(MXEvent *lastEvent) {
