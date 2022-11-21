@@ -418,14 +418,6 @@ extension MXCryptoMachine: MXCryptoRoomEventEncrypting {
         }
     }
     
-    func discardRoomKey(roomId: String) {
-        do {
-            try machine.discardRoomKey(roomId: roomId)
-        } catch {
-            log.error("Cannot discard room key", context: error)
-        }
-    }
-    
     // MARK: - Private
     
     private func updateTrackedUsers(users: [String]) async throws {

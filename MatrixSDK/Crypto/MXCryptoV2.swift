@@ -305,10 +305,10 @@ private class MXCryptoV2: NSObject, MXCrypto {
     }
     
     func decryptEvents(
-        _ events: [MXEvent],
-        inTimeline timeline: String?,
-        onComplete: (([MXEventDecryptionResult]) -> Void)?
-    ) {
+            _ events: [MXEvent],
+            inTimeline timeline: String?,
+            onComplete: (([MXEventDecryptionResult]) -> Void)?
+        ) {
         guard session?.isEventStreamInitialised == true else {
             log.debug("Ignoring \(events.count) encrypted event(s) during initial sync in timeline \(timeline ?? "") (we most likely do not have the keys yet)")
             let results = events.map { _ in MXEventDecryptionResult() }
@@ -323,8 +323,6 @@ private class MXCryptoV2: NSObject, MXCrypto {
                 onComplete?(results)
             }
         }
-        
-        return machine.decryptRoomEvent(event)
     }
     
     func ensureEncryption(

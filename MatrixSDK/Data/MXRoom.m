@@ -1610,7 +1610,6 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
-                            location:(NSDictionary*)location
                             threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
@@ -1622,6 +1621,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                          mimeType:mimeType
                          duration:duration
                           samples:samples
+                         location:nil
                          threadId:threadId
                         localEcho:localEcho
                           success:success
@@ -1633,6 +1633,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
                             mimeType:(NSString*)mimeType
                             duration:(NSUInteger)duration
                              samples:(NSArray<NSNumber *> *)samples
+                            location:(NSDictionary*)location
                             threadId:(NSString*)threadId
                            localEcho:(MXEvent**)localEcho
                              success:(void (^)(NSString *eventId))success
