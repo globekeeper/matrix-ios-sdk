@@ -1,3 +1,40 @@
+## Changes in 0.24.6 (2022-12-13)
+
+🙌 Improvements
+
+- Change invites count logic. ([#1645](https://github.com/matrix-org/matrix-ios-sdk/pull/1645))
+- Crypto: Fail launch when unavailable crypto ([#1646](https://github.com/matrix-org/matrix-ios-sdk/pull/1646))
+- Add message id for to-device events ([#1652](https://github.com/matrix-org/matrix-ios-sdk/pull/1652))
+- CryptoV2: Update to latest Verification API ([#1654](https://github.com/matrix-org/matrix-ios-sdk/pull/1654))
+
+🧱 Build
+
+- Update Ruby gems. ([#1655](https://github.com/matrix-org/matrix-ios-sdk/pull/1655))
+
+
+## Changes in 0.24.5 (2022-11-29)
+
+🙌 Improvements
+
+- CryptoV2: Import progress for room keys ([#1637](https://github.com/matrix-org/matrix-ios-sdk/pull/1637))
+- CryptoV2: Run all tasks with default priority ([#1639](https://github.com/matrix-org/matrix-ios-sdk/pull/1639))
+- CryptoV2: Fix backup performance ([#1641](https://github.com/matrix-org/matrix-ios-sdk/pull/1641))
+- MXSession: Calculate sync progress state ([#1643](https://github.com/matrix-org/matrix-ios-sdk/pull/1643))
+- CryptoV2: Add support to decrypt notifications and receive keys ([#1644](https://github.com/matrix-org/matrix-ios-sdk/pull/1644))
+- Pod: Fix linting on release mode & run fastlane lint on release configuration. ([#1648](https://github.com/matrix-org/matrix-ios-sdk/pull/1648))
+
+
+## Changes in 0.24.4 (2022-11-29)
+
+🙌 Improvements
+
+- CryptoV2: Import progress for room keys ([#1637](https://github.com/matrix-org/matrix-ios-sdk/pull/1637))
+- CryptoV2: Run all tasks with default priority ([#1639](https://github.com/matrix-org/matrix-ios-sdk/pull/1639))
+- CryptoV2: Fix backup performance ([#1641](https://github.com/matrix-org/matrix-ios-sdk/pull/1641))
+- MXSession: Calculate sync progress state ([#1643](https://github.com/matrix-org/matrix-ios-sdk/pull/1643))
+- CryptoV2: Add support to decrypt notifications and receive keys ([#1644](https://github.com/matrix-org/matrix-ios-sdk/pull/1644))
+
+
 ## Changes in 0.24.3 (2022-11-15)
 
 ✨ Features

@@ -121,7 +121,7 @@ typedef void (^MXOnResumeDone)(void);
      */
     NSMutableArray *globalEventListeners;
 
-    /** 
+    /**
      The block to call when MSSession resume is complete.
      */
     MXOnResumeDone onResumeDone;
@@ -217,6 +217,8 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readwrite) MXClientInformationService *clientInformationService;
 
+@property (nonatomic, strong) MXSessionSyncProgress *syncProgress;
+
 @end
 
 @implementation MXSession
@@ -309,6 +311,11 @@ typedef void (^MXOnResumeDone)(void);
         
         _homeserverCapabilitiesService = [[MXHomeserverCapabilitiesService alloc] initWithSession: self];
         [_homeserverCapabilitiesService updateWithCompletion:nil];
+        
+        if (MXSDKOptions.sharedInstance.enableSyncProgress)
+        {
+            _syncProgress = [[MXSessionSyncProgress alloc] init];
+        }
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
 
@@ -391,8 +398,17 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto) {
+        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
+            
+            if (!crypto && error)
+            {
+                if (failure)
+                {
+                    failure(error);
+                }
+                return;
+            }
             
             self->_crypto = crypto;
 
@@ -490,6 +506,7 @@ typedef void (^MXOnResumeDone)(void);
                     {
                         [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
                                                                                  force:YES
+                                                                              progress:nil
                                                                             completion:nil];
                     }
 
@@ -538,9 +555,11 @@ typedef void (^MXOnResumeDone)(void);
 
 /// Handle a sync response and decide serverTimeout for the next sync request.
 /// @param syncResponse The sync response object
+/// @param progress Progress block is called continuously to report current progress as a range between 0.0 - 1.0
 /// @param completion Completion block to be called at the end of the process. Will be called on the caller thread.
 /// @param storeCompletion Completion block to be called when the process completed at store level, i.e sync response is stored. Will be called on main thread.
 - (void)handleSyncResponse:(MXSyncResponse *)syncResponse
+                  progress:(void (^)(CGFloat))progress
                 completion:(void (^)(void))completion
            storeCompletion:(void (^)(void))storeCompletion
 {
@@ -558,6 +577,20 @@ typedef void (^MXOnResumeDone)(void);
         {
             [self handleAccountData:syncResponse.accountData];
         }
+        
+        // Track progress only for rooms as they take the majority time during sync response
+        // processing, particularly for large accounts
+        NSInteger totalRooms = syncResponse.rooms.join.count + syncResponse.rooms.invite.count + syncResponse.rooms.leave.count;
+        __block NSInteger completedRooms = 0;
+        void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
+            dispatch_group_leave(dispatchGroup);
+            
+            if (MXSDKOptions.sharedInstance.enableSyncProgress && progress)
+            {
+                completedRooms += 1;
+                progress([self syncProgressForCompleted:completedRooms total:totalRooms]);
+            }
+        };
         
         // Handle first joined rooms
         for (NSString *roomId in syncResponse.rooms.join)
@@ -585,25 +618,25 @@ typedef void (^MXOnResumeDone)(void);
                                 if (event.eventType == MXEventTypeRoomEncrypted)
                                 {
                                     [room.summary resetLastMessage:^{
-                                        dispatch_group_leave(dispatchGroup);
+                                        dispatch_group_leave_with_progress(dispatchGroup);
                                     } failure:^(NSError *error) {
-                                        dispatch_group_leave(dispatchGroup);
+                                        dispatch_group_leave_with_progress(dispatchGroup);
                                     } commit:NO];
                                 }
                                 else
                                 {
-                                    dispatch_group_leave(dispatchGroup);
+                                    dispatch_group_leave_with_progress(dispatchGroup);
                                 }
                             } failure:^(NSError *error) {
                                 MXLogErrorDetails(@"[MXSession] handleSyncResponse: event fetch failed", @{
                                     @"error": error ?: @"unknown"
                                 });
-                                dispatch_group_leave(dispatchGroup);
+                                dispatch_group_leave_with_progress(dispatchGroup);
                             }];
                         }
                         else
                         {
-                            dispatch_group_leave(dispatchGroup);
+                            dispatch_group_leave_with_progress(dispatchGroup);
                         }
                     }];
                 }];
@@ -642,7 +675,7 @@ typedef void (^MXOnResumeDone)(void);
                 [room handleInvitedRoomSync:invitedRoomSync onComplete:^{
                     [room.summary handleInvitedRoomSync:invitedRoomSync];
                     
-                    dispatch_group_leave(dispatchGroup);
+                    dispatch_group_leave_with_progress(dispatchGroup);
                 }];
             }
         }
@@ -694,7 +727,7 @@ typedef void (^MXOnResumeDone)(void);
                             // Remove the room from the rooms list
                             [self removeRoom:room.roomId];
                             
-                            dispatch_group_leave(dispatchGroup);
+                            dispatch_group_leave_with_progress(dispatchGroup);
                         }];
                     }];
                 }
@@ -942,6 +975,7 @@ typedef void (^MXOnResumeDone)(void);
             MXLogDebug(@"[MXSession] Crypto has been started");
         }  failure:^(NSError *error) {
             MXLogDebug(@"[MXSession] Crypto failed to start. Error: %@", error);
+            failure(error);
         }];
     }
     else
@@ -1243,6 +1277,7 @@ typedef void (^MXOnResumeDone)(void);
     
     // Clean any cached initial sync response
     [self.initialSyncResponseCache deleteData];
+    self.syncProgress = nil;
     
     // Flush the store
     [self.storeService closeStores];
@@ -1416,6 +1451,11 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
+    if (MXSDKOptions.sharedInstance.enableSyncProgress)
+    {
+        [self.syncProgress incrementSyncAttempt];
+    }
+    
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
     
     __block MXTaskProfile *syncTaskProfile;
@@ -1514,7 +1554,14 @@ typedef void (^MXOnResumeDone)(void);
             nextServerTimeout = 0;
         }
         
-        [self handleSyncResponse:syncResponse completion:^{
+        [self handleSyncResponse:syncResponse
+                        progress:^(CGFloat progress) {
+            if (MXSDKOptions.sharedInstance.enableSyncProgress)
+            {
+                [self.syncProgress updateProcessingProgress:progress forPhase:MXSessionSyncProcessingPhaseSyncResponse];
+            }
+        }
+                      completion:^{
             
             dispatch_group_t dispatchGroupLastMessage = dispatch_group_create();
             
@@ -1523,6 +1570,12 @@ typedef void (^MXOnResumeDone)(void);
                 dispatch_group_enter(dispatchGroupLastMessage);
                 [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
                                                                          force:YES
+                                                                      progress:^(CGFloat progress) {
+                    if (MXSDKOptions.sharedInstance.enableSyncProgress)
+                    {
+                        [self.syncProgress updateProcessingProgress:progress forPhase:MXSessionSyncProcessingPhaseRoomSummaries];
+                    }
+                }
                                                                     completion:^{
                     dispatch_group_leave(dispatchGroupLastMessage);
                 }];
@@ -1994,6 +2047,7 @@ typedef void (^MXOnResumeDone)(void);
     {
         if ([MXTools isSupportedToDeviceEvent:event])
         {
+            MXLogDebug(@"[MXSession] handleToDeviceEvents: Processing new to-device event msgid: %@", event.content[kMXToDeviceMessageId])
             [supportedEvents addObject:event];
         }
     }
@@ -2011,6 +2065,7 @@ typedef void (^MXOnResumeDone)(void);
         {
             if (!event.decryptionError)
             {
+                MXLogDebug(@"[MXSession] handleToDeviceEvents: Received new to-device event `%@` from `%@` msgid: %@", event.type, event.sender, event.wireContent[kMXToDeviceMessageId])
                 dispatch_group_enter(dispatchGroup);
                 [self handleToDeviceEvent:event onComplete:^{
                     dispatch_group_leave(dispatchGroup);
@@ -2156,6 +2211,7 @@ typedef void (^MXOnResumeDone)(void);
             if (cachedSyncResponse)
             {
                 [self handleSyncResponse:cachedSyncResponse.syncResponse
+                                progress:nil
                               completion:^{
                     taskCompleted();
                 } storeCompletion:nil];
@@ -2199,10 +2255,13 @@ typedef void (^MXOnResumeDone)(void);
 {
     MXLogDebug(@"[MXSession] handleOutdatedSyncResponse: %tu joined rooms, %tu invited rooms, %tu left rooms, %tu toDevice events.", syncResponse.rooms.join.count, syncResponse.rooms.invite.count, syncResponse.rooms.leave.count, syncResponse.toDevice.events.count);
     
-    // Handle only to_device events. They are sent only once by the homeserver
-    [self handleToDeviceEvents:syncResponse.toDevice.events onComplete:completion];
+    [self handleCryptoSyncResponse:syncResponse onComplete:completion];
 }
 
+- (CGFloat)syncProgressForCompleted:(NSInteger)completed total:(NSInteger)total
+{
+    return total > 0 ? (CGFloat)completed/(CGFloat)total : 0;
+}
 
 #pragma mark - Options
 - (void)enableVoIPWithCallStack:(id<MXCallStack>)callStack
@@ -2219,11 +2278,20 @@ typedef void (^MXOnResumeDone)(void);
 
     if (enableCrypto && !_crypto)
     {
-        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self];
+        NSError *error;
+        _crypto = [MXLegacyCrypto createCryptoWithMatrixSession:self error:&error];
+        if (!_crypto && error)
+        {
+            if (failure)
+            {
+                failure(error);
+            }
+            return;
+        }
 
         if (_state == MXSessionStateRunning)
         {
-            [_crypto start:success failure:failure];
+            [self startCrypto:success failure:failure];
         }
         else
         {
@@ -3266,11 +3334,13 @@ typedef void (^MXOnResumeDone)(void);
 {
     [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:maxServerPaginationCount
                                                              force:NO
+                                                          progress:nil
                                                         completion:nil];
 }
 
 - (void)fixRoomsSummariesLastMessageWithMaxServerPaginationCount:(NSUInteger)maxServerPaginationCount
                                                            force:(BOOL)force
+                                                        progress:(void(^)(CGFloat))progress
                                                       completion:(void(^)(void))completion
 {
     if (fixingRoomsLastMessages)
@@ -3284,6 +3354,18 @@ typedef void (^MXOnResumeDone)(void);
     fixingRoomsLastMessages = YES;
     
     dispatch_group_t dispatchGroup = dispatch_group_create();
+    
+    // Prepare block that will leave a dispatch group and update progress
+    // each time a room has been processed
+    __block NSInteger completedRooms = 0;
+    void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
+        dispatch_group_leave(dispatchGroup);
+        if (MXSDKOptions.sharedInstance.enableSyncProgress && progress)
+        {
+            completedRooms += 1;
+            progress([self syncProgressForCompleted:completedRooms total:self.rooms.count]);
+        }
+    };
     
     for (MXRoom *room in self.rooms)
     {
@@ -3307,10 +3389,10 @@ typedef void (^MXOnResumeDone)(void);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
-                dispatch_group_leave(dispatchGroup);
+                dispatch_group_leave_with_progress(dispatchGroup);
             } failure:^(NSError *error) {
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
-                dispatch_group_leave(dispatchGroup);
+                dispatch_group_leave_with_progress(dispatchGroup);
             }
                                                            commit:NO];
         }
@@ -3327,23 +3409,23 @@ typedef void (^MXOnResumeDone)(void);
                     
                     [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
                         MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
-                        dispatch_group_leave(dispatchGroup);
+                        dispatch_group_leave_with_progress(dispatchGroup);
                     } failure:^(NSError *error) {
                         MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
-                        dispatch_group_leave(dispatchGroup);
+                        dispatch_group_leave_with_progress(dispatchGroup);
                     }
                                                                    commit:NO];
                 }
                 else
                 {
-                    dispatch_group_leave(dispatchGroup);
+                    dispatch_group_leave_with_progress(dispatchGroup);
                 }
                 
             } failure:^(NSError *error) {
                 MXLogErrorDetails(@"[MXSession] fixRoomsSummariesLastMessage: event fetch failed", @{
                     @"error": error ?: @"unknown"
                 });
-                dispatch_group_leave(dispatchGroup);
+                dispatch_group_leave_with_progress(dispatchGroup);
             }];
         }
         else if (!summary.lastMessage)
@@ -3353,10 +3435,10 @@ typedef void (^MXOnResumeDone)(void);
             
             [summary resetLastMessageWithMaxServerPaginationCount:maxServerPaginationCount onComplete:^{
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage:Fixing last message operation for room %@ has complete. lastMessageEventId: %@", summary.roomId, summary.lastMessage.eventId);
-                dispatch_group_leave(dispatchGroup);
+                dispatch_group_leave_with_progress(dispatchGroup);
             } failure:^(NSError *error) {
                 MXLogDebug(@"[MXSession] fixRoomsSummariesLastMessage: Cannot fix last message for room %@ with maxServerPaginationCount: %@", summary.roomId, @(maxServerPaginationCount));
-                dispatch_group_leave(dispatchGroup);
+                dispatch_group_leave_with_progress(dispatchGroup);
             }
                                                            commit:NO];
         }
