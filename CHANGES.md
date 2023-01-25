@@ -1,3 +1,43 @@
+## Changes in 0.24.8 (2023-01-24)
+
+✨ Features
+
+- Implement MSC3912: Relation-based redactions ([#1688](https://github.com/matrix-org/matrix-ios-sdk/pull/1688))
+
+🙌 Improvements
+
+- CryptoV2: Add keys query scheduler ([#1676](https://github.com/matrix-org/matrix-ios-sdk/pull/1676))
+- CryptoV2: Create crypto migration data ([#1681](https://github.com/matrix-org/matrix-ios-sdk/pull/1681))
+- CryptoSDK: Perform crypto migration if necessary ([#1684](https://github.com/matrix-org/matrix-ios-sdk/pull/1684))
+- Rename MXSessionSyncProgress ([#1686](https://github.com/matrix-org/matrix-ios-sdk/pull/1686))
+- CryptoV2: Batch migrate olm and megolm sessions ([#1687](https://github.com/matrix-org/matrix-ios-sdk/pull/1687))
+- CryptoV2: Extract room event encryption ([#1689](https://github.com/matrix-org/matrix-ios-sdk/pull/1689))
+- CryptoV2: Migration improvements ([#1692](https://github.com/matrix-org/matrix-ios-sdk/pull/1692))
+
+🐛 Bugfixes
+
+- Messages' replies: fix localizations issues. ([#1685](https://github.com/matrix-org/matrix-ios-sdk/pull/1685))
+
+
+## Changes in 0.24.7 (2023-01-10)
+
+✨ Features
+
+- Threads: Load the thread list using server-side sorting and pagination ([#6059](https://github.com/vector-im/element-ios/issues/6059))
+
+🙌 Improvements
+
+- Add API to delete user's account data. ([#1651](https://github.com/matrix-org/matrix-ios-sdk/pull/1651))
+- Change Sync parser to delete empty account_data events. ([#1656](https://github.com/matrix-org/matrix-ios-sdk/pull/1656))
+- CryptoV2: Disable notification decryption ([#1662](https://github.com/matrix-org/matrix-ios-sdk/pull/1662))
+- CryptoV2: Verification request and QR listener ([#1663](https://github.com/matrix-org/matrix-ios-sdk/pull/1663))
+- Analytics: Do not track cancellation errors ([#1664](https://github.com/matrix-org/matrix-ios-sdk/pull/1664))
+- Polls: ensure polls are up to date after they are closed. ([#1672](https://github.com/matrix-org/matrix-ios-sdk/pull/1672))
+- Polls: handle decryption errors. ([#1673](https://github.com/matrix-org/matrix-ios-sdk/pull/1673))
+- Polls: add support for rendering/replying to poll ended events. ([#1674](https://github.com/matrix-org/matrix-ios-sdk/pull/1674))
+- Remove commented device property on MXPushRulesRespose. ([#1677](https://github.com/matrix-org/matrix-ios-sdk/pull/1677))
+
+
 ## Changes in 0.24.6 (2022-12-13)
 
 🙌 Improvements

@@ -217,7 +217,7 @@ typedef void (^MXOnResumeDone)(void);
 
 @property (nonatomic, readwrite) MXClientInformationService *clientInformationService;
 
-@property (nonatomic, strong) MXSessionSyncProgress *syncProgress;
+@property (nonatomic, strong) MXSessionStartupProgress *startupProgress;
 
 @end
 
@@ -312,9 +312,9 @@ typedef void (^MXOnResumeDone)(void);
         _homeserverCapabilitiesService = [[MXHomeserverCapabilitiesService alloc] initWithSession: self];
         [_homeserverCapabilitiesService updateWithCompletion:nil];
         
-        if (MXSDKOptions.sharedInstance.enableSyncProgress)
+        if (MXSDKOptions.sharedInstance.enableStartupProgress)
         {
-            _syncProgress = [[MXSessionSyncProgress alloc] init];
+            _startupProgress = [[MXSessionStartupProgress alloc] init];
         }
 
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onDidDecryptEvent:) name:kMXEventDidDecryptNotification object:nil];
@@ -398,7 +398,13 @@ typedef void (^MXOnResumeDone)(void);
 
         // Check if the user has enabled crypto
         MXWeakify(self);
-        [MXLegacyCrypto checkCryptoWithMatrixSession:self complete:^(id<MXCrypto> crypto, NSError *error) {
+        [MXLegacyCrypto initializeCryptoWithMatrixSession:self migrationProgress:^(double progress) {
+            if (MXSDKOptions.sharedInstance.enableStartupProgress)
+            {
+                [self.startupProgress updateMigrationProgress:progress];
+            }
+            
+        } complete:^(id<MXCrypto> crypto, NSError *error) {
             MXStrongifyAndReturnIfNil(self);
             
             if (!crypto && error)
@@ -585,10 +591,10 @@ typedef void (^MXOnResumeDone)(void);
         void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
             dispatch_group_leave(dispatchGroup);
             
-            if (MXSDKOptions.sharedInstance.enableSyncProgress && progress)
+            if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
             {
                 completedRooms += 1;
-                progress([self syncProgressForCompleted:completedRooms total:totalRooms]);
+                progress([self startupProgressForCompleted:completedRooms total:totalRooms]);
             }
         };
         
@@ -1277,7 +1283,7 @@ typedef void (^MXOnResumeDone)(void);
     
     // Clean any cached initial sync response
     [self.initialSyncResponseCache deleteData];
-    self.syncProgress = nil;
+    self.startupProgress = nil;
     
     // Flush the store
     [self.storeService closeStores];
@@ -1451,9 +1457,11 @@ typedef void (^MXOnResumeDone)(void);
                       clientTimeout:(NSUInteger)clientTimeout
                         setPresence:(NSString*)setPresence
 {
-    if (MXSDKOptions.sharedInstance.enableSyncProgress)
+    // We only want to report sync progress when doing initial sync
+    BOOL shoulReportStartupProgress = MXSDKOptions.sharedInstance.enableStartupProgress && !self.isEventStreamInitialised;
+    if (shoulReportStartupProgress)
     {
-        [self.syncProgress incrementSyncAttempt];
+        [self.startupProgress incrementSyncAttempt];
     }
     
     dispatch_group_t initialSyncDispatchGroup = dispatch_group_create();
@@ -1556,9 +1564,9 @@ typedef void (^MXOnResumeDone)(void);
         
         [self handleSyncResponse:syncResponse
                         progress:^(CGFloat progress) {
-            if (MXSDKOptions.sharedInstance.enableSyncProgress)
+            if (shoulReportStartupProgress)
             {
-                [self.syncProgress updateProcessingProgress:progress forPhase:MXSessionSyncProcessingPhaseSyncResponse];
+                [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseSyncResponse];
             }
         }
                       completion:^{
@@ -1571,9 +1579,9 @@ typedef void (^MXOnResumeDone)(void);
                 [self fixRoomsSummariesLastMessageWithMaxServerPaginationCount:MXRoomSummaryPaginationChunkSize
                                                                          force:YES
                                                                       progress:^(CGFloat progress) {
-                    if (MXSDKOptions.sharedInstance.enableSyncProgress)
+                    if (shoulReportStartupProgress)
                     {
-                        [self.syncProgress updateProcessingProgress:progress forPhase:MXSessionSyncProcessingPhaseRoomSummaries];
+                        [self.startupProgress updateProcessingProgress:progress forPhase:MXSessionProcessingResponsePhaseRoomSummaries];
                     }
                 }
                                                                     completion:^{
@@ -1920,7 +1928,15 @@ typedef void (^MXOnResumeDone)(void);
             }
 
             // Update the corresponding part of account data
-            [_accountData updateWithEvent:event];
+            if (event[@"content"] == nil || [event[@"content"] count] == 0) {
+                /*
+                 MSC3391 returns an empty object in the sync after the user delete one account_data event using the associated DELETE endpoint.
+                 https://github.com/ShadowJonathan/matrix-doc/blob/account-data-delete/proposals/3391-account-data-delete.md#sync
+                 */
+                [_accountData deleteDataWithType:event[@"type"]];
+            } else {
+                [_accountData updateWithEvent:event];
+            }
 
             if ([event[@"type"] isEqualToString:kMXAccountDataTypeIdentityServer])
             {
@@ -2258,7 +2274,7 @@ typedef void (^MXOnResumeDone)(void);
     [self handleCryptoSyncResponse:syncResponse onComplete:completion];
 }
 
-- (CGFloat)syncProgressForCompleted:(NSInteger)completed total:(NSInteger)total
+- (CGFloat)startupProgressForCompleted:(NSInteger)completed total:(NSInteger)total
 {
     return total > 0 ? (CGFloat)completed/(CGFloat)total : 0;
 }
@@ -3360,10 +3376,10 @@ typedef void (^MXOnResumeDone)(void);
     __block NSInteger completedRooms = 0;
     void(^dispatch_group_leave_with_progress)(dispatch_group_t) = ^(dispatch_group_t dispatchGroup) {
         dispatch_group_leave(dispatchGroup);
-        if (MXSDKOptions.sharedInstance.enableSyncProgress && progress)
+        if (MXSDKOptions.sharedInstance.enableStartupProgress && progress)
         {
             completedRooms += 1;
-            progress([self syncProgressForCompleted:completedRooms total:self.rooms.count]);
+            progress([self startupProgressForCompleted:completedRooms total:self.rooms.count]);
         }
     };
     
@@ -4507,6 +4523,22 @@ typedef void (^MXOnResumeDone)(void);
     } failure:failure];
 }
 
+- (MXHTTPOperation *)deleteAccountDataWithType:(NSString *)type success:(void (^)(void))success failure:(void (^)(NSError *))failure
+{
+    MXWeakify(self);
+    return [matrixRestClient deleteAccountDataWithType:type success:^{
+        MXStrongifyAndReturnIfNil(self);
+        
+        // Delete account data locally
+        [self->_accountData deleteDataWithType:type];
+        
+        if (success)
+        {
+            success();
+        }
+    } failure:failure];
+}
+
 - (MXHTTPOperation *)setAccountDataIdentityServer:(NSString *)identityServer
                                           success:(void (^)(void))success
                                           failure:(void (^)(NSError *))failure
@@ -4975,7 +5007,7 @@ typedef void (^MXOnResumeDone)(void);
                     [failedEvents addObject:event];
                 }
             }
-            
+
             onComplete(failedEvents);
         }];
     }

@@ -98,6 +98,13 @@ NSString *const kMXTimelineDirectionBackwards           = @"b";
 
 NSString *const MXCredentialsUpdateTokensNotification = @"MXCredentialsUpdateTokensNotification";
 NSString *const kMXCredentialsNewRefreshTokenDataKey = @"refresh_token_data";
+
+/**
+ Threads list request parameters
+ */
+NSString *const kMXThreadsListIncludeAllParameter = @"all";
+NSString *const kMXThreadsListIncludeParticipatedParameter = @"participated";
+
 /**
  The time interval before the access token expires that we will start trying to refresh the token.
  This avoids us having to block other users requests while the token refreshes.
@@ -1185,6 +1192,26 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
     return [httpClient requestWithMethod:@"PUT"
                                     path:path
                               parameters:data
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/org.matrix.msc3391/user/%@/account_data/%@", kMXAPIPrefixPathUnstable, credentials.userId, type];
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"DELETE"
+                                    path:path
+                              parameters:nil
                                  success:^(NSDictionary *JSONResponse) {
                                      MXStrongifyAndReturnIfNil(self);
                                      [self dispatchSuccess:success];
@@ -3022,6 +3049,54 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                  }];
 }
 
+- (MXHTTPOperation*)redactEvent:(NSString*)eventId
+                         inRoom:(NSString*)roomId
+                         reason:(NSString*)reason
+                          txnId:(NSString *)txnId
+                  withRelations:(NSArray<NSString *>*) relations
+          withRelationsIsStable:(BOOL)withRelationsIsStable
+                        success:(void (^)(void))success
+                        failure:(void (^)(NSError *error))failure
+{
+    if (!txnId.length)
+    {
+        // Create a random transaction id to prevent duplicated events
+        txnId = [MXTools generateTransactionId];
+    }
+    
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/redact/%@/%@",
+                      kMXAPIPrefixPathV3,
+                      roomId,
+                      [MXTools encodeURIComponent:eventId],
+                      [MXTools encodeURIComponent:txnId]];
+    
+    // All query parameters are optional. Fill the request parameters on demand
+    NSMutableDictionary *parameters = [NSMutableDictionary dictionary];
+    if (reason)
+    {
+        parameters[@"reason"] = reason;
+    }
+    
+    if (relations && [relations count] > 0)
+    {
+        NSString* property = withRelationsIsStable ? @"with_relations" : @"org.matrix.msc3912.with_relations";
+        parameters[property] = relations;
+    }
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"PUT"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchSuccess:success];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
 -(MXHTTPOperation *)reportEvent:(NSString *)eventId
                          inRoom:(NSString *)roomId
                           score:(NSInteger)score
@@ -3304,6 +3379,35 @@ andUnauthenticatedHandler: (MXRestClientUnauthenticatedHandler)unauthenticatedHa
                                         }
                                     } andCompletion:^{
                                         success(replacementRoomId);
+                                    }];
+                                 }
+                                 failure:^(NSError *error) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                     [self dispatchFailure:error inBlock:failure];
+                                 }];
+}
+
+- (MXHTTPOperation*)threadsInRoomWithId:(NSString*)roomId
+                                include:(NSString *)include
+                                   from:(nullable NSString*)from
+                                success:(void (^)(MXAggregationPaginatedResponse *response))success
+                                failure:(void (^)(NSError *error))failure
+{
+    NSString *path = [NSString stringWithFormat:@"%@/rooms/%@/threads", kMXAPIPrefixPathV1, [MXTools encodeURIComponent:roomId]];
+    
+    NSDictionary *parameters = from ? @{@"include": include, @"from": from} : @{@"include": include};
+
+    MXWeakify(self);
+    return [httpClient requestWithMethod:@"GET"
+                                    path:path
+                              parameters:parameters
+                                 success:^(NSDictionary *JSONResponse) {
+                                     MXStrongifyAndReturnIfNil(self);
+                                    __block MXAggregationPaginatedResponse *response;
+                                    [self dispatchProcessing:^{
+                                        MXJSONModelSetMXJSONModel(response, MXAggregationPaginatedResponse, JSONResponse);
+                                    } andCompletion:^{
+                                        success(response);
                                     }];
                                  }
                                  failure:^(NSError *error) {

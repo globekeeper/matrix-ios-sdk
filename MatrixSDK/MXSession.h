@@ -339,7 +339,6 @@ FOUNDATION_EXPORT NSString *const kMXSessionNotificationErrorKey;
  */
 FOUNDATION_EXPORT NSString *const kMXSessionNotificationUserIdsArrayKey;
 
-
 #pragma mark - Other constants
 /**
  Fake tag used to identify rooms that do not have tags in `roomsWithTag` and `roomsByTags` methods.
@@ -352,7 +351,7 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @class MXCapabilities;
 @class MXEventStreamService;
 @class MXLocationService;
-@class MXSessionSyncProgress;
+@class MXSessionStartupProgress;
 
 #pragma mark - MXSession
 /**
@@ -435,9 +434,9 @@ FOUNDATION_EXPORT NSString *const kMXSessionNoRoomTag;
 @property (nonatomic, readonly) BOOL syncWithLazyLoadOfRoomMembers;
 
 /**
- Handler that can compute the overal progress of sync and report it to a delegate
+ Handler that can compute the overal progress of session startup and report it to a delegate
  */
-@property (nonatomic, readonly) MXSessionSyncProgress *syncProgress;
+@property (nonatomic, readonly) MXSessionStartupProgress *startupProgress;
 
 /**
  The profile of the current user.
@@ -1456,6 +1455,20 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                            forType:(NSString*)type
                            success:(void (^)(void))success
                            failure:(void (^)(NSError *error))failure;
+
+/**
+ Delete an account_data event for the client.
+ 
+ @param type The event type of the account_data to delete (@see kMXAccountDataType* strings)
+ Custom types should be namespaced to avoid clashes.
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ 
+ @return a MXHTTPOperation instance.
+ */
+- (MXHTTPOperation*)deleteAccountDataWithType:(NSString*)type
+                                      success:(void (^)(void))success
+                                      failure:(void (^)(NSError *error))failure;
 
 /**
  Set the identity server in the user's account data.
