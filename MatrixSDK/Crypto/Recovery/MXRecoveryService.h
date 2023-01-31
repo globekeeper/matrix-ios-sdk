@@ -122,12 +122,51 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
 #pragma mark - Backup to recovery
 
 /**
+ Create a SSSS key for encrypting secrets.
+ 
+ Use the `MXSecretStorageKeyCreationInfo` object returned by the callback to get more information about
+ the created passphrase key (private key, recovery key, ...).
+ 
+ @param keyId the ID of the key.
+ @param keyName a human readable name.
+ @param privateKey a privateKey used to generate the key. Nil will generate a key.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)createKeyWithKeyId:(nullable NSString*)keyId
+                   keyName:(nullable NSString*)keyName
+                privateKey:(NSData*)privateKey
+                   success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                   failure:(void (^)(NSError *error))failure;
+
+/**
+ Create a SSSS key for encrypting secrets.
+ 
+ Use the `MXSecretStorageKeyCreationInfo` object returned by the callback to get more information about
+ the created passphrase key (private key, recovery key, ...).
+ 
+ @param keyId the ID of the key.
+ @param keyName a human readable name.
+ @param passphrase a passphrase used to generate the key. Nil will generate a key.
+ 
+ @param success A block object called when the operation succeeds.
+ @param failure A block object called when the operation fails.
+ */
+- (void)createKeyWithKeyId:(nullable NSString*)keyId
+                   keyName:(nullable NSString*)keyName
+                passphrase:(nullable NSString*)passphrase
+                   success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
+                   failure:(void (^)(NSError *error))failure;
+
+/**
  Create a recovery and store secrets there.
  
  It will send keys from the local storage to the recovery on the homeserver.
  Those keys are sent encrypted thanks to SSSS that implements this recovery.
  
  @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
+ @param keyCreationInfo Prepared key info
  @param privateKey a private key used to generate the recovery key to encrypt keys.
  @param createServicesBackups YES to create backups for associated services. Only keyBackup is supported.
  
@@ -135,7 +174,8 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  @param failure A block object called when the operation fails.
  */
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
-                  withPrivateKey:(NSData*)privateKey
+             withKeyCreationInfo:(nullable MXSecretStorageKeyCreationInfo*) keyCreationInfo
+                  privateKey:(NSData*)privateKey
            createServicesBackups:(BOOL)createServicesBackups
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure;
@@ -147,6 +187,7 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  Those keys are sent encrypted thanks to SSSS that implements this recovery.
  
  @param secrets secrets ids to store in the recovery. Nil for all self.supportedSecrets.
+ @param keyCreationInfo Prepared key info
  @param passphrase a passphrase used to generate the recovery key to encrypt keys. Nil will generate it.
  @param createServicesBackups YES to create backups for associated services. Only keyBackup is supported.
  
@@ -154,7 +195,8 @@ typedef NS_ENUM(NSInteger, MXRecoveryServiceErrorCode)
  @param failure A block object called when the operation fails.
  */
 - (void)createRecoveryForSecrets:(nullable NSArray<NSString*>*)secrets
-                  withPassphrase:(nullable NSString*)passphrase
+             withKeyCreationInfo:(nullable MXSecretStorageKeyCreationInfo*) keyCreationInfo
+                  passphrase:(nullable NSString*)passphrase
            createServicesBackups:(BOOL)createServicesBackups
                          success:(void (^)(MXSecretStorageKeyCreationInfo *keyCreationInfo))success
                          failure:(void (^)(NSError *error))failure;
