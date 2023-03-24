@@ -473,11 +473,6 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     return [MXRealmOlmAccount objectInRealm:self.realm forPrimaryKey:userId];
 }
 
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure
-{
-    onComplete();
-}
-
 - (NSString *)userId
 {
     return self.accountInCurrentThread.userId;
@@ -825,6 +820,23 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
     return [MXRealmRoomAlgorithm objectInRealm:realm forPrimaryKey:roomId];
 }
 
+- (NSArray<MXRealmRoomAlgorithm *> *)roomSettings
+{
+    NSMutableArray *objects = [NSMutableArray array];
+    for (MXRealmRoomAlgorithm *item in [MXRealmRoomAlgorithm allObjectsInRealm:self.realm]) {
+        NSError *error = nil;
+        MXRoomSettings *settings = [[MXRoomSettings alloc] initWithRoomId:item.roomId
+                                                                algorithm:item.algorithm
+                                               blacklistUnverifiedDevices:item.blacklistUnverifiedDevices
+                                                                    error:&error];
+        if (settings) {
+            [objects addObject:settings];
+        } else {
+            MXLogErrorDetails(@"[MXRealmCryptoStore] roomSettings: Cannot create settings", error);
+        }
+    }
+    return objects.copy;
+}
 
 - (void)storeSession:(MXOlmSession*)session
 {
@@ -1603,6 +1615,11 @@ NSString *const MXRealmCryptoStoreReadonlySuffix = @"readonly";
         
         [realm addOrUpdateObject:realmSecret];
     }];
+}
+
+- (BOOL)hasSecretWithSecretId:(NSString *)secretId
+{
+    return [self secretWithSecretId:secretId] != nil;
 }
 
 - (NSString*)secretWithSecretId:(NSString*)secretId

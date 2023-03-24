@@ -15,9 +15,6 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
 /// A set of protocols defining the functionality in `MatrixSDKCrypto` and separating them into logical units
@@ -66,7 +63,13 @@ protocol MXCryptoUserIdentitySource: MXCryptoIdentity {
 
 /// Room event encryption
 protocol MXCryptoRoomEventEncrypting: MXCryptoIdentity {
-    func addTrackedUsers(_ users: [String])
+    var onlyAllowTrustedDevices: Bool { get set }
+    
+    func isUserTracked(userId: String) -> Bool
+    func updateTrackedUsers(_ users: [String])
+    func roomSettings(roomId: String) -> RoomSettings?
+    func setRoomAlgorithm(roomId: String, algorithm: EventEncryptionAlgorithm) throws
+    func setOnlyAllowTrustedDevices(for roomId: String, onlyAllowTrustedDevices: Bool) throws
     func shareRoomKeysIfNecessary(roomId: String, users: [String], settings: EncryptionSettings) async throws
     func encryptRoomEvent(content: [AnyHashable: Any], roomId: String, eventType: String) throws -> [String: Any]
     func discardRoomKey(roomId: String)
@@ -89,7 +92,8 @@ protocol MXCryptoCrossSigning: MXCryptoUserIdentitySource {
 
 /// Verification functionality
 protocol MXCryptoVerifying: MXCryptoIdentity {
-    func receiveUnencryptedVerificationEvent(event: MXEvent, roomId: String)
+    func downloadKeysIfNecessary(users: [String]) async throws
+    func receiveVerificationEvent(event: MXEvent, roomId: String) async throws
     func requestSelfVerification(methods: [String]) async throws -> VerificationRequestProtocol
     func requestVerification(userId: String, roomId: String, methods: [String]) async throws -> VerificationRequestProtocol
     func requestVerification(userId: String, deviceId: String, methods: [String]) async throws -> VerificationRequestProtocol
@@ -128,4 +132,3 @@ enum MXVerification {
     case qrCode(QrCodeProtocol)
 }
 
-#endif

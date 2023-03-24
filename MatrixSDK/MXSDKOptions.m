@@ -54,18 +54,27 @@ static MXSDKOptions *sharedOnceInstance = nil;
         _authEnableRefreshTokens = NO;
         _enableThreads = NO;
         _enableRoomSharedHistoryOnInvite = NO;
-        
-        #if DEBUG
-        _isCryptoSDKAvailable = NO;
-        _enableCryptoSDK = NO;
-        #endif
-        
         _enableSymmetricBackup = NO;
         _enableNewClientInformationFeature = NO;
-        _enableStartupProgress = NO;
+        _enableStartupProgress = YES;
     }
     
     return self;
+}
+
+- (BOOL)enableCryptoSDK
+{
+    if (!self.cryptoSDKFeature)
+    {
+        MXLogError(@"[MXSDKOptions] enableCryptoSDK: Crypto SDK feature is not configured");
+        return NO;
+    }
+    return self.cryptoSDKFeature.isEnabled;
+}
+
+- (NSString *)cryptoModuleId
+{
+    return self.enableCryptoSDK ? @"rust" : @"native";
 }
 
 - (void)setRoomListDataManagerClass:(Class)roomListDataManagerClass

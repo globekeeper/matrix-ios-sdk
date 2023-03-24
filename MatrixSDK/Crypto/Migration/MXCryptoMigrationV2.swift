@@ -15,31 +15,42 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import OLMKit
 import MatrixSDKCrypto
 
 class MXCryptoMigrationV2: NSObject {
+    enum Error: Swift.Error {
+        case missingCredentials
+        case unknownPickleKey
+    }
+    
     private static let SessionBatchSize = 1000
     
+    private let legacyDevice: MXOlmDevice
     private let store: MXCryptoMigrationStore
     private let log = MXNamedLog(name: "MXCryptoMachineMigration")
     
     init(legacyStore: MXCryptoStore) {
+        MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
+        
+        // We need to create legacy OlmDevice which sets itself internally as pickle key delegate
+        // Once established we can get the pickleKey from OLMKit which is used to decrypt and migrate
+        // the legacy store data
+        legacyDevice = MXOlmDevice(store: legacyStore)
         store = .init(legacyStore: legacyStore)
-        super.init()
-        OLMKit.sharedInstance().pickleKeyDelegate = self
     }
     
-    func migrateCrypto(updateProgress: @escaping (Double) -> Void) throws {
+    func migrateAllData(updateProgress: @escaping (Double) -> Void) throws {
         log.debug("Starting migration")
+        
+        let startDate = Date()
         updateProgress(0)
         
-        let key = pickleKey()
-        let data = try store.extractData(with: key)
-        let url = try MXCryptoMachine.storeURL(for: data.account.userId)
+        let pickleKey = try legacyPickleKey()
+        let data = try store.extractData(with: pickleKey)
+        
+        let url = try MXCryptoMachineStore.storeURL(for: data.account.userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
         
         if FileManager.default.fileExists(atPath: url.path) {
             try FileManager.default.removeItem(at: url)
@@ -47,20 +58,24 @@ class MXCryptoMigrationV2: NSObject {
         
         let details = """
         Migration summary
-          - user id         : \(data.account.userId)
-          - device id       : \(data.account.deviceId)
-          - olm_sessions    : \(store.olmSessionCount)
-          - megolm_sessions : \(store.megolmSessionCount)
-          - backup_key      : \(data.backupRecoveryKey != nil ? "true" : "false")
-          - cross_signing   : \(data.crossSigning.masterKey != nil ? "true" : "false")
-          - tracked_users   : \(data.trackedUsers.count)
+          - user id          : \(data.account.userId)
+          - device id        : \(data.account.deviceId)
+          - olm_sessions     : \(store.olmSessionCount)
+          - megolm_sessions  : \(store.megolmSessionCount)
+          - backup_key       : \(data.backupRecoveryKey != nil ? "true" : "false")
+          - master_key       : \(data.crossSigning.masterKey != nil ? "true" : "false")
+          - user_signing_key : \(data.crossSigning.userSigningKey != nil ? "true" : "false")
+          - self_signing_key : \(data.crossSigning.selfSigningKey != nil ? "true" : "false")
+          - tracked_users    : \(data.trackedUsers.count)
+          - room_settings    : \(data.roomSettings.count)
+          - global_settings  : \(store.globalSettings)
         """
         log.debug(details)
         
         try migrate(
             data: data,
             path: url.path,
-            passphrase: nil,
+            passphrase: passphrase,
             progressListener: self
         )
         
@@ -70,14 +85,15 @@ class MXCryptoMigrationV2: NSObject {
         let totalSessions = store.olmSessionCount + store.megolmSessionCount
         let olmToMegolmRatio = totalSessions > 0 ? Double(store.olmSessionCount)/Double(totalSessions) : 0
         
-        store.extractSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+        store.extractSessions(with: pickleKey, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
             updateProgress(progress * olmToMegolmRatio)
             
             do {
-                try self?.migrateSessions(
+                try self?.migrateSessionsBatch(
                     data: data,
                     sessions: batch,
-                    url: url
+                    url: url,
+                    passphrase: passphrase
                 )
             } catch {
                 self?.log.error("Error migrating some sessions", context: error)
@@ -86,66 +102,116 @@ class MXCryptoMigrationV2: NSObject {
         
         log.debug("Migrating megolm sessions in batches")
         
-        store.extractGroupSessions(with: key, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
+        store.extractGroupSessions(with: pickleKey, batchSize: Self.SessionBatchSize) { [weak self] batch, progress in
             updateProgress(olmToMegolmRatio + progress * (1 - olmToMegolmRatio))
             
             do {
-                try self?.migrateSessions(
+                try self?.migrateSessionsBatch(
                     data: data,
                     inboundGroupSessions: batch,
-                    url: url
+                    url: url,
+                    passphrase: passphrase
                 )
             } catch {
                 self?.log.error("Error migrating some sessions", context: error)
             }
         }
         
-        log.debug("Migration complete")
+        log.debug("Migrating global settings")
+        try migrateGlobalSettings(
+            userId: data.account.userId,
+            deviceId: data.account.deviceId,
+            url: url,
+            passphrase: passphrase
+        )
+        
+        let duration = Date().timeIntervalSince(startDate) * 1000
+        log.debug("Migration completed in \(duration) ms")
         updateProgress(1)
     }
     
-    // To migrate sessions in batches and keep memory under control we are repeatedly calling `migrate`
-    // function whilst only passing data for sessions and account, keeping the rest empty.
-    // This API will be improved in `MatrixCryptoSDK` in the future.
-    private func migrateSessions(
+    func migrateRoomAndGlobalSettingsOnly(updateProgress: @escaping (Double) -> Void) throws {
+        guard let userId = store.userId, let deviceId = store.deviceId else {
+            throw Error.missingCredentials
+        }
+        
+        let url = try MXCryptoMachineStore.storeURL(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
+        let settings = store.extractRoomSettings()
+        
+        let details = """
+        Settings migration summary
+          - user id         : \(userId)
+          - device id       : \(deviceId)
+          - room_settings   : \(settings.count)
+          - global_settings : \(store.globalSettings)
+        """
+        log.debug(details)
+        updateProgress(0)
+        
+        try migrateRoomSettings(
+            roomSettings: settings,
+            path: url.path,
+            passphrase: passphrase
+        )
+        
+        log.debug("Migrating global settings")
+        try migrateGlobalSettings(
+            userId: userId,
+            deviceId: deviceId,
+            url: url,
+            passphrase: passphrase
+        )
+        
+        log.debug("Migration completed")
+        updateProgress(1)
+    }
+    
+    private func legacyPickleKey() throws -> Data {
+        guard let key = OLMKit.sharedInstance().pickleKeyDelegate?.pickleKey() else {
+            throw Error.unknownPickleKey
+        }
+        return key
+    }
+    
+    private func migrateSessionsBatch(
         data: MigrationData,
         sessions: [PickledSession] = [],
         inboundGroupSessions: [PickledInboundGroupSession] = [],
-        url: URL
+        url: URL,
+        passphrase: String
     ) throws {
-        try migrate(
+        try migrateSessions(
             data: .init(
-                account: data.account,
+                userId: data.account.userId,
+                deviceId: data.account.deviceId,
+                curve25519Key: legacyDevice.deviceCurve25519Key,
+                ed25519Key: legacyDevice.deviceEd25519Key,
                 sessions: sessions,
                 inboundGroupSessions: inboundGroupSessions,
-                backupVersion: data.backupVersion,
-                backupRecoveryKey: data.backupRecoveryKey,
-                pickleKey: data.pickleKey,
-                crossSigning: data.crossSigning,
-                trackedUsers: data.trackedUsers
+                pickleKey: data.pickleKey
             ),
             path: url.path,
-            passphrase: nil,
+            passphrase: passphrase,
             progressListener: self
         )
     }
-}
-
-extension MXCryptoMigrationV2: OLMKitPickleKeyDelegate {
-    public func pickleKey() -> Data {
-        let key = MXKeyProvider.sharedInstance()
-            .keyDataForData(
-                ofType: MXCryptoOlmPickleKeyDataType,
-                isMandatory: true,
-                expectedKeyType: .rawData
-            )
+    
+    private func migrateGlobalSettings(
+        userId: String,
+        deviceId: String,
+        url: URL,
+        passphrase: String
+    ) throws {
+        let machine = try OlmMachine(
+            userId: userId,
+            deviceId: deviceId,
+            path: url.path,
+            passphrase: passphrase
+        )
         
-        guard let key = key as? MXRawDataKey else {
-            log.failure("Wrong key")
-            return Data()
-        }
-        
-        return key.key
+        let onlyTrusted = store.globalSettings.onlyAllowTrustedDevices
+        try machine.setOnlyAllowTrustedDevices(onlyAllowTrustedDevices: onlyTrusted)
     }
 }
 
@@ -154,5 +220,3 @@ extension MXCryptoMigrationV2: ProgressListener {
         // Progress loggged manually
     }
 }
-
-#endif

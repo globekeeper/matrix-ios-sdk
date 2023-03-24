@@ -2299,7 +2299,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     {
         // The "Ended poll" text is not meant to be localized from the sender side.
         // This is why here we use a "default localizer" providing the english version of it.
-        senderMessageBody = MXSendReplyEventDefaultStringLocalizer.new.replyToEndedPoll;
+        senderMessageBody = MXSendReplyEventDefaultStringLocalizer.new.endedPollMessage;
     }
     else if (eventToReply.eventType == MXEventTypeBeaconInfo)
     {
@@ -2662,9 +2662,11 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     MXEventContentRelatesTo *relatesTo = [[MXEventContentRelatesTo alloc] initWithRelationType:MXEventRelationTypeReference
                                                                                        eventId:pollStartEvent.eventId];
     
+    MXSendReplyEventDefaultStringLocalizer* localizer = MXSendReplyEventDefaultStringLocalizer.new;
     NSDictionary *content = @{
         kMXEventRelationRelatesToKey: relatesTo.JSONDictionary,
-        kMXMessageContentKeyExtensiblePollEndMSC3381: @{}
+        kMXMessageContentKeyExtensiblePollEndMSC3381: @{},
+        kMXMessageContentKeyExtensibleTextMSC1767: localizer.endedPollMessage
     };
     
     return [self sendEventOfType:[MXTools eventTypeString:MXEventTypePollEnd] content:content threadId:threadId localEcho:localEcho success:success failure:failure];
@@ -3427,8 +3429,32 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
     }
 }
 
+- (void)setUnread
+{
+    [mxSession.store setUnreadForRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
+}
+
+- (void)resetUnread
+{
+    [mxSession.store resetUnreadForRoom:self.roomId];
+    if ([mxSession.store respondsToSelector:@selector(commit)])
+    {
+        [mxSession.store commit];
+    }
+}
+
+- (BOOL)isMarkedAsUnread
+{
+    return [mxSession.store isRoomMarkedAsUnread:self.roomId];
+}
+
 - (void)markAllAsRead
 {
+    [self resetUnread];
     NSString *readMarkerEventId = nil;
     MXReceiptData *updatedReceiptData = nil;
     
@@ -3923,7 +3949,7 @@ NSInteger const kMXRoomInvalidInviteSenderErrorCode = 9002;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.summary.displayname, self.summary.topic];
+    return [NSString stringWithFormat:@"<MXRoom: %p> %@: %@ - %@", self, self.roomId, self.summary.displayName, self.summary.topic];
 }
 
 - (NSComparisonResult)compareLastMessageEventOriginServerTs:(MXRoom *)otherRoom

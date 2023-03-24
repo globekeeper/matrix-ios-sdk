@@ -1,3 +1,113 @@
+## Changes in 0.26.4 (2023-03-22)
+
+🐛 Bugfixes
+
+- Crypto: Do not show current session as unverified ([#7446](https://github.com/vector-im/element-ios/issues/7446))
+
+
+## Changes in 0.26.3 (2023-03-22)
+
+No significant changes.
+
+
+## Changes in 0.26.2 (2023-03-21)
+
+🙌 Improvements
+
+- Crypto: Always update tracked users when sharing keys ([#1733](https://github.com/matrix-org/matrix-ios-sdk/pull/1733))
+- CryptoV2: Fully deprecate MXCryptoStore ([#1735](https://github.com/matrix-org/matrix-ios-sdk/pull/1735))
+- Make CallKit maximumCallGroups configurable. ([#1738](https://github.com/matrix-org/matrix-ios-sdk/pull/1738))
+- Crypto: Simplify user verification state ([#1740](https://github.com/matrix-org/matrix-ios-sdk/pull/1740))
+- Rageshakes: Identify crypto module ([#1742](https://github.com/matrix-org/matrix-ios-sdk/pull/1742))
+- Session: Improved session startup progress ([#7417](https://github.com/vector-im/element-ios/issues/7417))
+
+🐛 Bugfixes
+
+- MXCallManager: Make call transfer requests sequential. ([#1739](https://github.com/matrix-org/matrix-ios-sdk/pull/1739))
+
+
+## Changes in 0.26.1 (2023-03-13)
+
+🐛 Bugfixes
+
+- All chats: revert "Unread" rooms filter behaviour. ([#1736](https://github.com/matrix-org/matrix-ios-sdk/pull/1736))
+
+
+## Changes in 0.26.0 (2023-03-07)
+
+🙌 Improvements
+
+- CryptoV2: Control CryptoSDK via feature flag ([#1719](https://github.com/matrix-org/matrix-ios-sdk/pull/1719))
+- Update MatrixSDKCrypto ([#1725](https://github.com/matrix-org/matrix-ios-sdk/pull/1725))
+- Use correct next users with keys query ([#1726](https://github.com/matrix-org/matrix-ios-sdk/pull/1726))
+- Creating a direct room with a third party will now use their email as the m.direct ID and their obfuscated email as the room title. ([#1727](https://github.com/matrix-org/matrix-ios-sdk/pull/1727))
+
+🐛 Bugfixes
+
+- Fixed incorrect filtering of "unread rooms" in the all chats list. ([#1723](https://github.com/matrix-org/matrix-ios-sdk/pull/1723))
+- Unread rooms: Move the storage file to a better location. ([#1730](https://github.com/matrix-org/matrix-ios-sdk/pull/1730))
+- Fixed a crash when roomSummary is nil. ([#1731](https://github.com/matrix-org/matrix-ios-sdk/pull/1731))
+- Fix room list last message when the key comes late. ([#6848](https://github.com/vector-im/element-ios/issues/6848))
+
+⚠️ API Changes
+
+- MXRoomSummary: displayname has been renamed to displayName ([#1731](https://github.com/matrix-org/matrix-ios-sdk/pull/1731))
+
+
+## Changes in 0.25.2 (2023-02-21)
+
+🙌 Improvements
+
+- Polls: add fallback text for poll ended events. ([#1713](https://github.com/matrix-org/matrix-ios-sdk/pull/1713))
+- Push Rules: Apply push rules client side for encrypted rooms, including mentions and keywords. ([#1714](https://github.com/matrix-org/matrix-ios-sdk/pull/1714))
+- Typealias MXResponse to Swift.Result ([#1715](https://github.com/matrix-org/matrix-ios-sdk/pull/1715))
+- CryptoV2: Unify verification event processing ([#1717](https://github.com/matrix-org/matrix-ios-sdk/pull/1717))
+- Encryption: add encryption to rooms' last messages.
+  WARNING: the migration to this database version will cause an initial full sync. ([#1718](https://github.com/matrix-org/matrix-ios-sdk/pull/1718))
+
+🐛 Bugfixes
+
+- Avoid sending a verification cancel request while the session is closed
+  Fix of some retain cycles ([#1716](https://github.com/matrix-org/matrix-ios-sdk/pull/1716))
+- Fix an issue where MXMediaLoader would not start downloading until the end of the scroll. ([#1721](https://github.com/matrix-org/matrix-ios-sdk/pull/1721))
+
+
+## Changes in 0.25.1 (2023-02-07)
+
+✨ Features
+
+- Add mark as unread option for rooms ([#7253](https://github.com/vector-im/element-ios/issues/7253))
+
+🙌 Improvements
+
+- Polls: add more information in PollProtocol for poll history. ([#1691](https://github.com/matrix-org/matrix-ios-sdk/pull/1691))
+- CryptoV2: Decrypt notifications ([#1695](https://github.com/matrix-org/matrix-ios-sdk/pull/1695))
+- CryptoV2: Upload fallback keys ([#1697](https://github.com/matrix-org/matrix-ios-sdk/pull/1697))
+- CryptoV2: Set passphrase for the crypto store ([#1699](https://github.com/matrix-org/matrix-ios-sdk/pull/1699))
+- Backup: Import legacy backup in batches ([#1701](https://github.com/matrix-org/matrix-ios-sdk/pull/1701))
+- Notifications: add completion blocks in the API. ([#1702](https://github.com/matrix-org/matrix-ios-sdk/pull/1702))
+- CryptoV2: New CryptoMachine on each background operation ([#1704](https://github.com/matrix-org/matrix-ios-sdk/pull/1704))
+- CryptoV2: Fix JSONDictionary of keys query responses ([#1707](https://github.com/matrix-org/matrix-ios-sdk/pull/1707))
+- CryptoV2: Enable Crypto SDK for production ([#1708](https://github.com/matrix-org/matrix-ios-sdk/pull/1708))
+
+🐛 Bugfixes
+
+- Fix some scenarios where an answered call continues to ring ([#1710](https://github.com/matrix-org/matrix-ios-sdk/pull/1710))
+
+
+## Changes in 0.25.0 (2023-02-02)
+
+🙌 Improvements
+
+- CryptoV2: Decrypt notifications ([#1695](https://github.com/matrix-org/matrix-ios-sdk/pull/1695))
+- CryptoV2: Upload fallback keys ([#1697](https://github.com/matrix-org/matrix-ios-sdk/pull/1697))
+- CryptoV2: Set passphrase for the crypto store ([#1699](https://github.com/matrix-org/matrix-ios-sdk/pull/1699))
+- Backup: Import legacy backup in batches ([#1701](https://github.com/matrix-org/matrix-ios-sdk/pull/1701))
+- CryptoV2: New CryptoMachine on each background operation ([#1704](https://github.com/matrix-org/matrix-ios-sdk/pull/1704))
+- CryptoV2: Fix JSONDictionary of keys query responses ([#1707](https://github.com/matrix-org/matrix-ios-sdk/pull/1707))
+- CryptoV2: Enable Crypto SDK for production ([#1708](https://github.com/matrix-org/matrix-ios-sdk/pull/1708))
+
+
 ## Changes in 0.24.8 (2023-01-24)
 
 ✨ Features

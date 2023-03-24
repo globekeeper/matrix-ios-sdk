@@ -925,6 +925,11 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
                                                     success:(void (^)(BOOL canEnableE2E))success
                                                     failure:(void (^)(NSError *error))failure;
 
+/**
+ it will return if the room is marked unread by the user
+ */
+- (BOOL)isRoomMarkedAsUnread:(NSString*)roomId;
+
 #pragma mark - The user's rooms
 /**
  Check if the user is in a room
@@ -1082,7 +1087,7 @@ typedef void (^MXOnBackgroundSyncFail)(NSError *error);
 
  @return the MXRoomSummary instance.
  */
-- (MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
+- (nullable MXRoomSummary *)roomSummaryWithRoomId:(NSString*)roomId;
 
 /**
  Recompute all room summaries last message.

@@ -15,26 +15,26 @@
 //
 
 import Foundation
-
-#if DEBUG
-
 import MatrixSDKCrypto
 
-/// Redirects logs originating in `MatrixSDKCrypto` into `MXLog`
-class MXCryptoMachineLogger: Logger {
-    init() {
-        setLogger(logger: self)
+extension EventEncryptionAlgorithm {
+    enum Error: Swift.Error {
+        case cannotResetEncryption
+        case invalidAlgorithm
     }
     
-    func log(logLine: String) {
-        // Excluding some auto-generated logs that are not useful
-        // This will be changed in rust-sdk directly
-        guard !logLine.contains("::uniffi_api:") else {
-            return
+    init(string: String?) throws {
+        guard let string = string else {
+            throw Error.cannotResetEncryption
         }
         
-        MXLog.debug("[MXCryptoMachine] \(logLine)")
+        switch string {
+        case kMXCryptoOlmAlgorithm:
+            self = .olmV1Curve25519AesSha2
+        case kMXCryptoMegolmAlgorithm:
+            self = .megolmV1AesSha2
+        default:
+            throw Error.invalidAlgorithm
+        }
     }
 }
-
-#endif

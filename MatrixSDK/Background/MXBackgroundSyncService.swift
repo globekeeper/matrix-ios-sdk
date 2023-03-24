@@ -65,7 +65,12 @@ public enum MXBackgroundSyncServiceError: Error {
     
     /// Initializer
     /// - Parameter credentials: account credentials
-    public init(withCredentials credentials: MXCredentials, persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil, unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil) {
+    public init(
+        withCredentials credentials: MXCredentials,
+        isCryptoSDKEnabled: Bool = false,
+        persistTokenDataHandler: MXRestClientPersistTokenDataHandler? = nil,
+        unauthenticatedHandler: MXRestClientUnauthenticatedHandler? = nil
+    ) {
         processingQueue = DispatchQueue(label: "MXBackgroundSyncServiceQueue-" + MXTools.generateSecret())
         self.credentials = credentials
         
@@ -75,30 +80,31 @@ public enum MXBackgroundSyncServiceError: Error {
         let syncResponseStore = MXSyncResponseFileStore(withCredentials: credentials)
         syncResponseStoreManager = MXSyncResponseStoreManager(syncResponseStore: syncResponseStore)
         
-        restClient = MXRestClient(credentials: credentials, unrecognizedCertificateHandler: nil, persistentTokenDataHandler: persistTokenDataHandler, unauthenticatedHandler: unauthenticatedHandler)
+        let restClient = MXRestClient(
+            credentials: credentials,
+            unrecognizedCertificateHandler: nil,
+            persistentTokenDataHandler: persistTokenDataHandler,
+            unauthenticatedHandler: unauthenticatedHandler
+        )
         restClient.completionQueue = processingQueue
+        self.restClient = restClient
+        
         store = MXBackgroundStore(withCredentials: credentials)
         // We can flush any crypto data if our sync response store is empty
         let resetBackgroundCryptoStore = syncResponseStoreManager.syncToken() == nil
         
-        crypto = {
-            #if DEBUG
-            if MXSDKOptions.sharedInstance().isCryptoSDKAvailable && MXSDKOptions.sharedInstance().enableCryptoSDK {
-                // Crypto V2 is currently unable to decrypt notifications due to single-process store,
-                // so it uses dummy background crypto that does not do anything.
-                return MXDummyBackgroundCrypto()
-            }
-            #endif
-            return MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
-        }()
+        if isCryptoSDKEnabled {
+            MXLog.debug("[MXBackgroundSyncService] init: constructing crypto v2")
+            crypto = MXBackgroundCryptoV2(credentials: credentials, restClient: restClient)
+        } else {
+            MXLog.debug("[MXBackgroundSyncService] init: constructing legacy crypto")
+            crypto = MXLegacyBackgroundCrypto(credentials: credentials, resetBackgroundCryptoStore: resetBackgroundCryptoStore)
+        }
         
         pushRulesManager = MXBackgroundPushRulesManager(withCredentials: credentials)
-        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
-            pushRulesManager.handleAccountData(accountData)
-        } else if let accountData = store.userAccountData ?? nil {
-            pushRulesManager.handleAccountData(accountData)
-        }
+        MXLog.debug("[MXBackgroundSyncService] init complete")
         super.init()
+        syncPushRuleManagerWithAccountData()
     }
     
     /// Fetch event with given event and room identifiers. It performs a sync if the event not found in session store.
@@ -303,7 +309,7 @@ public enum MXBackgroundSyncServiceError: Error {
                 }
             } else {
                 //  we don't have keys to decrypt the event
-                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrpyted, but we don't have the keys to decrypt it.")
+                MXLog.debug("[MXBackgroundSyncService] fetchEvent: Event needs to be decrypted, but we don't have the keys to decrypt it.")
                 handleDecryptionFailure(withError: nil)
             }
         }
@@ -493,6 +499,16 @@ public enum MXBackgroundSyncServiceError: Error {
             // right time to clean the cryptoStore.
             MXLog.debug("[MXBackgroundSyncService] updateBackgroundServiceStoresIfNeeded: Reset MXBackgroundCryptoStore")
             crypto.reset()
+        }
+        
+        syncPushRuleManagerWithAccountData()
+    }
+    
+    private func syncPushRuleManagerWithAccountData() {
+        if let accountData = syncResponseStoreManager.syncResponseStore.accountData {
+            pushRulesManager.handleAccountData(accountData)
+        } else if let accountData = store.userAccountData ?? nil {
+            pushRulesManager.handleAccountData(accountData)
         }
     }
 }

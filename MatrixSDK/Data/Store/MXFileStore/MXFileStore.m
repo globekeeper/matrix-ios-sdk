@@ -29,7 +29,7 @@
 #import "MatrixSDKSwiftHeader.h"
 #import "MXFileRoomSummaryStore.h"
 
-static NSUInteger const kMXFileVersion = 81;
+static NSUInteger const kMXFileVersion = 82;    // Check getUnreadRoomFromStore if you update this value. Delete this comment after
 
 static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
@@ -46,6 +46,7 @@ static NSString *const kMXFileStoreRoomOutgoingMessagesFile = @"outgoingMessages
 static NSString *const kMXFileStoreRoomStateFile = @"state";
 static NSString *const kMXFileStoreRoomAccountDataFile = @"accountData";
 static NSString *const kMXFileStoreRoomReadReceiptsFile = @"readReceipts";
+static NSString *const kMXFileStoreRoomUnreadRoomsFile = @"unreadRooms";
 static NSString *const kMXFileStoreRoomThreadedReadReceiptsFile = @"threadedReadReceipts";
 
 static NSUInteger preloadOptions;
@@ -260,7 +261,7 @@ static NSUInteger preloadOptions;
                 }
                 [self loadUsers];
                 [self loadGroups];
-
+                [self loadUnreadRooms];
                 taskProfile.units = self.roomSummaryStore.countOfRooms;
                 [MXSDKOptions.sharedInstance.profiler stopMeasuringTaskWithProfile:taskProfile];
                 MXLogDebug(@"[MXFileStore] Data loaded from files in %.0fms", taskProfile.duration * 1000);
@@ -841,6 +842,7 @@ static NSUInteger preloadOptions;
     [self saveUsers];
     [self saveGroupsDeletion];
     [self saveGroups];
+    [self saveUnreadRooms];
     [self saveFilters];
     [self saveMetaData];
 }
@@ -998,6 +1000,37 @@ static NSUInteger preloadOptions;
     return threadedStore;
 }
 
+-(void)saveUnreadRooms
+{
+    
+    NSArray<NSString*>* rooms = [roomUnreaded allObjects];
+    NSString *roomsFile = [self unreadRoomsFile];
+    [self saveObject:rooms toFile:roomsFile];
+}
+
+-(void)loadUnreadRooms
+{
+    roomUnreaded = [NSMutableSet setWithArray:[self getUnreadRoomFromStore]];
+}
+
+- (NSArray*)getUnreadRoomFromStore
+{
+    NSString *unreadRoomsFile = [self unreadRoomsFile];
+    
+    // TODO: Remove this migration code on the next kMXFileVersion update (>82)
+    // The `unreadFileForRoomsForBackup()` method should be removed.
+    // Likewise for the associated test `testUnreadRoomsFileMigration()`
+    NSString *oldUnreadRoomsFile = [self unreadFileForRoomsForBackup:NO];
+    if ([[NSFileManager defaultManager] fileExistsAtPath:oldUnreadRoomsFile])
+    {
+        MXLogDebug(@"[MXFileStore] getUnreadRoomFromStore: Migrate the unread rooms file")
+        [[NSFileManager defaultManager] moveItemAtPath:oldUnreadRoomsFile toPath:unreadRoomsFile error:nil];
+    }
+        
+    NSArray *result = [self loadUnreadRoomsStoreFromFileAt:unreadRoomsFile];
+    return result;
+}
+
 - (NSMutableDictionary*)loadReceiptsStoreFromFileAt:(NSString*)filePath forRoomWithId:(NSString*)roomId
 {
     NSMutableDictionary *store;
@@ -1032,7 +1065,37 @@ static NSUInteger preloadOptions;
     
     return store;
 }
-
+- (NSArray*)loadUnreadRoomsStoreFromFileAt:(NSString*)filePath
+{
+    NSArray *store = [NSArray new];
+    
+    if ([[NSFileManager defaultManager] fileExistsAtPath:filePath])
+    {
+        @try
+        {
+            NSDate *startDate = [NSDate date];
+            NSData *dataOfFile = [NSData dataWithContentsOfFile:filePath];
+            NSError* error;
+            NSArray *result = [NSKeyedUnarchiver unarchivedArrayOfObjectsOfClass:[NSString class] fromData:dataOfFile error:&error];
+            if (nil != result) {
+                store = result;
+            }
+            if ([NSThread isMainThread])
+            {
+                MXLogWarning(@"[MXFileStore] Loaded unread rooms: %.0fms, in main thread", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+            }
+        }
+        @catch (NSException *exception)
+        {
+            NSDictionary *logDetails = @{
+                @"exception": exception
+            };
+            MXLogErrorDetails(@"[MXFileStore] Warning: loadReceipts file for room as been corrupted", logDetails);
+        }
+    }
+    
+    return store;
+}
 #pragma mark - File paths
 - (void)setUpStoragePaths
 {
@@ -1074,6 +1137,18 @@ static NSUInteger preloadOptions;
     else
     {
         return [self.storeBackupRoomsPath stringByAppendingPathComponent:roomId];
+    }
+}
+
+- (NSString*)folderForRoomsforBackup:(BOOL)backup
+{
+    if (!backup)
+    {
+        return storeRoomsPath;
+    }
+    else
+    {
+        return self.storeBackupRoomsPath;
     }
 }
 
@@ -1122,6 +1197,17 @@ static NSUInteger preloadOptions;
 - (NSString*)readReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup
 {
     return [[self folderForRoom:roomId forBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomReadReceiptsFile];
+}
+
+- (NSString*)unreadRoomsFile
+{
+    return [storePath stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];
+}
+
+// TODO: To delete when kMXFileVersion > 82
+- (NSString*)unreadFileForRoomsForBackup:(BOOL)backup
+{
+    return [[self folderForRoomsforBackup:backup] stringByAppendingPathComponent:kMXFileStoreRoomUnreadRoomsFile];
 }
 
 - (NSString*)threadedReadReceiptsFileForRoom:(NSString*)roomId forBackup:(BOOL)backup

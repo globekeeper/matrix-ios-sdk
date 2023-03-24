@@ -35,6 +35,7 @@
 
 @class OLMAccount;
 @class OLMOutboundGroupSession;
+@class MXRoomSettings;
 
 /**
  The `MXCryptoStore` protocol defines an interface that must be implemented in order to store
@@ -82,17 +83,6 @@
  @return the store. Call the open method before using it.
  */
 - (instancetype)initWithCredentials:(MXCredentials *)credentials;
-
-/**
- Open the store corresponding to the passed account.
-
- The implementation can use a separated thread for loading data but the callback blocks
- must be called from the main thread.
-
- @param onComplete the callback called once the data has been loaded.
- @param failure the callback called in case of error.
- */
-- (void)open:(void (^)(void))onComplete failure:(void (^)(NSError *error))failure;
 
 /**
  The user id.
@@ -257,6 +247,11 @@
  nil if the room is not encrypted.
  */
 - (NSString*)algorithmForRoom:(NSString*)roomId;
+
+/**
+ Fetch all stored room settings, containing room algorithm and other crypto options
+ */
+- (NSArray <MXRoomSettings *> *)roomSettings;
 
 /**
  Store a session between this device and another device.

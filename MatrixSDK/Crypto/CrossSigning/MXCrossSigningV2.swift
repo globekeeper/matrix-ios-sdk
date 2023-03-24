@@ -16,8 +16,6 @@
 
 import Foundation
 
-#if DEBUG
-
 /// An implementation of `MXCrossSigning` compatible with `MXCryptoV2` and `MatrixSDKCrypto`
 class MXCrossSigningV2: NSObject, MXCrossSigning {
     enum Error: Swift.Error {
@@ -31,7 +29,8 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         }
     
         if info.trustLevel.isVerified {
-            return hasAllPrivateKeys ? .canCrossSign : .trustCrossSigning
+            let status = crossSigning.crossSigningStatus()
+            return status.hasSelfSigning && status.hasUserSigning ? .canCrossSign : .trustCrossSigning
         } else {
             return .crossSigningExists
         }
@@ -117,14 +116,14 @@ class MXCrossSigningV2: NSObject, MXCrossSigning {
         success: ((Bool) -> Void)?,
         failure: ((Swift.Error) -> Void)? = nil
     ) {
-        log.debug("->")
+        log.debug("Refreshing cross signing state, current state: \(state)")
         
         Task {
             do {
                 try await crossSigning.refreshCrossSigningStatus()
                 myUserCrossSigningKeys = infoSource.crossSigningInfo(userId: crossSigning.userId)
                 
-                log.debug("Cross signing state refreshed")
+                log.debug("Cross signing state refreshed, new state: \(state)")
                 await MainActor.run {
                     success?(true)
                 }
@@ -234,4 +233,19 @@ extension MXCrossSigningV2: MXRecoveryServiceDelegate {
     }
 }
 
-#endif
+extension MXCrossSigningState: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .notBootstrapped:
+            return "notBootstrapped"
+        case .crossSigningExists:
+            return "crossSigningExists"
+        case .trustCrossSigning:
+            return "trustCrossSigning"
+        case .canCrossSign:
+            return "canCrossSign"
+        @unknown default:
+            return "unknown"
+        }
+    }
+}

@@ -29,6 +29,7 @@
   "testTargets" : [
     {
       "selectedTests" : [
+        "EventEncryptionAlgorithmUnitTests",
         "MXAesUnitTests",
         "MXAggregatedEditsUnitTests",
         "MXAggregatedReferenceUnitTests",
@@ -66,6 +67,7 @@
         "MXKeyVerificationManagerV2UnitTests",
         "MXKeyVerificationRequestV2UnitTests",
         "MXKeyVerificationStateResolverUnitTests",
+        "MXKeysQueryResponseUnitTest",
         "MXKeysQuerySchedulerUnitTests",
         "MXMediaScanStoreUnitTests",
         "MXMegolmDecryptionUnitTests",

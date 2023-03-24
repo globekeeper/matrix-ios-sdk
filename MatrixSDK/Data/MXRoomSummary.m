@@ -172,6 +172,18 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)save:(BOOL)commit
 {
+    if (!NSThread.isMainThread)
+    {
+        // Saving on the main thread is not ideal, but is currently the only safe way, given the mutation
+        // of internal state and posting notifications observed by UI without double-checking which thread
+        // the notification arrives on.
+        MXLogFailure(@"[MXRoomSummary] save: Saving room summary should happen from the main thread")
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self save:commit];
+        });
+        return;
+    }
+    
     _dataTypes = self.calculateDataTypes;
     _sentStatus = self.calculateSentStatus;
     _favoriteTagOrder = self.room.accountData.tags[kMXRoomTagFavourite].order;
@@ -222,11 +234,16 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     {
         return;
     }
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (nil != _lastMessage && ![_lastMessage.eventId isEqualToString:summary.lastMessage.eventId])
+    {
+        [self.room resetUnread];
+    }
     
     _roomTypeString = summary.roomTypeString;
     _roomType = summary.roomType;
     _avatar = summary.avatar;
-    _displayname = summary.displayname;
+    _displayName = summary.displayName;
     _topic = summary.topic;
     _creatorUserId = summary.creatorUserId;
     _aliases = summary.aliases;
@@ -269,7 +286,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     MXRoom *room = self.room;
 
     _avatar = nil;
-    _displayname = nil;
+    _displayName = nil;
     _topic = nil;
     _aliases = nil;
 
@@ -279,7 +296,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
         BOOL updated = [self.mxSession.roomSummaryUpdateDelegate session:self.mxSession updateRoomSummary:self withStateEvents:roomState.stateEvents roomState:roomState];
 
-        if (self.displayname == nil || self.avatar == nil)
+        if (self.displayName == nil || self.avatar == nil)
         {
             // Avatar and displayname may not be recomputed from the state event list if
             // the latter does not contain any `name` or `avatar` event. So, in this case,
@@ -299,6 +316,11 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (void)updateLastMessage:(MXRoomLastMessage *)message
 {
+    // if there is a new LastMessage then it's better to unmark the room as unread
+    if (![_lastMessage.eventId isEqualToString:message.eventId])
+    {
+        [self.room resetUnread];
+    }
     _lastMessage = message;
 }
 
@@ -949,7 +971,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
         _roomTypeString = [aDecoder decodeObjectForKey:@"roomTypeString"];
         _roomType = [aDecoder decodeIntegerForKey:@"roomType"];
         _avatar = [aDecoder decodeObjectForKey:@"avatar"];
-        _displayname = [aDecoder decodeObjectForKey:@"displayname"];
+        _displayName = [aDecoder decodeObjectForKey:@"displayname"];
         _topic = [aDecoder decodeObjectForKey:@"topic"];
         _creatorUserId = [aDecoder decodeObjectForKey:@"creatorUserId"];
         _aliases = [aDecoder decodeObjectForKey:@"aliases"];
@@ -999,7 +1021,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     [aCoder encodeObject:_roomTypeString forKey:@"roomTypeString"];
     [aCoder encodeInteger:_roomType forKey:@"roomType"];
     [aCoder encodeObject:_avatar forKey:@"avatar"];
-    [aCoder encodeObject:_displayname forKey:@"displayname"];
+    [aCoder encodeObject:_displayName forKey:@"displayname"];
     [aCoder encodeObject:_topic forKey:@"topic"];
     [aCoder encodeObject:_creatorUserId forKey:@"creatorUserId"];    
     [aCoder encodeObject:_aliases forKey:@"aliases"];
@@ -1037,7 +1059,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
 
 - (NSString *)description
 {
-    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayname, _lastMessage.eventId];
+    return [NSString stringWithFormat:@"%@ %@: %@ - %@", super.description, _roomId, _displayName, _lastMessage.eventId];
 }
 
 - (NSUInteger)hash
@@ -1048,7 +1070,7 @@ static NSUInteger const kMXRoomSummaryTrustComputationDelayMs = 1000;
     result = prime * result + [_roomId hash];
     result = prime * result + [_roomTypeString hash];
     result = prime * result + [_avatar hash];
-    result = prime * result + [_displayname hash];
+    result = prime * result + [_displayName hash];
     result = prime * result + [_topic hash];
     result = prime * result + [_creatorUserId hash];
     result = prime * result + [_aliases hash];
