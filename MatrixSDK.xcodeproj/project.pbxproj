@@ -7,6 +7,14 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		01B3A24329DC8446005E2DB1 /* MXMultiroomSyncLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 01B3A23F29DC8446005E2DB1 /* MXMultiroomSyncLocation.m */; };
+		01B3A24429DC8446005E2DB1 /* MXMultiroomSyncLocation.m in Sources */ = {isa = PBXBuildFile; fileRef = 01B3A23F29DC8446005E2DB1 /* MXMultiroomSyncLocation.m */; };
+		01B3A24529DC8446005E2DB1 /* MXMultiroomSync.h in Headers */ = {isa = PBXBuildFile; fileRef = 01B3A24029DC8446005E2DB1 /* MXMultiroomSync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01B3A24629DC8446005E2DB1 /* MXMultiroomSync.h in Headers */ = {isa = PBXBuildFile; fileRef = 01B3A24029DC8446005E2DB1 /* MXMultiroomSync.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01B3A24729DC8446005E2DB1 /* MXMultiroomSyncLocation.h in Headers */ = {isa = PBXBuildFile; fileRef = 01B3A24129DC8446005E2DB1 /* MXMultiroomSyncLocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01B3A24829DC8446005E2DB1 /* MXMultiroomSyncLocation.h in Headers */ = {isa = PBXBuildFile; fileRef = 01B3A24129DC8446005E2DB1 /* MXMultiroomSyncLocation.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		01B3A24929DC8446005E2DB1 /* MXMultiroomSync.m in Sources */ = {isa = PBXBuildFile; fileRef = 01B3A24229DC8446005E2DB1 /* MXMultiroomSync.m */; };
+		01B3A24A29DC8446005E2DB1 /* MXMultiroomSync.m in Sources */ = {isa = PBXBuildFile; fileRef = 01B3A24229DC8446005E2DB1 /* MXMultiroomSync.m */; };
 		021AFBA42179E91900742B2C /* MXEncryptedContentFile.h in Headers */ = {isa = PBXBuildFile; fileRef = 021AFBA02179E91800742B2C /* MXEncryptedContentFile.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		021AFBA52179E91900742B2C /* MXEncryptedContentKey.m in Sources */ = {isa = PBXBuildFile; fileRef = 021AFBA12179E91800742B2C /* MXEncryptedContentKey.m */; };
 		021AFBA62179E91900742B2C /* MXEncryptedContentKey.h in Headers */ = {isa = PBXBuildFile; fileRef = 021AFBA22179E91800742B2C /* MXEncryptedContentKey.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -2132,6 +2140,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		01B3A23F29DC8446005E2DB1 /* MXMultiroomSyncLocation.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMultiroomSyncLocation.m; sourceTree = "<group>"; };
+		01B3A24029DC8446005E2DB1 /* MXMultiroomSync.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMultiroomSync.h; sourceTree = "<group>"; };
+		01B3A24129DC8446005E2DB1 /* MXMultiroomSyncLocation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXMultiroomSyncLocation.h; sourceTree = "<group>"; };
+		01B3A24229DC8446005E2DB1 /* MXMultiroomSync.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXMultiroomSync.m; sourceTree = "<group>"; };
 		021AFBA02179E91800742B2C /* MXEncryptedContentFile.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEncryptedContentFile.h; sourceTree = "<group>"; };
 		021AFBA12179E91800742B2C /* MXEncryptedContentKey.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MXEncryptedContentKey.m; sourceTree = "<group>"; };
 		021AFBA22179E91800742B2C /* MXEncryptedContentKey.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MXEncryptedContentKey.h; sourceTree = "<group>"; };
@@ -3265,6 +3277,17 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		01B3A23E29DC8446005E2DB1 /* Multiroom */ = {
+			isa = PBXGroup;
+			children = (
+				01B3A23F29DC8446005E2DB1 /* MXMultiroomSyncLocation.m */,
+				01B3A24029DC8446005E2DB1 /* MXMultiroomSync.h */,
+				01B3A24129DC8446005E2DB1 /* MXMultiroomSyncLocation.h */,
+				01B3A24229DC8446005E2DB1 /* MXMultiroomSync.m */,
+			);
+			path = Multiroom;
+			sourceTree = "<group>";
+		};
 		02CAD431217DD12F0074700B /* ContentScan */ = {
 			isa = PBXGroup;
 			children = (
@@ -5185,6 +5208,7 @@
 		EC60ED5A265CFBD000B39A4E /* Sync */ = {
 			isa = PBXGroup;
 			children = (
+				01B3A23E29DC8446005E2DB1 /* Multiroom */,
 				EC60ED5B265CFC2C00B39A4E /* MXSyncResponse.h */,
 				EC60ED5C265CFC2C00B39A4E /* MXSyncResponse.m */,
 				EC60ED65265CFC7200B39A4E /* MXPresenceSyncResponse.h */,
@@ -5981,6 +6005,7 @@
 				32C474C122AF7A2D00CFBCD2 /* MXReactionOperation.h in Headers */,
 				324AAC6F239913AD00380A66 /* MXKeyVerificationJSONModel.h in Headers */,
 				327E9AFC228AC22800A98BC1 /* MXAggregationsStore.h in Headers */,
+				01B3A24729DC8446005E2DB1 /* MXMultiroomSyncLocation.h in Headers */,
 				324DD2AC246AEB7B00377005 /* MXSecretStoragePassphrase.h in Headers */,
 				323547DC2226FC5700F15F94 /* MXCredentials.h in Headers */,
 				B19A30CA2404268600FB6F35 /* MXQRCodeDataCodable.h in Headers */,
@@ -6050,6 +6075,7 @@
 				3A108AA225810FE5005EEBE9 /* MXRawDataKey.h in Headers */,
 				EC11658D270F3ABF0089FA56 /* RLMRealm+MatrixSDK.h in Headers */,
 				B1A026F626161EF5001AADFF /* MXSpaceChildSummaryResponse.h in Headers */,
+				01B3A24529DC8446005E2DB1 /* MXMultiroomSync.h in Headers */,
 				EC05478225FF99450047ECD7 /* MXRoomAccountDataUpdater.h in Headers */,
 				8EC511042568216B00EC4E5B /* MXTaggedEventInfo.h in Headers */,
 				ECBF657E26DE2A4900AA3A99 /* MXMemoryRoomOutgoingMessagesStore.h in Headers */,
@@ -6328,6 +6354,7 @@
 				EC8A53AA25B1BC77004E0802 /* MXCallRejectEventContent.h in Headers */,
 				183892772702F553003F0C4F /* MXRoomNameDefaultStringLocalizer.h in Headers */,
 				B14EF2BB2397E90400758AF0 /* MXUsersDevicesMap.h in Headers */,
+				01B3A24829DC8446005E2DB1 /* MXMultiroomSyncLocation.h in Headers */,
 				EC8A53C425B1BC77004E0802 /* MXCallInviteEventContent.h in Headers */,
 				B14EF2BC2397E90400758AF0 /* MXAggregatedReactions.h in Headers */,
 				32AF9280240EA0190008A0FD /* MXSecretShareManager.h in Headers */,
@@ -6473,6 +6500,7 @@
 				324DD2B7246C21C700377005 /* MXSecretStorageKeyCreationInfo.h in Headers */,
 				B14EF3102397E90400758AF0 /* MXEmojiRepresentation.h in Headers */,
 				ED5C754928B3E80300D24E85 /* MXLogObjcWrapper.h in Headers */,
+				01B3A24629DC8446005E2DB1 /* MXMultiroomSync.h in Headers */,
 				EC403857289B26400067D5B8 /* MXBaseKeyBackupAuthData.h in Headers */,
 				EC116596270FBF090089FA56 /* MXApplicationProtocol.h in Headers */,
 				ECF29BCD264194AE0053E6D6 /* MXCallAssertedIdentityEventContent.h in Headers */,
@@ -7102,6 +7130,7 @@
 				EC40384C289A7F260067D5B8 /* MXAes256KeyBackupAlgorithm.m in Sources */,
 				ECBF658726DE3DF800AA3A99 /* MXFileRoomOutgoingMessagesStore.m in Sources */,
 				3AC13804264482A100EE1E74 /* MXExportedOlmDevice.m in Sources */,
+				01B3A24329DC8446005E2DB1 /* MXMultiroomSyncLocation.m in Sources */,
 				321CFDFE2254E8C4004D31DF /* MXEmojiRepresentation.m in Sources */,
 				B10AFB4822AA8A8E0092E6AF /* MXEventEditsListener.m in Sources */,
 				C6D5D60E1E4FBD2900706C0F /* MXSession.swift in Sources */,
@@ -7282,6 +7311,7 @@
 				B19A30A62404257700FB6F35 /* MXQRCodeKeyVerificationStart.m in Sources */,
 				B146D47B21A5958400D8C2C6 /* MXAntivirusScanStatusFormatter.m in Sources */,
 				EC8A53DE25B1BCC6004E0802 /* MXThirdpartyProtocolsResponse.m in Sources */,
+				01B3A24929DC8446005E2DB1 /* MXMultiroomSync.m in Sources */,
 				32133022228BF7BC0070BA9B /* MXReactionCountChange.m in Sources */,
 				ED6DAC2228C7A51400ECDCB6 /* MXDateProvider.swift in Sources */,
 				32A151491DAF7C0C00400192 /* MXKey.m in Sources */,
@@ -7773,6 +7803,7 @@
 				EC40384D289A7F260067D5B8 /* MXAes256KeyBackupAlgorithm.m in Sources */,
 				B14EF2232397E90400758AF0 /* MXEvent.swift in Sources */,
 				B14EF2242397E90400758AF0 /* MXEventScan.m in Sources */,
+				01B3A24429DC8446005E2DB1 /* MXMultiroomSyncLocation.m in Sources */,
 				B14EF2252397E90400758AF0 /* MXOutgoingSASTransaction.m in Sources */,
 				B14EF2262397E90400758AF0 /* MXOlmEncryption.m in Sources */,
 				324AAC782399140D00380A66 /* MXKeyVerificationJSONModel.m in Sources */,
@@ -7953,6 +7984,7 @@
 				B14EF26A2397E90400758AF0 /* MXReactionCountChangeListener.m in Sources */,
 				B14EF26B2397E90400758AF0 /* MXMegolmBackupCreationInfo.m in Sources */,
 				B14EF26C2397E90400758AF0 /* MXRoom.m in Sources */,
+				01B3A24A29DC8446005E2DB1 /* MXMultiroomSync.m in Sources */,
 				B14EF26D2397E90400758AF0 /* NSData+MatrixSDK.m in Sources */,
 				ED6DAC2128C7A51400ECDCB6 /* MXDateProvider.swift in Sources */,
 				EC383BB22540688E002FBBE6 /* MXBackgroundStore.swift in Sources */,

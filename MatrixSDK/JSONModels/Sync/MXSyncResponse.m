@@ -21,6 +21,7 @@
 #import "MXDeviceListResponse.h"
 #import "MXRoomsSyncResponse.h"
 #import "MXGroupsSyncResponse.h"
+#import "MXMultiroomSync.h"
 
 static NSString * const kMXDeviceUnusedFallbackKeyTypesKey = @"org.matrix.msc2732.device_unused_fallback_key_types";
 
@@ -40,6 +41,15 @@ static NSString * const kMXDeviceUnusedFallbackKeyTypesKey = @"org.matrix.msc273
         MXJSONModelSetArray(syncResponse.unusedFallbackKeys, JSONDictionary[kMXDeviceUnusedFallbackKeyTypesKey])
         MXJSONModelSetMXJSONModel(syncResponse.rooms, MXRoomsSyncResponse, JSONDictionary[@"rooms"]);
         MXJSONModelSetMXJSONModel(syncResponse.groups, MXGroupsSyncResponse, JSONDictionary[@"groups"]);
+        if (JSONDictionary[@"multiroom"])
+        {
+          NSMutableDictionary *mxMultiroom = [NSMutableDictionary dictionary];
+          for (NSString *userId in JSONDictionary[@"multiroom"])
+          {
+            MXJSONModelSetMXJSONModel(mxMultiroom[userId], MXMultiroomSync, JSONDictionary[@"multiroom"][userId]);
+          }
+          syncResponse.multiroom = mxMultiroom;
+        }
     }
     
     return syncResponse;
@@ -81,6 +91,15 @@ static NSString * const kMXDeviceUnusedFallbackKeyTypesKey = @"org.matrix.msc273
     if (self.groups)
     {
         JSONDictionary[@"groups"] = self.groups.JSONDictionary;
+    }
+    if (self.multiroom)
+    {
+      NSMutableDictionary *jsonMultiroom = [NSMutableDictionary dictionaryWithCapacity:self.multiroom.count];
+      for (NSString *key in self.multiroom)
+      {
+        jsonMultiroom[key] = self.multiroom[key].JSONDictionary;
+      }
+      JSONDictionary[@"multiroom"] = jsonMultiroom;
     }
     
     return JSONDictionary;

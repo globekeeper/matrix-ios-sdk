@@ -21,6 +21,7 @@
 @class MXDeviceListResponse;
 @class MXRoomsSyncResponse;
 @class MXGroupsSyncResponse;
+@class MXMultiroomSync;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -74,6 +75,11 @@ NS_ASSUME_NONNULL_BEGIN
  List of groups.
  */
 @property (nonatomic, nullable) MXGroupsSyncResponse *groups;
+
+/**
+ Users that shared theirs location
+ */
+@property (nonatomic, nullable) NSDictionary<NSString*, MXMultiroomSync*> *multiroom;
 
 @end
 
