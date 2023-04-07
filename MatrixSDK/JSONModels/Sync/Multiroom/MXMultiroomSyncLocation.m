@@ -14,7 +14,7 @@
   MXMultiroomSyncLocation *multiroomSyncLocation = [[MXMultiroomSyncLocation alloc] init];
   if (multiroomSyncLocation)
   {
-    MXJSONModelSetDictionary(multiroomSyncLocation.wireContent, JSONDictionary[@"content"]);
+    MXJSONModelSetDictionary(multiroomSyncLocation.content, JSONDictionary[@"content"]);
     MXJSONModelSetUInt64(multiroomSyncLocation.originServerTs, JSONDictionary[@"origin_server_ts"]);
   }
   
@@ -26,7 +26,7 @@
   NSMutableDictionary *JSONDictionary = [NSMutableDictionary dictionary];
   if (JSONDictionary)
   {
-    JSONDictionary[@"content"] = _wireContent;
+    JSONDictionary[@"content"] = _content;
     JSONDictionary[@"origin_server_ts"] = @(_originServerTs);
   }
   
