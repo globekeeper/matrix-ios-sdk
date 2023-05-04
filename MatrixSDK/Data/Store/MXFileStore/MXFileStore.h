@@ -71,6 +71,10 @@ typedef NS_OPTIONS(NSInteger, MXFileStorePreloadOptions)
                 L usersGroup #1
                 L usersGroup #2
                 L ...
+            + multiroom
+                L userLocation #1
+                L userLocation #2
+                L ...
             + groups:
                 L groupA
                 L groupB

@@ -33,4 +33,38 @@
   return JSONDictionary;
 }
 
+#pragma mark - NSCoding
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+  self = [super init];
+  if (self)
+  {
+    _content = [aDecoder decodeObjectForKey:@"content"];
+    _originServerTs = (uint64_t)[aDecoder decodeInt64ForKey:@"originServerTs"];
+  }
+  return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+  if(_content) {
+    [aCoder encodeObject:_content forKey:@"content"];
+  }
+  if (_originServerTs) {
+    [aCoder encodeInt64:(int64_t)_originServerTs forKey:@"originServerTs"];
+  }
+}
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+  MXMultiroomSyncLocation *multiroomSyncLocation = [[[self class] allocWithZone:zone] init];
+  
+  multiroomSyncLocation->_content = [_content copyWithZone:zone];
+  multiroomSyncLocation.originServerTs = _originServerTs;
+  return multiroomSyncLocation;
+}
+
 @end

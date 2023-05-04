@@ -42,6 +42,10 @@ typedef NSMutableDictionary<NSString*, RoomReceiptsStore*> RoomThreadedReceiptsS
     // All matrix users known by the user
     // The keys are user ids.
     NSMutableDictionary <NSString*, MXUser*> *users;
+  
+    // All matrix multiroom locations known by the user
+    // The keys are user ids.
+    NSMutableDictionary <NSString*, MXMultiroomSync*> *locations;
     
     // All matrix groups known by the user
     // The keys are groups ids.

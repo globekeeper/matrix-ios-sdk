@@ -26,6 +26,7 @@
 #import "MXRoomAccountData.h"
 #import "MXGroup.h"
 #import "MXFilterJSONModel.h"
+#import "MXMultiroomSync.h"
 
 #import "MXEventsEnumerator.h"
 #import "MXRoomSummaryStore.h"
@@ -217,6 +218,19 @@
  @return the MXUser instance or nil if not found.
  */
 - (MXUser* _Nullable)userWithUserId:(nonnull NSString*)userId;
+
+#pragma mark - Multiroom locations
+/**
+ Store a multiroom locations.
+ */
+- (void)storeLocations:(nonnull NSDictionary<NSString*, MXMultiroomSync*>*)newLocations;
+
+/**
+ Get the list of all stored multiroom locations.
+ 
+ @return an array of MXUser.
+ */
+- (NSDictionary<NSString*, MXMultiroomSync*>*)locations;
 
 #pragma mark - groups
 /**

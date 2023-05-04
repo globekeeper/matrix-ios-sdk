@@ -16,7 +16,7 @@ NS_ASSUME_NONNULL_BEGIN
  by this model.
  */
 
-@interface MXMultiroomSyncLocation : MXJSONModel
+@interface MXMultiroomSyncLocation : MXJSONModel<NSCopying>
 
 /**
  The event (possibly encrypted) content.

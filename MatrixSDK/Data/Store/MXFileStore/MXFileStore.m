@@ -35,6 +35,7 @@ static NSString *const kMXFileStoreFolder = @"MXFileStore";
 static NSString *const kMXFileStoreMedaDataFile = @"MXFileStore";
 static NSString *const kMXFileStoreFiltersFile = @"filters";
 static NSString *const kMXFileStoreUsersFolder = @"users";
+static NSString *const kMXFileStoreMultiroomFolder = @"multiroom";
 static NSString *const kMXFileStoreGroupsFolder = @"groups";
 static NSString *const kMXFileStoreBackupFolder = @"backup";
 
@@ -71,6 +72,8 @@ static NSUInteger preloadOptions;
     NSMutableArray *roomsToCommitForDeletion;
 
     NSMutableDictionary *usersToCommit;
+  
+    NSDictionary *multiroomToCommit;
     
     NSMutableDictionary *groupsToCommit;
     NSMutableArray *groupsToCommitForDeletion;
@@ -86,6 +89,9 @@ static NSUInteger preloadOptions;
 
     // The path of the rooms folder
     NSString *storeUsersPath;
+  
+    // The path of the multiroom folder
+    NSString *storeMultiroomPath;
     
     // The path of the groups folder
     NSString *storeGroupsPath;
@@ -150,6 +156,7 @@ static NSUInteger preloadOptions;
         roomsToCommitForReceipts = [NSMutableArray array];
         roomsToCommitForDeletion = [NSMutableArray array];
         usersToCommit = [NSMutableDictionary dictionary];
+        multiroomToCommit = [NSDictionary dictionary];
         groupsToCommit = [NSMutableDictionary dictionary];
         groupsToCommitForDeletion = [NSMutableArray array];
         preloadedRoomsStates = [NSMutableDictionary dictionary];
@@ -260,6 +267,7 @@ static NSUInteger preloadOptions;
                     [self preloadRoomReceipts];
                 }
                 [self loadUsers];
+                [self loadMultiroom];
                 [self loadGroups];
                 [self loadUnreadRooms];
                 taskProfile.units = self.roomSummaryStore.countOfRooms;
@@ -412,6 +420,7 @@ static NSUInteger preloadOptions;
     [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storePath error:nil];
     [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeRoomsPath error:nil];
     [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeUsersPath error:nil];
+    [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeMultiroomPath error:nil];
     [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeGroupsPath error:nil];
     
     [roomSummaryStore removeAllSummaries];
@@ -618,6 +627,13 @@ static NSUInteger preloadOptions;
     [super storeUser:user];
 
     usersToCommit[user.userId] = user;
+}
+
+- (void)storeLocations:(nonnull NSDictionary<NSString*, MXMultiroomSync*>*)newLocations {
+  
+  [super storeLocations:newLocations];
+  
+  multiroomToCommit = newLocations;
 }
 
 - (void)storeGroup:(MXGroup *)group
@@ -840,6 +856,7 @@ static NSUInteger preloadOptions;
     [self saveRoomsAccountData];
     [self saveReceipts];
     [self saveUsers];
+    [self saveMultiroom];
     [self saveGroupsDeletion];
     [self saveGroups];
     [self saveUnreadRooms];
@@ -1123,6 +1140,7 @@ static NSUInteger preloadOptions;
     storePath = [[cachePath stringByAppendingPathComponent:kMXFileStoreFolder] stringByAppendingPathComponent:credentials.userId];
     storeRoomsPath = [storePath stringByAppendingPathComponent:kMXFileStoreRoomsFolder];
     storeUsersPath = [storePath stringByAppendingPathComponent:kMXFileStoreUsersFolder];
+    storeMultiroomPath = [storePath stringByAppendingPathComponent:kMXFileStoreMultiroomFolder];
     storeGroupsPath = [storePath stringByAppendingPathComponent:kMXFileStoreGroupsFolder];
     
     storeBackupPath = [storePath stringByAppendingPathComponent:kMXFileStoreBackupFolder];
@@ -1255,6 +1273,31 @@ static NSUInteger preloadOptions;
             return nil;
         }
     }
+}
+
+- (NSString*)multiroomFileForGroup:(NSString*)multiroomId forBackup:(BOOL)backup
+{
+  if (!backup)
+  {
+    return [storeMultiroomPath stringByAppendingPathComponent:multiroomId];
+  }
+  else
+  {
+    if (backupEventStreamToken)
+    {
+      NSString *multiroomBackupFolder = [[storeBackupPath stringByAppendingPathComponent:backupEventStreamToken] stringByAppendingPathComponent:kMXFileStoreMultiroomFolder];
+      if (![NSFileManager.defaultManager fileExistsAtPath:multiroomBackupFolder])
+      {
+        [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:multiroomBackupFolder error:nil];
+      }
+      
+      return [multiroomBackupFolder stringByAppendingPathComponent:multiroomId];
+    }
+    else
+    {
+      return nil;
+    }
+  }
 }
 
 - (NSString*)groupFileForGroup:(NSString*)groupId forBackup:(BOOL)backup
@@ -2013,6 +2056,88 @@ static NSUInteger preloadOptions;
 #endif
         });
     }
+}
+
+#pragma mark - Multiroom locations
+
+/**
+ Preload all multiroom locations.
+ 
+ This operation must be called on the `dispatchQueue` thread to avoid blocking the main thread.
+ */
+- (void)loadMultiroom
+{
+  NSDate *startDate = [NSDate date];
+  
+  // Load all multiroom files
+  NSArray *multiroomIds = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:storeMultiroomPath error:nil];
+  
+  for (NSString *multiroomId in multiroomIds)
+  {
+    NSString *multiroomFile = [storeMultiroomPath stringByAppendingPathComponent:multiroomId];
+    
+    // Load stored locations
+    
+    @try
+    {
+      MXMultiroomSync *multiroom = [NSKeyedUnarchiver unarchiveObjectWithFile: multiroomFile];
+      if (multiroom) {
+        // Append them
+        [locations setObject:multiroom forKey:multiroomId];
+      }
+    }
+    @catch (NSException *exception)
+    {
+      MXLogDebug(@"[MXFileStore] Warning: MXFileRoomStore file for multiroom %@ has been corrupted", locations);
+    }
+  }
+  
+  MXLogDebug(@"[MXFileStore] Loaded %tu MXMultiroomSync in %.0fms", locations.count, [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+}
+
+- (void)saveMultiroom
+{
+  // Save only in case of change
+  if (multiroomToCommit.count)
+  {
+    
+    // Check if folder exists
+    if (![NSFileManager.defaultManager fileExistsAtPath:storeMultiroomPath])
+    {
+      [[NSFileManager defaultManager] createDirectoryExcludedFromBackupAtPath:storeMultiroomPath error:nil];
+    }
+    
+    // Take a snapshot of groups to store them on the other thread
+    NSMutableDictionary *theMultiroomToCommit = [[NSMutableDictionary alloc] initWithDictionary:multiroomToCommit copyItems:YES];
+    multiroomToCommit = [NSDictionary dictionary];
+#if DEBUG
+    MXLogDebug(@"[MXFileStore commit] queuing saveMultiroom");
+#endif
+    dispatch_async(dispatchQueue, ^(void){
+      
+#if DEBUG
+      NSDate *startDate = [NSDate date];
+#endif
+      for (NSString *multiroomId in theMultiroomToCommit)
+      {
+        MXMultiroomSync *multiroom = theMultiroomToCommit[multiroomId];
+        
+        NSString *file = [self multiroomFileForGroup:multiroomId forBackup:NO];
+        
+        // Backup the file for this location
+        NSString *backupFile = [self multiroomFileForGroup:multiroomId forBackup:YES];
+        if (backupFile && [[NSFileManager defaultManager] fileExistsAtPath:file])
+        {
+          [[NSFileManager defaultManager] moveItemAtPath:file toPath:backupFile error:nil];
+        }
+
+        [NSKeyedArchiver archiveRootObject:multiroom toFile:file];
+      }
+#if DEBUG
+      MXLogDebug(@"[MXFileStore] saveMultiroom in %.0fms", [[NSDate date] timeIntervalSinceDate:startDate] * 1000);
+#endif
+    });
+  }
 }
 
 #pragma mark - Matrix groups

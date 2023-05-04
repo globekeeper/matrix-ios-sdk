@@ -5,13 +5,17 @@
 //  Created by Artem Krachulov on 04.04.2023.
 //
 
-#import <MatrixSDK/MatrixSDK.h>
+#import <Foundation/Foundation.h>
 
+#import "MXJSONModels.h"
+//#import "MXEnumConstants.h"
+
+@class MXSession;
 @class MXMultiroomSyncLocation;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface MXMultiroomSync : MXJSONModel
+@interface MXMultiroomSync : MXJSONModel <NSCoding, NSCopying>
 
 /**
  The location posted via /_matrix/client/r0/multiroom/connect.multiroom.location request.

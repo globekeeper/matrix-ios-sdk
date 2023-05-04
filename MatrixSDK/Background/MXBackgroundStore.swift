@@ -186,7 +186,14 @@ class MXBackgroundStore: NSObject, MXStore {
     func user(withUserId userId: String) -> MXUser? {
         return nil
     }
-    
+
+    func storeLocations(_ newLocations: [String : MXMultiroomSync]) {
+    }
+
+    func locations() -> [String : MXMultiroomSync] {
+      return [:]
+    }
+
     func store(_ group: MXGroup) {
     }
     

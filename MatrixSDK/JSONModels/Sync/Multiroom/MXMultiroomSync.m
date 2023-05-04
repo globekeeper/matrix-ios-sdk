@@ -38,4 +38,38 @@
   return JSONDictionary;
 }
 
+#pragma mark - NSCoding
+
+- (instancetype)initWithCoder:(NSCoder *)aDecoder
+{
+  self = [super init];
+  if (self)
+  {
+    _location = [aDecoder decodeObjectForKey:@"location"];
+    _panic = [aDecoder decodeObjectForKey:@"panic"];
+  }
+  return self;
+}
+
+- (void)encodeWithCoder:(NSCoder *)aCoder
+{
+  if(_location) {
+    [aCoder encodeObject:_location forKey:@"location"];
+  }
+  if (_panic) {
+    [aCoder encodeObject:_panic forKey:@"panic"];
+  }
+}
+
+#pragma mark - NSCopying
+
+- (id)copyWithZone:(NSZone *)zone
+{
+  MXMultiroomSync *multiroomSync = [[[self class] allocWithZone:zone] init];
+  
+  multiroomSync->_location = [_location copyWithZone:zone];
+  multiroomSync->_panic = [_panic copyWithZone:zone];
+  return multiroomSync;
+}
+
 @end

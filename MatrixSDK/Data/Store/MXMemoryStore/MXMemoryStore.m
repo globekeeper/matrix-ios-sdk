@@ -51,6 +51,7 @@
         roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
         roomThreadedReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
+//        locations = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         roomUnreaded = [[NSMutableSet alloc] init];
         roomSummaryStore = [[MXMemoryRoomSummaryStore alloc] init];
@@ -444,6 +445,17 @@
 - (MXUser *)userWithUserId:(NSString *)userId
 {
     return users[userId];
+}
+
+#pragma mark - Multiroom locations
+
+- (void)storeLocations:(nonnull NSDictionary<NSString*, MXMultiroomSync*>*)newLocations {
+  [locations addEntriesFromDictionary: newLocations];
+}
+
+- (NSDictionary<NSString*, MXMultiroomSync*>*)locations
+{
+  return locations;
 }
 
 #pragma mark - Matrix groups
