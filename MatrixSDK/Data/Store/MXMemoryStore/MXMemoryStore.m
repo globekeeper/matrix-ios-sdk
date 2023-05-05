@@ -51,7 +51,7 @@
         roomOutgoingMessagesStores = [NSMutableDictionary dictionary];
         roomThreadedReceiptsStores = [NSMutableDictionary dictionary];
         users = [NSMutableDictionary dictionary];
-//        locations = [NSMutableDictionary dictionary];
+        locations = [NSMutableDictionary dictionary];
         groups = [NSMutableDictionary dictionary];
         roomUnreaded = [[NSMutableSet alloc] init];
         roomSummaryStore = [[MXMemoryRoomSummaryStore alloc] init];

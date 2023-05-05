@@ -774,6 +774,9 @@ typedef void (^MXOnResumeDone)(void);
         {
             [self handlePresenceEvent:presenceEvent direction:MXTimelineDirectionForwards];
         }
+      
+        // Handle multiroom
+        [self handleMultiroom: syncResponse.multiroom];
         
         // Sync point: wait that all rooms in the /sync response have been loaded
         // and their /sync response has been processed
@@ -1860,6 +1863,11 @@ typedef void (^MXOnResumeDone)(void);
     }
 
     [self notifyListeners:event direction:direction];
+}
+
+- (void)handleMultiroom:(NSDictionary<NSString*, MXMultiroomSync*> *)multiroom
+{
+  [self.store storeLocations: multiroom];
 }
 
 - (void)handleAccountData:(NSDictionary*)accountDataUpdate
