@@ -71,11 +71,15 @@ typedef NS_ENUM(NSInteger, MXEventType)
     MXEventTypeRead,
     MXEventTypeReadMarker,
     MXEventTypeCallInvite,
+    MXEventTypeCallInviteGk,
     MXEventTypeCallCandidates,
     MXEventTypeCallAnswer,
+    MXEventTypeCallAnswerGk,
     MXEventTypeCallSelectAnswer,
     MXEventTypeCallHangup,
+    MXEventTypeCallHangupGk,
     MXEventTypeCallReject,
+    MXEventTypeCallRejectGk,
     MXEventTypeCallNegotiate,
     MXEventTypeCallReplaces,
     MXEventTypeCallRejectReplacement,
@@ -145,11 +149,15 @@ FOUNDATION_EXPORT NSString *const kMXEventTypeStringReceipt;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringRead;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringReadMarker;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInvite;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallInviteGk;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallCandidates;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswer;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallAnswerGk;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallSelectAnswer;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangup;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallHangupGk;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReject;
+FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallRejectGk;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallNegotiate;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallReplaces;
 FOUNDATION_EXPORT NSString *const kMXEventTypeStringCallRejectReplacement;

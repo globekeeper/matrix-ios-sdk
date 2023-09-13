@@ -6751,6 +6751,7 @@
 					};
 					32C6F93719DD814400EA4E9C = {
 						CreatedOnToolsVersion = 6.0;
+						DevelopmentTeam = XQLT2QUZE3;
 						LastSwiftMigration = 1020;
 					};
 					B1E09A0D2397FA950057C069 = {
@@ -8460,6 +8461,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				DEVELOPMENT_TEAM = XQLT2QUZE3;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -8488,6 +8490,7 @@
 			buildSettings = {
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = NO;
+				DEVELOPMENT_TEAM = XQLT2QUZE3;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",

@@ -301,6 +301,11 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
 @property (readonly, nonatomic, copy) NSString *partyId;
 
 /**
+ Flag indicating this is a globekeeper call ;
+ */
+@property (readonly, nonatomic) BOOL isGkCall;
+
+/**
  The user id of the callee. Nil for conference calls
  */
 - (void)calleeId:(void (^)(NSString *calleeId))onComplete;

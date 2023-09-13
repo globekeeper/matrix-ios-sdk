@@ -52,11 +52,15 @@ public enum MXEventType: Equatable, Hashable {
     case presence
     case typing
     case callInvite
+    case callInviteGk
     case callCandidates
     case callAnswer
+    case callAnswerGk
     case callSelectAnswer
     case callHangup
+    case callHangupGk
     case callReject
+    case callRejectGk
     case callNegotiate
     case callReplaces
     case callRejectReplacement
@@ -114,11 +118,15 @@ public enum MXEventType: Equatable, Hashable {
         case .roomTag: return kMXEventTypeStringRoomTag
         case .presence: return kMXEventTypeStringPresence
         case .callInvite: return kMXEventTypeStringCallInvite
+        case .callInviteGk: return kMXEventTypeStringCallInviteGk
         case .callCandidates: return kMXEventTypeStringCallCandidates
         case .callAnswer: return kMXEventTypeStringCallAnswer
+        case .callAnswerGk: return kMXEventTypeStringCallAnswerGk
         case .callSelectAnswer: return kMXEventTypeStringCallSelectAnswer
         case .callHangup: return kMXEventTypeStringCallHangup
+        case .callHangupGk: return kMXEventTypeStringCallHangupGk
         case .callReject: return kMXEventTypeStringCallReject
+        case .callRejectGk: return kMXEventTypeStringCallRejectGk
         case .callNegotiate: return kMXEventTypeStringCallNegotiate
         case .callReplaces: return kMXEventTypeStringCallReplaces
         case .callRejectReplacement: return kMXEventTypeStringCallRejectReplacement

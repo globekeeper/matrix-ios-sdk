@@ -109,11 +109,15 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
         // Listen to call events
         callEventsListener = [mxSession listenToEventsOfTypes:@[
                                                                 kMXEventTypeStringCallInvite,
+                                                                kMXEventTypeStringCallInviteGk,
                                                                 kMXEventTypeStringCallCandidates,
                                                                 kMXEventTypeStringCallAnswer,
+                                                                kMXEventTypeStringCallAnswerGk,
                                                                 kMXEventTypeStringCallSelectAnswer,
                                                                 kMXEventTypeStringCallHangup,
+                                                                kMXEventTypeStringCallHangupGk,
                                                                 kMXEventTypeStringCallReject,
+                                                                kMXEventTypeStringCallRejectGk,
                                                                 kMXEventTypeStringCallNegotiate,
                                                                 kMXEventTypeStringCallReplaces,
                                                                 kMXEventTypeStringCallRejectReplacement,
@@ -372,21 +376,25 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
     switch (event.eventType)
     {
         case MXEventTypeCallInvite:
+        case MXEventTypeCallInviteGk:
             [self handleCallInvite:event];
             break;
         case MXEventTypeCallAnswer:
+        case MXEventTypeCallAnswerGk:
             [self handleCallAnswer:event];
             break;
         case MXEventTypeCallSelectAnswer:
             [self handleCallSelectAnswer:event];
             break;
         case MXEventTypeCallHangup:
+        case MXEventTypeCallHangupGk:
             [self handleCallHangup:event];
             break;
         case MXEventTypeCallCandidates:
             [self handleCallCandidates:event];
             break;
         case MXEventTypeCallReject:
+        case MXEventTypeCallRejectGk:
             [self handleCallReject:event];
             break;
         case MXEventTypeCallNegotiate:
@@ -1751,7 +1759,7 @@ NSString *const kMXCallManagerConferenceUserDomain  = @"matrix.org";
     NSMutableArray *callEvents = [NSMutableArray arrayWithCapacity:rooms.count];
     
     for (MXRoom *room in rooms) {
-        id<MXEventsEnumerator> enumerator = [room enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringCallInvite]];
+        id<MXEventsEnumerator> enumerator = [room enumeratorForStoredMessagesWithTypeIn:@[kMXEventTypeStringCallInvite, kMXEventTypeStringCallInviteGk]];
         MXEvent *callEvent = enumerator.nextEvent;
         if (callEvent)
         {

@@ -26,6 +26,8 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+@class MXCall;
+
 @protocol MXCallStackCallDelegate;
 
 /**
@@ -62,7 +64,7 @@ NS_ASSUME_NONNULL_BEGIN
 /**
  Terminate the call.
  */
-- (void)end;
+- (void)endCall:(MXCall*)call;
 
 /**
  Add TURN or STUN servers.
@@ -95,7 +97,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param success A block object called when the operation succeeds.
  @param failure A block object called when the operation fails.
  */
-- (void)handleOffer:(NSString *)sdpOffer
+- (void)handleCall:(MXCall*)call
+             offer:(NSString *)sdpOffer
             success:(void (^)(void))success
             failure:(void (^)(NSError *error))failure;
 
@@ -111,7 +114,8 @@ NS_ASSUME_NONNULL_BEGIN
  of the answer.
  @param failure A block object called when the operation fails.
  */
-- (void)createAnswer:(void (^)(NSString *sdpAnswer))success
+- (void)createAnswer:(MXCall*)call
+             success:(void (^)(NSString *sdpAnswer))success
              failure:(void (^)(NSError *error))failure;
 
 #pragma mark - Outgoing call
@@ -124,7 +128,8 @@ NS_ASSUME_NONNULL_BEGIN
                 of the offer.
  @param failure A block object called when the operation fails.
  */
-- (void)createOffer:(void (^)(NSString *sdp))success
+- (void)createCall:(MXCall*)call
+             offer:(void (^)(NSString *sdp))success
             failure:(void (^)(NSError *error))failure;
 
 /**
@@ -136,7 +141,8 @@ NS_ASSUME_NONNULL_BEGIN
  @param success A block object called when the operation succeeds. 
  @param failure A block object called when the operation fails.
  */
-- (void)handleAnswer:(NSString *)sdp
+- (void)handleAnswer:(MXCall*)call
+               offer:(NSString *)sdp
              success:(void (^)(void))success
              failure:(void (^)(NSError *error))failure;
 

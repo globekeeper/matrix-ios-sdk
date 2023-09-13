@@ -284,11 +284,15 @@ typedef void (^MXOnResumeDone)(void);
                                       kMXEventTypeStringRoomRelatedGroups,
                                       kMXEventTypeStringReaction,
                                       kMXEventTypeStringCallInvite,
+                                      kMXEventTypeStringCallInviteGk,
                                       kMXEventTypeStringCallCandidates,
                                       kMXEventTypeStringCallAnswer,
+                                      kMXEventTypeStringCallAnswerGk,
                                       kMXEventTypeStringCallSelectAnswer,
                                       kMXEventTypeStringCallHangup,
+                                      kMXEventTypeStringCallHangupGk,
                                       kMXEventTypeStringCallReject,
+                                      kMXEventTypeStringCallRejectGk,
                                       kMXEventTypeStringCallNegotiate,
                                       kMXEventTypeStringSticker,
                                       kMXEventTypeStringPollStart,
@@ -301,6 +305,7 @@ typedef void (^MXOnResumeDone)(void);
                               kMXEventTypeStringRoomTopic,
                               kMXEventTypeStringRoomMessage,
                               kMXEventTypeStringCallInvite,
+                              kMXEventTypeStringCallInviteGk,
                               kMXEventTypeStringRoomEncrypted,
                               kMXEventTypeStringSticker
                               ];
