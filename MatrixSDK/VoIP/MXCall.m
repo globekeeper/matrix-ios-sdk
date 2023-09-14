@@ -149,7 +149,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         // meanwhile
         [callManager.mxSession retainPreventPause];
 
-        callStackCall = [callManager.callStack createCall: _callUUID.UUIDString];
+        callStackCall = [callManager.callStack createCall: _callUUID.UUIDString withRoomId:_room.roomId];
         if (nil == callStackCall)
         {
             MXLogErrorDetails(@"[MXCall] Error: Cannot create call. [MXCallStack createCall] returned nil.", @{

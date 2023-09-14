@@ -36,7 +36,7 @@
  
  @return an object that implements the `MXCallStackCall` protocol.
  */
-- (nullable id<MXCallStackCall>)createCall: (NSString*) callUUIDString;
+- (nullable id<MXCallStackCall>)createCall: (NSString*) callUUIDString withRoomId: (NSString*) roomId;
 
 /**
  Indicates whether this call can use gk call events.
