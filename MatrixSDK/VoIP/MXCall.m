@@ -67,6 +67,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
      The date when the communication has been established.
      */
     NSDate *callConnectedDate;
+  
+    /**
+    The date for gk.call.answer timestamp event
+    */
+    NSDate *answerConnectedDate;
 
     /**
      The total duration of the call. It is computed when the call ends.
@@ -968,7 +973,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
     if (MXCallStateConnected == _state)
     {
-        duration = [[NSDate date] timeIntervalSinceDate:callConnectedDate] * 1000;
+      if (answerConnectedDate) {
+        duration = [[NSDate date] timeIntervalSinceDate: answerConnectedDate] * 1000;
+      } else {
+        duration = [[NSDate date] timeIntervalSinceDate: callConnectedDate] * 1000;
+      }
     }
     else if (MXCallStateEnded == _state)
     {
@@ -1217,6 +1226,11 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 {
     MXLogDebug(@"[MXCall][%@] handleCallAnswer", _callId)
     
+    if (_isGkCall) {
+      //  reset call connected date
+      answerConnectedDate = [NSDate dateWithTimeIntervalSince1970: (event.originServerTs / 1000)];
+    }
+  
     if ([self isMyEvent:event])
     {
         return;
