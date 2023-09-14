@@ -298,7 +298,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 #endif
             
             MXWeakify(self);
-            [self->callStackCall createCall: self offer:^(NSString *sdp) {
+            [self->callStackCall createOffer:^(NSString *sdp) {
                 MXStrongifyAndReturnIfNil(self);
 
                 [self setState:MXCallStateCreateOffer reason:nil];
@@ -388,7 +388,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 [self setState:MXCallStateConnecting reason:nil];
 
                 MXWeakify(self);
-                [self->callStackCall createAnswer: self success:^(NSString *sdpAnswer) {
+                [self->callStackCall createAnswer:^(NSString *sdpAnswer) {
                     MXStrongifyAndReturnIfNil(self);
 
                     MXLogDebug(@"[MXCall][%@] answer - Created SDP:\n%@", self.callId, sdpAnswer);
@@ -840,7 +840,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                                                                          incoming:self.isIncoming];
         
         // Terminate the call at the stack level
-        [callStackCall endCall: self];
+        [callStackCall end];
     }
     else if (MXCallStateInviteSent == state)
     {
@@ -1158,7 +1158,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             [self.audioOutputRouter reroute];
 #endif
             
-            [self->callStackCall handleCall: self offer:self->callInviteEventContent.offer.sdp
+            [self->callStackCall handleAnswer:self->callInviteEventContent.offer.sdp
                                      success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
@@ -1251,7 +1251,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             [self setState:MXCallStateConnecting reason:event];
             
             MXWeakify(self);
-            [self->callStackCall handleAnswer:self offer:content.answer.sdp
+            [self->callStackCall handleAnswer:content.answer.sdp
                                 success:^{}
                                 failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
@@ -1449,14 +1449,14 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             self.isVideoCall = content.isVideoCall;
 
             MXWeakify(self);
-            [self->callStackCall handleCall: self offer:content.sessionDescription.sdp
+            [self->callStackCall handleOffer:content.sessionDescription.sdp
                                      success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
                 //  TODO: Get offer type from handleOffer and decide auto-accept it or not
                 //  auto-accept negotiations for now
                 MXWeakify(self);
-                [self->callStackCall createAnswer:self success:^(NSString * _Nonnull sdpAnswer) {
+                [self->callStackCall createAnswer:^(NSString * _Nonnull sdpAnswer) {
                     MXStrongifyAndReturnIfNil(self);
                     
                     MXLogDebug(@"[MXCall][%@] handleCallNegotiate: answer negotiation - Created SDP:\n%@", self.callId, sdpAnswer);
@@ -1497,7 +1497,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         else if (content.sessionDescription.type == MXCallSessionDescriptionTypeAnswer)
         {
             MXWeakify(self);
-            [self->callStackCall handleAnswer:self offer:content.sessionDescription.sdp
+            [self->callStackCall handleAnswer:content.sessionDescription.sdp
                                 success:^{}
                                 failure:^(NSError *error) {
                 MXStrongifyAndReturnIfNil(self);
@@ -1631,7 +1631,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     localIceGatheringTimer = nil;
 
     // Terminate the call at the stack level
-    [callStackCall endCall:self];
+    [callStackCall end];
     
     // Determine call end reason
     if (event)
@@ -1731,7 +1731,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         if (!_isIncoming)
         {
             // Terminate the call at the stack level we initiated
-            [callStackCall endCall: self];
+            [callStackCall end];
         }
 
         // If the call is not aleady ended
