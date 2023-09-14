@@ -30,6 +30,11 @@
         MXJSONModelSetUInteger(callInviteEventContent.lifetime, JSONDictionary[@"lifetime"]);
         MXJSONModelSetString(callInviteEventContent.invitee, JSONDictionary[@"invitee"]);
         MXJSONModelSetMXJSONModel(callInviteEventContent.capabilities, MXCallCapabilitiesModel, JSONDictionary[@"capabilities"]);
+      
+        if (JSONDictionary[@"type"]) {
+          MXJSONModelSetString(callInviteEventContent.type, JSONDictionary[@"type"]);
+        }
+      
     }
 
     return callInviteEventContent;
@@ -37,7 +42,11 @@
 
 - (BOOL)isVideoCall
 {
+  if (_type) {
+    return [_type isEqual:@"video"];
+  } else {
     return (NSNotFound != [self.offer.sdp rangeOfString:@"m=video"].location);
+  }
 }
 
 @end

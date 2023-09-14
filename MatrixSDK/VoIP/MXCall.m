@@ -315,7 +315,8 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                     @"version": kMXCallVersion,
                     @"lifetime": @(self->callManager.inviteLifetime),
                     @"capabilities": @{@"m.call.transferee": @(NO)},
-                    @"party_id": self.partyId
+                    @"party_id": self.partyId,
+                    @"type": video ? @"video" : @"voice"
                 } mutableCopy];
                 
                 NSString *directUserId = self.room.directUserId;

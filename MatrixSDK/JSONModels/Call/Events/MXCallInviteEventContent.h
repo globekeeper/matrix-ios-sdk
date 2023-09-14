@@ -50,6 +50,11 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) MXCallCapabilitiesModel *capabilities;
 
 /**
+ Type of this call.
+ */
+@property (nonatomic, copy, nullable) NSString *type;
+
+/**
  Indicate whether the invitation is for a video call.
  */
 - (BOOL)isVideoCall;
