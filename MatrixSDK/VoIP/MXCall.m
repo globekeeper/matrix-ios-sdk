@@ -509,7 +509,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         void(^terminateBlock)(void) = ^{
             //  terminate with a fake reject event
             MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-                @"type": kMXEventTypeStringCallReject,
+                @"type": self->_isGkCall ? kMXEventTypeStringCallRejectGk : kMXEventTypeStringCallReject,
                 @"content": content
             }];
             fakeEvent.sender = self->callManager.mxSession.myUserId;
@@ -555,7 +555,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         void(^terminateBlock)(void) = ^{
             //  terminate with a fake hangup event
             MXEvent *fakeEvent = [MXEvent modelFromJSON:@{
-                @"type": kMXEventTypeStringCallHangup,
+                @"type": self->_isGkCall ? kMXEventTypeStringCallHangupGk : kMXEventTypeStringCallHangup,
                 @"content": content
             }];
             fakeEvent.sender = self->callManager.mxSession.myUserId;
@@ -1653,6 +1653,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         switch (event.eventType)
         {
             case MXEventTypeCallHangup:
+            case MXEventTypeCallHangupGk:
             {
                 MXCallHangupEventContent *content = [MXCallHangupEventContent modelFromJSON:event.content];
                 MXCallHangupReason reason = content.reasonType;
@@ -1696,6 +1697,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
                 break;
             }
             case MXEventTypeCallReject:
+            case MXEventTypeCallRejectGk:
             {
                 _endReason = MXCallEndReasonBusy;
                 break;
