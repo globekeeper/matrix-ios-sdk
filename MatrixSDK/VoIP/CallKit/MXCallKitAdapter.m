@@ -68,6 +68,8 @@ NSString * const kMXCallKitAdapterAudioSessionDidActive = @"kMXCallKitAdapterAud
         _callController = [[CXCallController alloc] initWithQueue:dispatch_get_main_queue()];
         
         _calls = [NSMutableDictionary dictionary];
+      
+        _maximumActiveCalls = -1;
     }
     
     return self;

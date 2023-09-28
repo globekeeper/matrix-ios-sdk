@@ -59,6 +59,14 @@ API_AVAILABLE(ios(10.0))
  */
 + (BOOL)callKitAvailable;
 
+/**
+ The maximum number of calls.
+ 
+ Defaults is -1. Any count
+ */
+@property (nonatomic) NSUInteger maximumActiveCalls;
+
+
 @end
 
 NS_ASSUME_NONNULL_END

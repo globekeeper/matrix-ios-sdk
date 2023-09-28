@@ -490,6 +490,14 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
             call = [[MXCall alloc] initWithRoomId:nativeRoomId callSignalingRoomId:event.roomId andCallManager:self];
             if (call)
             {
+              
+                if (_callKitAdapter.maximumActiveCalls != -1 && calls.count >= _callKitAdapter.maximumActiveCalls) {
+                
+                  [call hangupWithReason: MXCallHangupReasonUserBusy];
+                
+                  return;
+                }
+              
                 [calls addObject:call];
 
                 [call handleCallEvent:event];
