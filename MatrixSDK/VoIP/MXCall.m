@@ -1167,7 +1167,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
             [self.audioOutputRouter reroute];
 #endif
             
-            [self->callStackCall handleAnswer:self->callInviteEventContent.offer.sdp
+            [self->callStackCall handleOffer:self->callInviteEventContent.offer.sdp
                                      success:^{
                 MXStrongifyAndReturnIfNil(self);
                 
