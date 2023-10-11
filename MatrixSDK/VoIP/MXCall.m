@@ -1203,9 +1203,15 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
     {
         return;
     }
+  
+    // Use additional interval to prevent hangup with expired reason from both sides
+    int additionalIntervalForIncomingCall = 0;
+    if (_isIncoming) {
+      additionalIntervalForIncomingCall = 10000; // +10 sec
+    }
     
     // Start expiration timer
-    inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:callInviteEventContent.lifetime / 1000]
+    inviteExpirationTimer = [[NSTimer alloc] initWithFireDate:[NSDate dateWithTimeIntervalSinceNow:(callInviteEventContent.lifetime + additionalIntervalForIncomingCall) / 1000]
                                                      interval:0
                                                        target:self
                                                      selector:@selector(expireCallInvite)
