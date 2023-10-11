@@ -24,6 +24,7 @@
 
 #import "MXCallStackCall.h"
 #import "MXCallHangupEventContent.h"
+#import "MXCallInviteEventContent.h"
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -125,6 +126,12 @@ extern NSString *const kMXCallSupportsTransferringStatusDidChange;
  */
 - (void)handleCallEvent:(MXEvent *)event;
 
+/**
+ Update call id from invite content
+ 
+ @param event the call event coming from the event stream.
+ */
+- (void)updateCallId:(MXCallInviteEventContent*)invite;
 
 #pragma mark - Controls
 /**

@@ -502,6 +502,8 @@ NSTimeInterval const kMXCallDirectRoomJoinTimeout = 30;
                 
                 if (_callKitAdapter.maximumActiveCalls != -1 && runningCalls >= _callKitAdapter.maximumActiveCalls) {
                   
+                  MXCallInviteEventContent* callInviteEventContent = [MXCallInviteEventContent modelFromJSON:event.content];
+                  [call updateCallId: callInviteEventContent];
                   [call hangupWithReason: MXCallHangupReasonUserBusy];
                   
                   return;

@@ -26,7 +26,6 @@
 #import "MXSDKOptions.h"
 #import "MXEnumConstants.h"
 
-#import "MXCallInviteEventContent.h"
 #import "MXCallAnswerEventContent.h"
 #import "MXCallSelectAnswerEventContent.h"
 #import "MXCallCandidatesEventContent.h"
@@ -1102,6 +1101,10 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
 
 #pragma mark - Event Handlers
 
+- (void)updateCallId:(MXCallInviteEventContent*)invite {
+  _callId = invite.callId;
+}
+
 - (void)handleCallInvite:(MXEvent *)event
 {
     MXLogDebug(@"[MXCall][%@] handleCallInvite", _callId)
@@ -1121,7 +1124,7 @@ NSString *const kMXCallSupportsTransferringStatusDidChange = @"kMXCallSupportsTr
         return;
     }
 
-    _callId = callInviteEventContent.callId;
+    [self updateCallId: callInviteEventContent];
     _callerId = event.sender;
     _callerName = [callManager.mxSession userWithUserId:_callerId].displayname;
     MXRoom *signalingRoom = [callManager.mxSession roomWithRoomId:event.roomId];
