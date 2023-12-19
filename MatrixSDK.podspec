@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name         = "MatrixSDK"
-  s.version      = "0.26.4.9"
+  s.version      = "0.27.4"
   s.summary      = "The iOS SDK to build apps compatible with Matrix (https://www.matrix.org)"
 
   s.description  = <<-DESC
@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.author             = { "matrix.org" => "support@matrix.org" }
   s.social_media_url   = "http://twitter.com/matrixdotorg"
 
-  s.source       = { :git => "https://github.com/globekeeper/matrix-ios-sdk.git", :tag => "v#{s.version}" }
+  s.source       = { :git => "https://github.com/matrix-org/matrix-ios-sdk.git", :tag => "v#{s.version}" }
   
   s.requires_arc  = true
   s.swift_versions = ['5.1', '5.2']
@@ -45,7 +45,7 @@ Pod::Spec.new do |s|
       ss.dependency 'OLMKit', '~> 3.2.5'
       ss.dependency 'Realm', '10.27.0'
       ss.dependency 'libbase58', '~> 0.1.4'
-      ss.dependency 'MatrixSDKCrypto', '0.3.0', :configurations => ["DEBUG", "RELEASE"], :inhibit_warnings => true
+      ss.dependency 'MatrixSDKCrypto', '0.3.13', :configurations => ["DEBUG", "RELEASE"], :inhibit_warnings => true
   end
 
   s.subspec 'JingleCallStack' do |ss|
@@ -61,7 +61,8 @@ Pod::Spec.new do |s|
     #ss.ios.dependency 'GoogleWebRTC', '~>1.1.21820'
     
     # Use WebRTC framework included in Jitsi Meet SDK
-    ss.ios.dependency 'JitsiMeetSDK', '5.0.2'
+    # Use the lite version so we don't add a dependency on Giphy.
+    ss.ios.dependency 'JitsiMeetSDKLite', '8.1.2-lite'
   end
 
 end

@@ -36,6 +36,8 @@ class MXCryptoMachine {
     }
     
     private static let kdfRounds: Int32 = 500_000
+    // Error type will be moved to rust sdk
+    private static let MismatchedAccountError = "the account in the store doesn't match the account in the constructor"
     
     enum Error: Swift.Error {
         case invalidEvent
@@ -72,17 +74,7 @@ class MXCryptoMachine {
     ) throws {
         MXCryptoSDKLogger.shared.log(logLine: "Starting logs")
         
-        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
-        let passphrase = try MXCryptoMachineStore.storePassphrase()
-        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding path to db for debugging purpose
-        
-        machine = try OlmMachine(
-            userId: userId,
-            deviceId: deviceId,
-            path: url.path,
-            passphrase: passphrase
-        )
-        
+        self.machine = try Self.createMachine(userId: userId, deviceId: deviceId, log: log)
         self.requests = MXCryptoRequests(restClient: restClient)
         self.getRoomAction = getRoomAction
         
@@ -119,7 +111,46 @@ class MXCryptoMachine {
     
     func deleteAllData() throws {
         let url = try MXCryptoMachineStore.storeURL(for: userId)
-        try FileManager.default.removeItem(at: url)
+        if FileManager.default.fileExists(atPath: url.path) {
+            try FileManager.default.removeItem(at: url)
+        }
+    }
+    
+    // MARK: - Private
+    
+    private static func createMachine(userId: String, deviceId: String, log: MXNamedLog) throws -> OlmMachine {
+        let url = try MXCryptoMachineStore.createStoreURLIfNecessary(for: userId)
+        let passphrase = try MXCryptoMachineStore.storePassphrase()
+        
+        log.debug("Opening crypto store at \(url.path)/matrix-sdk-crypto.sqlite3") // Hardcoding full path to db for debugging purposes
+        
+        do {
+            return try OlmMachine(
+                userId: userId,
+                deviceId: deviceId,
+                path: url.path,
+                passphrase: passphrase
+            )
+        } catch {
+            // If we cannot open machine due to a mismatched account, delete previous data and try again
+            if case CryptoStoreError.CryptoStore(let message) = error,
+               message.contains(Self.MismatchedAccountError) {
+                log.error("Credentials of the account do not match, deleting previous data", context: [
+                    "error": message
+                ])
+                try FileManager.default.removeItem(at: url)
+                return try OlmMachine(
+                    userId: userId,
+                    deviceId: deviceId,
+                    path: url.path,
+                    passphrase: passphrase
+                )
+
+            // Otherwise re-throw the error
+            } else {
+                throw error
+            }
+        }
     }
 }
 
@@ -156,7 +187,8 @@ extension MXCryptoMachine: MXCryptoSyncing {
         toDevice: MXToDeviceSyncResponse?,
         deviceLists: MXDeviceListResponse?,
         deviceOneTimeKeysCounts: [String: NSNumber],
-        unusedFallbackKeys: [String]?
+        unusedFallbackKeys: [String]?,
+        nextBatchToken: String
     ) throws -> MXToDeviceSyncResponse {
         log.debug("Recieving sync changes")
         
@@ -171,20 +203,30 @@ extension MXCryptoMachine: MXCryptoSyncing {
             events: events,
             deviceChanges: deviceChanges,
             keyCounts: keyCounts,
-            unusedFallbackKeys: unusedFallbackKeys
+            unusedFallbackKeys: unusedFallbackKeys,
+            nextBatchToken: nextBatchToken
         )
         
-        guard
-            let json = MXTools.deserialiseJSONString(result) as? [Any],
-            let toDevice = MXToDeviceSyncResponse(fromJSON: ["events": json])
-        else {
+        var deserialisedToDeviceEvents = [Any]()
+        for toDeviceEvent in result.toDeviceEvents {
+            guard let deserialisedToDeviceEvent = MXTools.deserialiseJSONString(toDeviceEvent) else {
+                log.failure("Failed deserialising to device event", context: [
+                    "result": result
+                ])
+                return MXToDeviceSyncResponse()
+            }
+            
+            deserialisedToDeviceEvents.append(deserialisedToDeviceEvent)
+        }
+        
+        guard let toDeviceSyncResponse = MXToDeviceSyncResponse(fromJSON: ["events": deserialisedToDeviceEvents]) else {
             log.failure("Result cannot be serialized", context: [
                 "result": result
             ])
             return MXToDeviceSyncResponse()
         }
         
-        return toDevice
+        return toDeviceSyncResponse
     }
     
     func downloadKeysIfNecessary(users: [String]) async throws {
@@ -279,7 +321,7 @@ extension MXCryptoMachine: MXCryptoSyncing {
     }
     
     private func markRequestAsSent(requestId: String, requestType: RequestType, response: String? = nil) throws {
-        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, response: response ?? "")
+        try self.machine.markRequestAsSent(requestId: requestId, requestType: requestType, responseBody: response ?? "")
     }
     
     private func handleOutgoingRequests() async throws {
@@ -328,6 +370,10 @@ extension MXCryptoMachine: MXCryptoDevicesSource {
             log.error("Cannot fetch device", context: error)
             return nil
         }
+    }
+    
+    func dehydratedDevices() -> DehydratedDevicesProtocol {
+        machine.dehydratedDevices()
     }
 }
 
@@ -515,7 +561,10 @@ extension MXCryptoMachine: MXCryptoRoomEventDecrypting {
             roomId: roomId,
             // Handling verification events automatically during event decryption is now a deprecated behavior,
             // all verification events are handled manually via `receiveVerificationEvent`
-            handleVerificationEvents: false
+            handleVerificationEvents: false,
+            // The app does not use strict shields by default, in the future this will become configurable
+            // per room.
+            strictShields: false
         )
     }
     
@@ -551,7 +600,12 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
     }
     
     func exportCrossSigningKeys() -> CrossSigningKeyExport? {
-        machine.exportCrossSigningKeys()
+        do {
+            return try machine.exportCrossSigningKeys()
+        } catch {
+            log.error("Failed exporting cross signing keys", context: error)
+            return nil
+        }
     }
     
     func importCrossSigningKeys(export: CrossSigningKeyExport) {
@@ -561,6 +615,23 @@ extension MXCryptoMachine: MXCryptoCrossSigning {
             log.error("Failed importing cross signing keys", context: error)
         }
     }
+    
+    func queryMissingSecretsFromOtherSessions() async throws {
+        let isMissingSecrets = try machine.queryMissingSecretsFromOtherSessions()
+        
+        if (isMissingSecrets) {
+            // Out-of-sync check if there are any secret request to send out as a result of
+            // the missing secret request
+            for request in try machine.outgoingRequests() {
+                if case .toDevice(_, let eventType, _) = request {
+                    if (eventType == kMXEventTypeStringSecretRequest) {
+                        try await handleRequest(request)
+                    }
+                }
+            }
+        }
+    }
+    
 }
 
 extension MXCryptoMachine: MXCryptoVerifying {
@@ -752,7 +823,7 @@ extension MXCryptoMachine: MXCryptoBackup {
         }
         
         do {
-            let verification = try machine.verifyBackup(authData: string)
+            let verification = try machine.verifyBackup(backupInfo: string)
             return verification.trusted
         } catch {
             log.error("Failed verifying backup", context: error)

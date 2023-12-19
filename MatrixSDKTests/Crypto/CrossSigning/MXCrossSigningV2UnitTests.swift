@@ -21,18 +21,73 @@ import MatrixSDKCrypto
 
 class MXCrossSigningV2UnitTests: XCTestCase {
     
+    class RestClientStub: MXRestClientStub {
+        var stubbedAuthSession: MXAuthenticationSession?
+        
+        override var credentials: MXCredentials! {
+            let cred = MXCredentials()
+            cred.userId = "Alice"
+            cred.deviceId = "XYZ"
+            return cred
+        }
+        
+        override func authSession(
+            toUploadDeviceSigningKeys success: ((MXAuthenticationSession?) -> Void)!,
+            failure: ((Error?) -> Void)!
+        ) -> MXHTTPOperation! {
+            success(stubbedAuthSession)
+            return MXHTTPOperation()
+        }
+    }
+    
     var crypto: CryptoCrossSigningStub!
     var crossSigning: MXCrossSigningV2!
-    var restClient: MXRestClientStub!
+    var restClient: RestClientStub!
     
     override func setUp() {
         crypto = CryptoCrossSigningStub()
-        restClient = MXRestClientStub()
+        restClient = RestClientStub()
         crossSigning = MXCrossSigningV2(
             crossSigning: crypto,
             restClient: restClient
         )
     }
+    
+    // MARK: - Setup
+    
+    func test_setup_canSetupWithoutAuthSession() {
+        let exp = expectation(description: "exp")
+        crossSigning.setup(withPassword: "pass") {
+            XCTAssertEqual(self.crypto.spyAuthParams as? [String: String], [:])
+            exp.fulfill()
+        } failure: {
+            XCTFail("Failed setting up cross signing with error - \($0)")
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1)
+    }
+    
+    func test_setup_canSetupWitAuthSession() {
+        let exp = expectation(description: "exp")
+        restClient.stubbedAuthSession = MXAuthenticationSession()
+        restClient.stubbedAuthSession?.session = "123"
+        
+        crossSigning.setup(withPassword: "pass") {
+            XCTAssertEqual(self.crypto.spyAuthParams as? [String: String], [
+                "session": "123",
+                "user": "Alice",
+                "password": "pass",
+                "type": kMXLoginFlowTypePassword
+            ])
+            exp.fulfill()
+        } failure: {
+            XCTFail("Failed setting up cross signing with error - \($0)")
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1)
+    }
+    
+    // MARK: - State
     
     func test_state_notBootstrapped() {
         XCTAssertEqual(crossSigning.state, .notBootstrapped)
@@ -46,8 +101,8 @@ class MXCrossSigningV2UnitTests: XCTestCase {
                 userId: "Alice",
                 trustsOurOwnDevice: true,
                 masterKey: "",
-                selfSigningKey: "",
-                userSigningKey: ""
+                userSigningKey: "",
+                selfSigningKey: ""
             )
         ]
         crossSigning.refreshState { _ in
@@ -65,8 +120,8 @@ class MXCrossSigningV2UnitTests: XCTestCase {
                 userId: "Alice",
                 trustsOurOwnDevice: true,
                 masterKey: "",
-                selfSigningKey: "",
-                userSigningKey: ""
+                userSigningKey: "",
+                selfSigningKey: ""
             )
         ]
         crossSigning.refreshState { _ in
@@ -94,13 +149,83 @@ class MXCrossSigningV2UnitTests: XCTestCase {
                     userId: "Alice",
                     trustsOurOwnDevice: true,
                     masterKey: "",
-                    selfSigningKey: "",
-                    userSigningKey: ""
+                    userSigningKey: "",
+                    selfSigningKey: ""
                 )
             ]
             
             try await crossSigning.refreshState()
             XCTAssertEqual(self.crossSigning.state, state, "Status: \(status)")
+        }
+    }
+    
+    // MARK: - Devices
+    
+    func test_crossSignDevice_verifiesUntrustedDevice() async throws {
+        let userId = "Alice"
+        let deviceId = "ABCD"
+        crypto.devices = [
+            userId: [
+                deviceId: .stub(crossSigningTrusted: false)
+            ]
+        ]
+        
+        let before = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(before)
+        XCTAssertFalse(before!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+        
+        try await crossSigning.crossSignDevice(deviceId: deviceId, userId: userId)
+        
+        let after = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(after)
+        XCTAssertTrue(after!.crossSigningTrusted)
+        XCTAssertTrue(crypto.verifiedDevicesSpy.contains(deviceId))
+    }
+    
+    func test_crossSignDevice_doesNotReverifyAlreadyTrustedDevice() async throws {
+        let userId = "Alice"
+        let deviceId = "ABCD"
+        crypto.devices = [
+            userId: [
+                deviceId: .stub(crossSigningTrusted: true)
+            ]
+        ]
+        
+        let before = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(before)
+        XCTAssertTrue(before!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+        
+        try await crossSigning.crossSignDevice(deviceId: deviceId, userId: userId)
+        
+        let after = crypto.device(userId: userId, deviceId: deviceId)
+        XCTAssertNotNil(after)
+        XCTAssertTrue(after!.crossSigningTrusted)
+        XCTAssertFalse(crypto.verifiedDevicesSpy.contains(deviceId))
+    }
+}
+
+private extension MXCrossSigningV2 {
+    func crossSignDevice(deviceId: String, userId: String) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            self.crossSignDevice(withDeviceId: deviceId, userId: userId) {
+                continuation.resume()
+            } failure: { error in
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+}
+
+private extension MXCrossSigning {
+    func refreshState() async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            refreshState { _ in
+                continuation.resume()
+            } failure: { error in
+                continuation.resume(throwing: error)
+            }
         }
     }
 }

@@ -237,12 +237,10 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
      See `forwardingCurve25519KeyChain` property.
      */
     NSArray<NSString *> *forwardingCurve25519KeyChain;
-
-    /**
-     Untrusted flag for clear events.
-     */
-    BOOL untrusted;
 }
+
+@property (nonatomic, strong, readwrite) MXEventDecryptionDecoration *decryptionDecoration;
+
 @end
 
 @implementation MXEvent
@@ -258,7 +256,7 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
     if (self)
     {
         _ageLocalTs = -1;
-        untrusted = NO;
+        _decryptionDecoration = nil;
     }
 
     return self;
@@ -1077,7 +1075,7 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
         _clearEvent->senderCurve25519Key = decryptionResult.senderCurve25519Key;
         _clearEvent->claimedEd25519Key = decryptionResult.claimedEd25519Key;
         _clearEvent->forwardingCurve25519KeyChain = decryptionResult.forwardingCurve25519KeyChain ? decryptionResult.forwardingCurve25519KeyChain : @[];
-        _clearEvent->untrusted = decryptionResult.isUntrusted;
+        _clearEvent.decryptionDecoration = decryptionResult.decoration;
     }
 
     // Notify only for events that are lately decrypted
@@ -1186,7 +1184,6 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
     return encryptedContentFiles;
 }
 
-// Extract the decryption result that allowed to decrypt the event.
 - (MXEventDecryptionResult*)decryptionResult
 {
     MXEventDecryptionResult *decryptionResult = [MXEventDecryptionResult new];
@@ -1197,7 +1194,7 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
         decryptionResult.senderCurve25519Key = _clearEvent->senderCurve25519Key;
         decryptionResult.claimedEd25519Key = _clearEvent->claimedEd25519Key;
         decryptionResult.forwardingCurve25519KeyChain = _clearEvent->forwardingCurve25519KeyChain;
-        decryptionResult.untrusted = _clearEvent.isUntrusted;
+        decryptionResult.decoration = _clearEvent.decryptionDecoration;
     }
     
     decryptionResult.error = _decryptionError;
@@ -1205,13 +1202,13 @@ NSString *const kMXEventUnthreaded = @"unthreaded";
     return decryptionResult;
 }
 
-- (BOOL)isUntrusted
+- (MXEventDecryptionDecoration *)decryptionDecoration
 {
     if (self.isEncrypted && _clearEvent)
     {
-        return _clearEvent.isUntrusted;
+        return _clearEvent.decryptionDecoration;
     }
-    return untrusted;
+    return _decryptionDecoration;
 }
 
 #pragma mark - private

@@ -977,8 +977,7 @@
 // -> Alice2 should see Alice1 as trusted thanks to cross-signing
 // -> Bob should see Alice3 as trusted thanks to cross-signing
 // -> Alice3 should see Bob as trusted thanks to cross-signing
-// TODO: test is currently broken
-- (void)xtestTrustChain
+- (void)testTrustChain
 {
     // - Have Alice with 2 devices (Alice1 and Alice2) and Bob. All trusted via cross-signing
     [matrixSDKTestsE2EData doTestWithBobAndAliceWithTwoDevicesAllTrusted:self readyToTest:^(MXSession *aliceSession1, MXSession *aliceSession2, MXSession *bobSession, NSString *roomId, XCTestExpectation *expectation) {
@@ -1175,7 +1174,7 @@
             newDeviceId = newAliceSession.matrixRestClient.credentials.deviceId;
             
             // - Cross-sign this new device
-            [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newDeviceId success:^{
+            [aliceSession.crypto.crossSigning crossSignDeviceWithDeviceId:newDeviceId userId:newAliceSession.matrixRestClient.credentials.userId success:^{
                 
                 // Intermediate check
                 MXDeviceTrustLevel *aliceDevice2Trust = [aliceSession.crypto deviceTrustLevelForDevice:newDeviceId ofUser:aliceSession.myUserId];
@@ -1230,8 +1229,7 @@
 // - Reset XS on this new device
 // - Restart Alice first device
 // -> Alice first device must not trust the cross-signing anymore
-// TODO: test is currently broken
-- (void)xtestMXCrossSigningResetDetectionAfterRestart
+- (void)testMXCrossSigningResetDetectionAfterRestart
 {
     // - Have Alice with cross-signing
     [self doTestWithBobAndBootstrappedAlice:self readyToTest:^(MXSession *bobSession, MXSession *aliceSession, NSString *roomId, XCTestExpectation *expectation) {

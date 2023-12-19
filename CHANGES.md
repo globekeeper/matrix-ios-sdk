@@ -1,3 +1,146 @@
+## Changes in 0.27.4 (2023-11-28)
+
+🐛 Bugfixes
+
+- Fix unhandled callback when the session is nil. ([#1833](https://github.com/matrix-org/matrix-ios-sdk/pull/1833))
+
+
+## Changes in 0.27.3 (2023-10-04)
+
+🐛 Bugfixes
+
+- Prevent crash when sending file with unrecognised file extension (no associated mime type) (mimetype)
+
+🧱 Build
+
+- Update Cocoapods to 1.13.0. ([#1820](https://github.com/matrix-org/matrix-ios-sdk/pull/1820))
+
+
+## Changes in 0.27.2 (2023-09-12)
+
+🐛 Bugfixes
+
+- Fix | QR code verification failing due to incorrect encoding padding ([#1816](https://github.com/vector-im/element-ios/issues/1816))
+
+
+## Changes in 0.27.1 (2023-08-29)
+
+✨ Features
+
+- Delegate OIDC compatibility flag added. ([#1811](https://github.com/matrix-org/matrix-ios-sdk/pull/1811))
+- Added the authentication property to the well known. ([#1812](https://github.com/matrix-org/matrix-ios-sdk/pull/1812))
+- Function that allows to generate from the well known authentication, a logout mas URL given the device ID. ([#1813](https://github.com/matrix-org/matrix-ios-sdk/pull/1813))
+
+🐛 Bugfixes
+
+- Fixes power level events force unwrap crash ([#1809](https://github.com/matrix-org/matrix-ios-sdk/pull/1809))
+- Prevent keyed archiver encoding crashes when writing read receipts to the file store ([#1810](https://github.com/vector-im/element-ios/issues/1810))
+- Fix incoming push notifications not triggering sounds ([#7636](https://github.com/vector-im/element-ios/issues/7636))
+
+
+## Changes in 0.27.0 (2023-08-15)
+
+✨ Features
+
+- Add support for device hydration through the Crypto SDK (uses MSC3814) ([#1807](https://github.com/matrix-org/matrix-ios-sdk/pull/1807))
+
+🐛 Bugfixes
+
+- Fix parsing logic for legacy location events ([#1801](https://github.com/matrix-org/matrix-ios-sdk/pull/1801))
+
+⚠️ API Changes
+
+- Remove MXDehydrationService and old client methods. ([#1807](https://github.com/matrix-org/matrix-ios-sdk/pull/1807))
+
+
+## Changes in 0.26.12 (2023-06-21)
+
+🐛 Bugfixes
+
+- Ignore push rules with unknown condition kinds ([#7601](https://github.com/vector-im/element-ios/issues/7601))
+
+
+## Changes in 0.26.11 (2023-06-13)
+
+🙌 Improvements
+
+- MSC3912 implementation: the stable property with_relations has been renamed with_rel_types ([#7563](https://github.com/vector-im/element-ios/issues/7563))
+- Updated Jitsi meet sdk to 8.1.2-lite. ([#7565](https://github.com/vector-im/element-ios/issues/7565))
+- MSC3987 implementation: the 'dont_notify' action for a push_rule is now deprecated and replaced by an empty action list. ([#7576](https://github.com/vector-im/element-ios/issues/7576))
+
+🐛 Bugfixes
+
+- Fixes a bug where an unhelpful message is shown rather than the threads empty state. ([#7551](https://github.com/vector-im/element-ios/issues/7551))
+
+
+## Changes in 0.26.10 (2023-05-16)
+
+🙌 Improvements
+
+- Crypto: Enable Crypto SDK by default ([#1770](https://github.com/matrix-org/matrix-ios-sdk/pull/1770))
+- Crypto: Deprecate MXLegacyCrypto ([#1772](https://github.com/matrix-org/matrix-ios-sdk/pull/1772))
+
+🐛 Bugfixes
+
+- Poll: Refreshing the poll when receiving pollEnd can break the chronological order in the store. ([#1776](https://github.com/matrix-org/matrix-ios-sdk/pull/1776))
+- Fix breadcrumb list not updating when leaving a room. Contributed by @JanNikGra. ([#1777](https://github.com/vector-im/element-ios/issues/1777))
+
+
+## Changes in 0.26.9 (2023-04-18)
+
+🐛 Bugfixes
+
+- Cross-signing: Setup cross-signing with empty auth session ([#1774](https://github.com/matrix-org/matrix-ios-sdk/pull/1774))
+
+
+## Changes in 0.26.8 (2023-04-18)
+
+🙌 Improvements
+
+- Crypto: Update Crypto SDK ([#1767](https://github.com/matrix-org/matrix-ios-sdk/pull/1767))
+- Cross-signing: Ensure device signed after restoring cross-signing keys ([#1768](https://github.com/matrix-org/matrix-ios-sdk/pull/1768))
+- Crypto: Remove legacy crypto store ([#1769](https://github.com/matrix-org/matrix-ios-sdk/pull/1769))
+
+
+## Changes in 0.26.7 (2023-04-12)
+
+🙌 Improvements
+
+- Crypto: Upgrade Crypto SDK ([#1765](https://github.com/matrix-org/matrix-ios-sdk/pull/1765))
+
+🐛 Bugfixes
+
+- Crypto: Delete data for mismatched accounts ([#1763](https://github.com/matrix-org/matrix-ios-sdk/pull/1763))
+
+
+## Changes in 0.26.6 (2023-04-04)
+
+🙌 Improvements
+
+- Bugfix: Ensure related event nullability ([#1746](https://github.com/matrix-org/matrix-ios-sdk/pull/1746))
+- Add constants for mention room power levels and check decrypted event content for @room mentions. ([#1750](https://github.com/matrix-org/matrix-ios-sdk/pull/1750))
+- Crypto: Display correct SDK version ([#7457](https://github.com/vector-im/element-ios/issues/7457))
+
+🐛 Bugfixes
+
+- Fix invitations count in all chats list. ([#6871](https://github.com/vector-im/element-ios/issues/6871))
+
+⚠️ API Changes
+
+- Crypto: Add event decryption decoration instead of untrusted property ([#1743](https://github.com/matrix-org/matrix-ios-sdk/pull/1743))
+
+🧱 Build
+
+- Upgrade JitsiMeetSDK to 7.0.1-lite. ([#1754](https://github.com/matrix-org/matrix-ios-sdk/pull/1754))
+
+
+## Changes in 0.26.5 (2023-03-28)
+
+🙌 Improvements
+
+- Crypto: Upgrade verification if necessary ([#1751](https://github.com/matrix-org/matrix-ios-sdk/pull/1751))
+
+
 ## Changes in 0.26.4 (2023-03-22)
 
 🐛 Bugfixes

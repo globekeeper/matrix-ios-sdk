@@ -15,6 +15,7 @@
 //
 
 import Foundation
+import MatrixSDKCrypto
 @testable import MatrixSDK
 
 class MXMegolmDecryptionUnitTests: XCTestCase {
@@ -24,7 +25,7 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
     }
     
     /// Spy olm device used to collect spy sessions for the purpose of test assertions
-    class SpyDevice: MXOlmDevice {
+    class DeviceStub: MXOlmDevice {
         var sessions: [SpySession] = []
         
         override func addInboundGroupSession(
@@ -42,6 +43,19 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
                 .init(sharedHistory: sharedHistory)
             )
             return true
+        }
+        
+        var stubbedResult: MXDecryptionResult?
+        
+        override func decryptGroupMessage(
+            _ body: String!,
+            isEditEvent: Bool,
+            roomId: String!,
+            inTimeline timeline: String!,
+            sessionId: String!,
+            senderKey: String!
+        ) throws -> MXDecryptionResult {
+            stubbedResult ?? MXDecryptionResult()
         }
     }
     
@@ -76,11 +90,13 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
         private let device: MXOlmDevice
         private let cryptoStore: MXCryptoStore
         private let session: MXSession
+        private let devices: MXDeviceList
         
-        init(device: MXOlmDevice, store: MXCryptoStore, session: MXSession) {
+        init(device: MXOlmDevice, store: MXCryptoStore, session: MXSession, devices: MXDeviceList) {
             self.device = device
             self.cryptoStore = store
             self.session = session
+            self.devices = devices
         }
         
         override var olmDevice: MXOlmDevice! {
@@ -98,6 +114,25 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
         override var mxSession: MXSession! {
             return session
         }
+        
+        override var deviceList: MXDeviceList! {
+            return devices
+        }
+        
+        override func trustLevel(forUser userId: String) -> MXUserTrustLevel {
+            return MXUserTrustLevel(crossSigningVerified: true, locallyVerified: true)
+        }
+    }
+    
+    class DeviceListStub: MXDeviceList {
+        var stubbedDevices = [String: Device]()
+        override func device(withIdentityKey senderKey: String!, andAlgorithm algorithm: String!) -> MXDeviceInfo! {
+            guard algorithm != nil, let senderKey = senderKey, let device = stubbedDevices[senderKey] else {
+                return nil
+            }
+            
+            return .init(device: .init(device: device))
+        }
     }
     
     let roomId1 = "ABC"
@@ -106,18 +141,21 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
     let sessionId2 = "999"
     let senderKey = "456"
     
-    var device: SpyDevice!
+    var device: DeviceStub!
     var store: CryptoStoreStub!
     var session: SessionStub!
+    var crypto: CryptoStub!
+    var devicesList: DeviceListStub!
     var decryption: MXMegolmDecryption!
     
     override func setUp() {
         super.setUp()
         
-        device = SpyDevice()
+        device = DeviceStub()
         store = CryptoStoreStub()
         session = SessionStub()
-        let crypto = CryptoStub(device: device, store: store, session: session)
+        devicesList = DeviceListStub()
+        crypto = CryptoStub(device: device, store: store, session: session, devices: devicesList)
         decryption = MXMegolmDecryption(crypto: crypto)
     }
     
@@ -215,5 +253,76 @@ class MXMegolmDecryptionUnitTests: XCTestCase {
             let hasSharedHistory = decryption.hasSharedHistory(forRoomId: roomId1, sessionId: sessionId1, senderKey: senderKey)
             XCTAssertEqual(hasSharedHistory, expectedValue)
         }
+    }
+    
+    func test_decryptEvent_untrustedResult() {
+        let event = MXEvent.encryptedFixture()
+        device.stubbedResult = MXDecryptionResult()
+        device.stubbedResult?.senderKey = "ABCD"
+        
+        devicesList.stubbedDevices = [
+            "ABCD": Device.stub(
+                locallyTrusted: false,
+                crossSigningTrusted: true
+            )
+        ]
+        
+        device.stubbedResult?.isUntrusted = true
+        let result1 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result1?.decoration.color, .grey)
+        
+        device.stubbedResult?.isUntrusted = false
+        let result2 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result2?.decoration.color, MXEventDecryptionDecorationColor.none)
+    }
+    
+    func test_decryptEvent_untrustedDevice() {
+        let event = MXEvent.encryptedFixture()
+        device.stubbedResult = MXDecryptionResult()
+        device.stubbedResult?.senderKey = "XYZ"
+        
+        devicesList.stubbedDevices = [
+            "XYZ": Device.stub(
+                locallyTrusted: false,
+                crossSigningTrusted: false
+            )
+        ]
+        let result1 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result1?.decoration.color, .red)
+        
+        devicesList.stubbedDevices = [
+            "XYZ": Device.stub(
+                locallyTrusted: false,
+                crossSigningTrusted: true
+            )
+        ]
+        let result2 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result2?.decoration.color, MXEventDecryptionDecorationColor.none)
+    }
+    
+    func test_decryptEvent_unknownDevice() {
+        let invalidKey = "123"
+        let validKey = "456"
+        
+        let event = MXEvent.encryptedFixture()
+        device.stubbedResult = MXDecryptionResult()
+        device.stubbedResult?.senderKey = validKey
+        
+        let stub = Device.stub(
+            locallyTrusted: true,
+            crossSigningTrusted: true
+        )
+        
+        devicesList.stubbedDevices = [
+            invalidKey: stub
+        ]
+        let result1 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result1?.decoration.color, .red)
+        
+        devicesList.stubbedDevices = [
+            validKey: stub
+        ]
+        let result2 = decryption.decryptEvent(event, inTimeline: nil)
+        XCTAssertEqual(result2?.decoration.color, MXEventDecryptionDecorationColor.none)
     }
 }
