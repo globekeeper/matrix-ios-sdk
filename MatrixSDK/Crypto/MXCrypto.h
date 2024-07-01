@@ -95,6 +95,12 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  */
 @property (nullable, nonatomic, readonly) NSString *deviceEd25519Key;
 
+
+/**
+* The user device creation in local timestamp, milliseconds since epoch.
+*/
+@property (nonatomic, readonly) UInt64 deviceCreationTs;
+
 /**
  The key backup manager.
  */
@@ -371,6 +377,8 @@ extern NSString *const MXDeviceListDidUpdateUsersDevicesNotification;
  @param blacklist YES to encrypt messsages for only verified devices.
  */
 - (void)setBlacklistUnverifiedDevicesInRoom:(NSString *)roomId blacklist:(BOOL)blacklist;
+
+- (void) invalidateCache:(void (^)(void))done;
 
 @end
 

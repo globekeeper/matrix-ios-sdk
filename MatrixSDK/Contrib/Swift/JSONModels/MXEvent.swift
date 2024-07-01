@@ -90,6 +90,7 @@ public enum MXEventType: Equatable, Hashable {
     
     case beaconInfo
     case beacon
+    case roomRetention
 
     case custom(String)
     
@@ -149,6 +150,7 @@ public enum MXEventType: Equatable, Hashable {
         case .taggedEvents: return kMXEventTypeStringTaggedEvents
         case .spaceChild: return kMXEventTypeStringSpaceChild
         case .spaceOrder: return kMXEventTypeStringSpaceOrderMSC3230
+        case .roomRetention: return kMXEventTypeStringRoomRetention
             
         case .pollStart: return kMXEventTypeStringPollStartMSC3381
         case .pollResponse: return kMXEventTypeStringPollResponseMSC3381
@@ -165,7 +167,7 @@ public enum MXEventType: Equatable, Hashable {
     }
     
     public init(identifier: String) {
-        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callInviteGk, .callCandidates, .callAnswer, .callAnswerGk, .callSelectAnswer, .callHangup, .callHangupGk, .callReject, .callRejectGk, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .secretRequest, .secretSend, .secretStorageDefaultKey, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo, .beacon]
+        let events: [MXEventType] = [.roomName, .roomTopic, .roomAvatar, .roomMember, .roomCreate, .roomJoinRules, .roomPowerLevels, .roomAliases, .roomCanonicalAlias, .roomEncrypted, .roomEncryption, .roomGuestAccess, .roomHistoryVisibility, .roomKey, .roomForwardedKey, .roomKeyRequest, .roomMessage, .roomMessageFeedback, .roomRedaction, .roomThirdPartyInvite, .roomTag, .presence, .typing, .callInvite, .callCandidates, .callAnswer, .callSelectAnswer, .callHangup, .callReject, .callNegotiate, .callReplaces, .callRejectReplacement, .callAssertedIdentity, .callAssertedIdentityUnstable, .reaction, .receipt, .roomTombStone, .keyVerificationStart, .keyVerificationAccept, .keyVerificationKey, .keyVerificationMac, .keyVerificationCancel, .keyVerificationDone, .secretRequest, .secretSend, .secretStorageDefaultKey, .taggedEvents, .spaceChild, .spaceOrder, .pollStart, .pollResponse, .pollEnd, .beaconInfo, .beacon, .roomRetention]
         
         if let type = events.first(where: { $0.identifier == identifier }) {
             self = type

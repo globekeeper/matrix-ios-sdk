@@ -20,6 +20,7 @@ import MatrixSDKCrypto
 /// An implementation of `MXCrypto` which uses [matrix-rust-sdk](https://github.com/matrix-org/matrix-rust-sdk/tree/main/crates/matrix-sdk-crypto)
 /// under the hood.
 class MXCryptoV2: NSObject, MXCrypto {
+
     enum Error: Swift.Error {
         case cannotUnsetTrust
         case backupNotEnabled
@@ -54,6 +55,11 @@ class MXCryptoV2: NSObject, MXCrypto {
     
     var deviceEd25519Key: String? {
         return machine.deviceEd25519Key
+    }
+    
+    var deviceCreationTs: UInt64 {
+        // own device always exists
+        return machine.device(userId: machine.userId, deviceId: machine.deviceId)!.firstTimeSeenTs
     }
     
     let backup: MXKeyBackup?
@@ -715,4 +721,13 @@ class MXCryptoV2: NSObject, MXCrypto {
                 return dict[info.userId] = info
             }
     }
-}
+    
+    func invalidateCache(_ done: @escaping () -> Void) {
+        Task {
+            log.debug("Invalidating Olm Machine crypto store cache.")
+            await machine.invalidateCache()
+            await MainActor.run {
+                done()
+            }
+        }
+    }}
